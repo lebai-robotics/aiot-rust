@@ -33,6 +33,7 @@ futures = "^0.3"
 rand = "^0.8"
 regex = "^1.5"
 async-trait = "^0.1"
+reqwest = { version = "^0.11", features = ["json", "rustls-tls"] }
 
 [dev-dependencies]
 env_logger = "^0.9"

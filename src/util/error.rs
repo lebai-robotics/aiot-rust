@@ -14,6 +14,10 @@ pub enum Error {
     SerdeError(#[from] serde_json::Error),
     #[error(transparent)]
     UrlParseError(#[from] url::ParseError),
+    #[error(transparent)]
+    RequestError(#[from] reqwest::Error),
+    #[error(transparent)]
+    HttpError(#[from] crate::http::HttpError),
     #[error("tokio mpsc send error")]
     MpscSendError,
     #[error("header format error: {0}")]

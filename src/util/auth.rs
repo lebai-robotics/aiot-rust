@@ -78,6 +78,22 @@ pub mod mqtt {
     }
 }
 
+pub mod http {
+    pub fn client_id(product_key: &str, device_name: &str) -> String {
+        format!("{}.{}", product_key, device_name)
+    }
+
+    pub fn password(product_key: &str, device_name: &str, device_secret: &str) -> String {
+        let text = format!(
+            "clientId{}deviceName{}productKey{}",
+            client_id(product_key, device_name),
+            device_name,
+            product_key
+        );
+        super::sign(&text, &device_secret)
+    }
+}
+
 /// 阿里云物联网平台的 X509 根证书
 pub const ALI_CA_CERT: &str = r#"-----BEGIN CERTIFICATE-----
 MIIDdTCCAl2gAwIBAgILBAAAAAABFUtaw5QwDQYJKoZIhvcNAQEFBQAwVzELMAkG
