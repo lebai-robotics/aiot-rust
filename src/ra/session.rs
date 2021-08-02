@@ -56,22 +56,21 @@ impl SessionList {
             loop {
                 tokio::select! {
                     Some(w) = rx.recv() => {
-                        // TODO: None exit
-                        stream.write_all(&w).await.unwrap();
+                        stream.write_all(&w).await.map_err(|_| Error::MpscSendError)?;
                         debug!("write {}={:x?}", addr, w);
-                        // Ok::<_, Error>(())
                     },
                     Ok(n) = stream.read(&mut buf) => {
                         debug!("read={:x?}", &buf[0..n]);
                         if n == 0 {
                             break;
                         }
-                        local_tx.send((id.clone(), (&buf[0..n]).to_vec())).await.unwrap();
+                        local_tx.send((id.clone(), (&buf[0..n]).to_vec())).await.map_err(|_| Error::MpscSendError)?;
                     },
                     else => break,
                 }
             }
             info!("Session {} 已退出", id);
+            Ok::<_, Error>(())
         });
 
         Ok(res)

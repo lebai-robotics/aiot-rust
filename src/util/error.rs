@@ -14,6 +14,8 @@ pub enum Error {
     SerdeError(#[from] serde_json::Error),
     #[error(transparent)]
     UrlParseError(#[from] url::ParseError),
+    #[error("tokio mpsc send error")]
+    MpscSendError,
     #[error("header format error: {0}")]
     HeaderFormatError(String),
     #[error("session {0} not found")]
@@ -34,4 +36,6 @@ pub enum Error {
     RepeatRegisterResponse,
     #[error("事件循环错误")]
     EventLoopError,
+    #[error("收取云端事件失败")]
+    ReceiveCloudError,
 }

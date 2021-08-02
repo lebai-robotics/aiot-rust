@@ -39,7 +39,7 @@ impl RemoteAccessProxy {
     }
 
     pub async fn process(&mut self) -> Result<()> {
-        let data = self.cloud_rx.recv().await.unwrap();
+        let data = self.cloud_rx.recv().await.ok_or(Error::ReceiveCloudError)?;
         let data: EdgeDebugSwitch = serde_json::from_slice(&data)?;
         debug!("{:?}", data);
         if data.status != 0 {

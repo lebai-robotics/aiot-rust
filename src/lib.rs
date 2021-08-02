@@ -7,7 +7,7 @@ mod mqtt;
 pub use mqtt::{DeviceAuthInfo, MqttClient, MqttInstance};
 
 mod ra;
-pub use ra::{RemoteAccess, Runner as RemoteAccessRunner, RemoteAccessTrait};
+pub use ra::{RemoteAccess, RemoteAccessTrait, Runner as RemoteAccessRunner};
 
 mod dm;
 pub use dm::ThreeTuple;
