@@ -18,7 +18,7 @@ pub struct DataModelMsg {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct PropertyPost {
     /// 字符串形式的JSON结构体, <b>必须以结束符'\0'结尾</b>. 包含用户要上报的属性数据, 如<i>"{\"LightSwitch\":0}"</i>
-    pub params: Map<String, Value>,
+    pub params: Value,
 }
 
 /// <b>物模型事件上报</b>消息结构体
@@ -153,7 +153,7 @@ impl DataModelMsg {
 }
 
 impl MsgEnum {
-    pub fn new_property_post(params: Map<String, Value>) -> Self {
+    pub fn new_property_post(params: Value) -> Self {
         MsgEnum::PropertyPost(PropertyPost { params })
     }
 
@@ -179,7 +179,7 @@ impl MsgEnum {
     pub fn value(&self) -> Value {
         use MsgEnum::*;
         match &self {
-            PropertyPost(data) => Value::Object(data.params.clone()),
+            PropertyPost(data) => data.params.clone(),
             _ => Value::Null,
         }
     }

@@ -1,7 +1,7 @@
 use aiot::{DataModelMsg, DataModelOptions, DataModelTrait, MqttClient, MsgEnum, ThreeTuple};
 use anyhow::Result;
 use log::*;
-use serde_json::{Map, Value, json};
+use serde_json::{json, Map, Value};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -15,9 +15,9 @@ async fn main() -> Result<()> {
     let (client, mut eventloop) = client.connect();
     let mut dm = dm.init(client.clone()).await?;
 
-    let mut params: Map<String, Value> = Map::new();
-    params.insert("LightSwitch".to_string(), json!(0));
-    let data = DataModelMsg::new(MsgEnum::new_property_post(params));
+    let data = DataModelMsg::new(MsgEnum::new_property_post(json!({
+        "LightSwitch": 0
+    })));
     dm.send(data).await?;
 
     loop {
