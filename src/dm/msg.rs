@@ -1,4 +1,5 @@
 use super::recv::{DataModelRecv, RecvEnum};
+use crate::alink::AlinkRequest;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 
@@ -145,10 +146,10 @@ impl DataModelMsg {
         }
     }
 
-    pub fn topic(&self) -> String {
+    pub fn to_requset(&self, ack: i32) -> (String, AlinkRequest) {
         let pk = self.product_key.as_deref().unwrap_or("");
         let dn = self.device_name.as_deref().unwrap_or("");
-        self.data.topic(&pk, &dn)
+        self.data.to_requset(&pk, &dn, ack)
     }
 }
 
@@ -157,30 +158,24 @@ impl MsgEnum {
         MsgEnum::PropertyPost(PropertyPost { params })
     }
 
-    pub fn topic(&self, product_key: &str, device_name: &str) -> String {
+    pub fn to_requset(
+        &self,
+        product_key: &str,
+        device_name: &str,
+        ack: i32,
+    ) -> (String, AlinkRequest) {
         use MsgEnum::*;
-        match &self {
-            PropertyPost(_) => format!(
-                "/sys/{}/{}/thing/event/property/post",
-                product_key, device_name
+        let (method, topic, data) = match &self {
+            PropertyPost(data) => (
+                "thing.event.property.post",
+                format!(
+                    "/sys/{}/{}/thing/event/property/post",
+                    product_key, device_name
+                ),
+                data.params.clone(),
             ),
-            _ => format!(""),
-        }
-    }
-
-    pub fn method(&self) -> &'static str {
-        use MsgEnum::*;
-        match &self {
-            PropertyPost(_) => "thing.event.property.post",
-            _ => "",
-        }
-    }
-
-    pub fn value(&self) -> Value {
-        use MsgEnum::*;
-        match &self {
-            PropertyPost(data) => data.params.clone(),
-            _ => Value::Null,
-        }
+            _ => ("", format!(""), Value::Null),
+        };
+        (topic, AlinkRequest::new(method, data, ack))
     }
 }

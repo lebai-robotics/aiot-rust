@@ -3,11 +3,11 @@ pub mod recv;
 
 use crate::alink::*;
 use crate::{Error, Result, ThreeTuple};
+use log::*;
 use rumqttc::{AsyncClient, QoS};
 use serde_json::Value;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
-use log::*;
 
 #[derive(Debug, Clone)]
 pub struct DataModelOptions {
@@ -59,11 +59,7 @@ impl Runner {
         if data.device_name.is_none() {
             data.device_name = Some(self.three.device_name.to_string());
         }
-        let topic = data.topic();
-        debug!("topic={}", topic);
-        let method = data.data.method();
-        let value = data.data.value();
-        let payload = AlinkRequest::new(method, value, self.ack);
+        let (topic, payload) = data.to_requset(self.ack);
         let payload = serde_json::to_string(&payload)?;
         debug!("payload={}", payload);
         self.client
