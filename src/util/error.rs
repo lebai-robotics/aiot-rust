@@ -42,4 +42,6 @@ pub enum Error {
     EventLoopError,
     #[error("收取云端事件失败")]
     ReceiveCloudError,
+    #[error("实例未初始化")]
+    UnInitError,
 }

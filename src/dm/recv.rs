@@ -1,6 +1,3 @@
-use crate::ffi::*;
-use crate::*;
-
 /// data-model模块接收消息的结构体
 #[derive(Debug, Clone)]
 pub struct DataModelRecv {
@@ -90,70 +87,4 @@ pub enum RecvEnum {
     RawData(RawData),
     /// 服务器下发的二进制格式的同步服务调用消息
     RawSyncServiceInvoke(RawServiceInvoke),
-}
-
-impl From<aiot_dm_recv_t> for DataModelRecv {
-    fn from(packet: aiot_dm_recv_t) -> Self {
-        use aiot_dm_recv_type_t::*;
-        let data = match packet.type_ {
-            AIOT_DMRECV_GENERIC_REPLY => {
-                let data = unsafe { &packet.data.generic_reply };
-                RecvEnum::GenericReply(GenericReply {
-                    msg_id: data.msg_id,
-                    code: data.code,
-                    data: String::from_clen(data.data, data.data_len),
-                    message: String::from_clen(data.message, data.message_len),
-                })
-            }
-            AIOT_DMRECV_PROPERTY_SET => {
-                let data = unsafe { &packet.data.property_set };
-                RecvEnum::PropertySet(PropertySet {
-                    msg_id: data.msg_id,
-                    params: String::from_clen(data.params, data.params_len),
-                })
-            }
-            AIOT_DMRECV_ASYNC_SERVICE_INVOKE => {
-                let data = unsafe { &packet.data.async_service_invoke };
-                RecvEnum::AsyncServiceInvoke(ASyncServiceInvoke {
-                    msg_id: data.msg_id,
-                    service_id: String::from_c(data.service_id),
-                    params: String::from_clen(data.params, data.params_len),
-                })
-            }
-            AIOT_DMRECV_SYNC_SERVICE_INVOKE => {
-                let data = unsafe { &packet.data.sync_service_invoke };
-                RecvEnum::SyncServiceInvoke(SyncServiceInvoke {
-                    msg_id: data.msg_id,
-                    service_id: String::from_c(data.service_id),
-                    rrpc_id: String::from_c(data.rrpc_id),
-                    params: String::from_clen(data.params, data.params_len),
-                })
-            }
-            AIOT_DMRECV_RAW_DATA_REPLY => {
-                let data = unsafe { &packet.data.raw_data };
-                RecvEnum::RawDataReply(RawData {
-                    data: Vec::from_clen(data.data as *mut i8, data.data_len),
-                })
-            }
-            AIOT_DMRECV_RAW_DATA => {
-                let data = unsafe { &packet.data.raw_data };
-                RecvEnum::RawData(RawData {
-                    data: Vec::from_clen(data.data as *mut i8, data.data_len),
-                })
-            }
-            AIOT_DMRECV_RAW_SYNC_SERVICE_INVOKE => {
-                let data = unsafe { &packet.data.raw_service_invoke };
-                RecvEnum::RawSyncServiceInvoke(RawServiceInvoke {
-                    rrpc_id: String::from_c(data.rrpc_id),
-                    data: Vec::from_clen(data.data as *mut i8, data.data_len),
-                })
-            }
-            _ => panic!("AIOT_DMRECV_MAX"),
-        };
-        Self {
-            product_key: String::from_c(packet.product_key),
-            device_name: String::from_c(packet.device_name),
-            data,
-        }
-    }
 }

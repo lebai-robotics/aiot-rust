@@ -35,18 +35,20 @@ pub struct MqttPublicInstance {
 }
 
 pub struct MqttClient {
-    pub(crate) options: MqttOptions,
+    pub three: ThreeTuple,
+    pub options: MqttOptions,
     pub(crate) executors: Vec<Box<dyn Executor>>,
 }
 
 impl MqttClient {
-    pub fn new(info: &DeviceAuthInfo, instance: &MqttInstance) -> Result<Self> {
+    pub fn new(three: &ThreeTuple, info: &DeviceAuthInfo, instance: &MqttInstance) -> Result<Self> {
         let (host, port) = instance.url();
         let mut options = MqttOptions::new(&info.client_id, &host, port);
-        options.set_keep_alive(60);
+        options.set_keep_alive(300);
         options.set_credentials(&info.username, &info.password);
 
         Ok(Self {
+            three: three.clone(),
             options,
             executors: Vec::new(),
         })
@@ -55,7 +57,7 @@ impl MqttClient {
     pub fn new_public(host: &str, three: &ThreeTuple) -> Result<Self> {
         let info = DeviceAuthInfo::from_tuple(&three);
         let instance = MqttInstance::public(&host, &three.product_key);
-        Self::new(&info, &instance)
+        Self::new(three, &info, &instance)
     }
 
     pub fn new_public_tls(host: &str, three: &ThreeTuple) -> Result<Self> {

@@ -1,5 +1,5 @@
 use crate::util::{auth, rand_string};
-use crate::{DeviceAuthInfo, Error, MqttClient, MqttInstance, Result};
+use crate::{DeviceAuthInfo, Error, MqttClient, MqttInstance, Result, ThreeTuple};
 use log::*;
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
@@ -31,8 +31,13 @@ impl DynamicRegister {
             password,
             client_id,
         };
+        let three = ThreeTuple {
+            product_key: product_key.to_string(),
+            device_name: device_name.to_string(),
+            device_secret: "".to_string(),
+        };
         let instance = MqttInstance::public(&host, &product_key);
-        let mut mqtt = MqttClient::new(&info, &instance)?;
+        let mut mqtt = MqttClient::new(&three, &info, &instance)?;
         mqtt.enable_tls()?;
         mqtt.executors.push(rego as Box<dyn crate::Executor>);
         Ok(Self { mqtt, rx })

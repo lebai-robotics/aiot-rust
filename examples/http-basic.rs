@@ -11,7 +11,7 @@ async fn main() -> Result<()> {
     client.auth().await?;
 
     let topic = "/sys/a13FN5TplKq/http_basic_demo/thing/event/property/post";
-    let data = b"{\"id\":\"1\",\"version\":\"1.0\",\"params\":{\"LightSwitch\":0}}";
+    let data = b"{\"id\":\"1\",\"version\":\"1.0\",\"params\":{\"LightSwitch\":1}}";
     let res = client.send(topic, data).await?;
     log::info!("{:?}", res);
 
