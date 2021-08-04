@@ -6,7 +6,6 @@ use crate::{Error, Result, ThreeTuple};
 use log::*;
 use regex::Regex;
 use rumqttc::{AsyncClient, QoS};
-use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
@@ -103,7 +102,7 @@ impl crate::Executor for Executor {
                 return Ok(());
             }
         }
-
+        // "/sys/+/+/thing/service/property/set"
         if let Some(caps) = self.regs[1].captures(topic) {
             debug!("{:?}", caps);
             if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
@@ -116,6 +115,80 @@ impl crate::Executor for Executor {
             };
             let data = recv::DataModelRecv::property_set(&caps[1], &caps[2], data);
             self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
+            return Ok(());
+        }
+        // "/sys/+/+/thing/service/+"
+        if let Some(caps) = self.regs[2].captures(topic) {
+            debug!("{:?}", caps);
+            if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
+                return Ok(());
+            }
+            let payload: AlinkRequest = serde_json::from_slice(&payload)?;
+            let data = recv::AsyncServiceInvoke {
+                msg_id: payload.msg_id(),
+                service_id: (&caps[3]).to_string(),
+                params: payload.params.clone(),
+            };
+            let data = recv::DataModelRecv::async_service_invoke(&caps[1], &caps[2], data);
+            self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
+            return Ok(());
+        }
+        // "/ext/rrpc/+/sys/+/+/thing/service/+"
+        if let Some(caps) = self.regs[3].captures(topic) {
+            debug!("{:?}", caps);
+            if &caps[2] != self.three.product_key || &caps[3] != self.three.device_name {
+                return Ok(());
+            }
+            let payload: AlinkRequest = serde_json::from_slice(&payload)?;
+            let data = recv::SyncServiceInvoke {
+                rrpc_id: (&caps[1]).to_string(),
+                msg_id: payload.msg_id(),
+                service_id: (&caps[4]).to_string(),
+                params: payload.params.clone(),
+            };
+            let data = recv::DataModelRecv::sync_service_invoke(&caps[2], &caps[3], data);
+            self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
+            return Ok(());
+        }
+        // "/sys/+/+/thing/model/down_raw"
+        if let Some(caps) = self.regs[4].captures(topic) {
+            debug!("{:?}", caps);
+            if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
+                return Ok(());
+            }
+            let data = recv::RawData {
+                data: payload.to_vec(),
+            };
+            let data = recv::DataModelRecv::raw_data(&caps[1], &caps[2], data);
+            self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
+            return Ok(());
+        }
+        // "/sys/+/+/thing/model/up_raw_reply"
+        if let Some(caps) = self.regs[5].captures(topic) {
+            debug!("{:?}", caps);
+            if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
+                return Ok(());
+            }
+            let data = recv::RawData {
+                data: payload.to_vec(),
+            };
+            let data = recv::DataModelRecv::raw_data_reply(&caps[1], &caps[2], data);
+            self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
+            return Ok(());
+        }
+        // "/ext/rrpc/+/sys/+/+/thing/model/down_raw"
+        if let Some(caps) = self.regs[6].captures(topic) {
+            debug!("{:?}", caps);
+            if &caps[2] != self.three.product_key || &caps[3] != self.three.device_name {
+                return Ok(());
+            }
+            let data = recv::RawServiceInvoke {
+                rrpc_id: (&caps[1]).to_string(),
+                data: payload.to_vec(),
+            };
+            let data = recv::DataModelRecv::raw_sync_service_invoke(&caps[2], &caps[3], data);
+            self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
+            return Ok(());
         }
 
         Ok(())
@@ -127,12 +200,25 @@ pub struct DataModel {
     executor: Executor,
 }
 
+const TOPICS: &'static [&str] = &[
+    "/sys/+/+/thing/event/+/post_reply",
+    "/sys/+/+/thing/service/property/set",
+    "/sys/+/+/thing/service/+",
+    "/ext/rrpc/+/sys/+/+/thing/service/+",
+    "/sys/+/+/thing/model/down_raw",
+    "/sys/+/+/thing/model/up_raw_reply",
+    "/ext/rrpc/+/sys/+/+/thing/model/down_raw",
+    "/sys/+/+/thing/property/desired/get_reply",
+    "/sys/+/+/thing/property/desired/delete_reply",
+    "/sys/+/+/thing/event/property/batch/post_reply",
+];
+
 impl DataModel {
     pub fn new(options: &DataModelOptions, three: Arc<ThreeTuple>) -> Result<Self> {
         let regs = [
             Regex::new(r"/sys/(.*)/(.*)/thing/event/(.*)/post_reply")?,
             Regex::new(r"/sys/(.*)/(.*)/thing/service/property/set")?,
-            Regex::new(r"/sys/(.*)/(.*)/thing/service/(.*)")?,
+            Regex::new(r"/sys/(.*)/(.*)/thing/service/(.*)_reply")?,
             Regex::new(r"/ext/rrpc/(.*)/sys/(.*)/(.*)/thing/service/(.*)")?,
             Regex::new(r"/sys/(.*)/(.*)/thing/model/down_raw")?,
             Regex::new(r"/sys/(.*)/(.*)/thing/model/up_raw_reply")?,
@@ -164,16 +250,3 @@ impl DataModelTrait for crate::MqttClient {
         Ok(ra.runner)
     }
 }
-
-const TOPICS: &'static [&str] = &[
-    "/sys/+/+/thing/event/+/post_reply",
-    "/sys/+/+/thing/service/property/set",
-    "/sys/+/+/thing/service/+",
-    "/ext/rrpc/+/sys/+/+/thing/service/+",
-    "/sys/+/+/thing/model/down_raw",
-    "/sys/+/+/thing/model/up_raw_reply",
-    "/ext/rrpc/+/sys/+/+/thing/model/down_raw",
-    "/sys/+/+/thing/property/desired/get_reply",
-    "/sys/+/+/thing/property/desired/delete_reply",
-    "/sys/+/+/thing/event/property/batch/post_reply",
-];

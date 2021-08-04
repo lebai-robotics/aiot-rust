@@ -1,5 +1,5 @@
 use crate::alink::{AlinkRequest, AlinkResponse};
-use crate::{Error, Result};
+use crate::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
@@ -165,12 +165,49 @@ impl DataModelMsg {
     }
 
     #[inline]
-    pub fn property_set_reply(msg_id: u64, code: u32, data: Value) -> Self {
+    pub fn property_set_reply(code: u32, data: Value, msg_id: u64) -> Self {
         DataModelMsg::new(MsgEnum::PropertySetReply(PropertySetReply {
             msg_id,
             code,
             data,
         }))
+    }
+
+    #[inline]
+    pub fn async_service_reply(code: u32, data: Value, msg_id: u64, service_id: String) -> Self {
+        DataModelMsg::new(MsgEnum::AsyncServiceReply(AsyncServiceReply {
+            msg_id,
+            code,
+            service_id,
+            data,
+        }))
+    }
+
+    #[inline]
+    pub fn sync_service_reply(
+        code: u32,
+        data: Value,
+        rrpc_id: String,
+        msg_id: u64,
+        service_id: String,
+    ) -> Self {
+        DataModelMsg::new(MsgEnum::SyncServiceReply(SyncServiceReply {
+            rrpc_id,
+            msg_id,
+            code,
+            service_id,
+            data,
+        }))
+    }
+
+    #[inline]
+    pub fn raw_data(data: Vec<u8>) -> Self {
+        DataModelMsg::new(MsgEnum::RawData(RawData { data }))
+    }
+
+    #[inline]
+    pub fn raw_service_reply(data: Vec<u8>, rrpc_id: String) -> Self {
+        DataModelMsg::new(MsgEnum::RawServiceReply(RawServiceReply { rrpc_id, data }))
     }
 }
 

@@ -41,7 +41,7 @@ pub struct AlinkRequest {
     pub version: String,
     pub params: Value,
     pub sys: Option<SysAck>,
-    pub method: String,
+    pub method: Option<String>,
 }
 
 impl AlinkRequest {
@@ -55,7 +55,7 @@ impl AlinkRequest {
             version: "1.0".to_string(),
             params,
             sys: Some(SysAck { ack }),
-            method: method.to_string(),
+            method: Some(method.to_string()),
         }
     }
 

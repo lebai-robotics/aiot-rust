@@ -25,10 +25,10 @@ pub struct GenericReply {
 }
 
 impl DataModelRecv {
-    pub fn generic_reply(product_key: &str, device_name: &str, data: GenericReply) -> Self {
+    pub fn generic_reply(pk: &str, dn: &str, data: GenericReply) -> Self {
         Self {
-            product_key: product_key.to_string(),
-            device_name: device_name.to_string(),
+            product_key: pk.to_string(),
+            device_name: dn.to_string(),
             data: RecvEnum::GenericReply(data),
         }
     }
@@ -44,10 +44,10 @@ pub struct PropertySet {
 }
 
 impl DataModelRecv {
-    pub fn property_set(product_key: &str, device_name: &str, data: PropertySet) -> Self {
+    pub fn property_set(pk: &str, dn: &str, data: PropertySet) -> Self {
         Self {
-            product_key: product_key.to_string(),
-            device_name: device_name.to_string(),
+            product_key: pk.to_string(),
+            device_name: dn.to_string(),
             data: RecvEnum::PropertySet(data),
         }
     }
@@ -66,9 +66,19 @@ pub struct SyncServiceInvoke {
     pub params: Value,
 }
 
+impl DataModelRecv {
+    pub fn sync_service_invoke(pk: &str, dn: &str, data: SyncServiceInvoke) -> Self {
+        Self {
+            product_key: pk.to_string(),
+            device_name: dn.to_string(),
+            data: RecvEnum::SyncServiceInvoke(data),
+        }
+    }
+}
+
 /// <b>异步服务调用</b>消息结构体
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct ASyncServiceInvoke {
+pub struct AsyncServiceInvoke {
     /// 消息标识符, uint64_t类型的整数
     pub msg_id: u64,
     /// 服务标示符, 字符串内容由用户定义的物模型决定
@@ -77,11 +87,39 @@ pub struct ASyncServiceInvoke {
     pub params: Value,
 }
 
+impl DataModelRecv {
+    pub fn async_service_invoke(pk: &str, dn: &str, data: AsyncServiceInvoke) -> Self {
+        Self {
+            product_key: pk.to_string(),
+            device_name: dn.to_string(),
+            data: RecvEnum::AsyncServiceInvoke(data),
+        }
+    }
+}
+
 /// <b>物模型二进制数据</b>消息结构体, 服务器的JSON格式物模型数据将通过物联网平台的JavaScript脚本转化为二进制数据, 用户在接收此消息前应确保已正确启用云端解析脚本
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct RawData {
     /// 二进制数据
     pub data: Vec<u8>,
+}
+
+impl DataModelRecv {
+    pub fn raw_data(pk: &str, dn: &str, data: RawData) -> Self {
+        Self {
+            product_key: pk.to_string(),
+            device_name: dn.to_string(),
+            data: RecvEnum::RawData(data),
+        }
+    }
+
+    pub fn raw_data_reply(pk: &str, dn: &str, data: RawData) -> Self {
+        Self {
+            product_key: pk.to_string(),
+            device_name: dn.to_string(),
+            data: RecvEnum::RawDataReply(data),
+        }
+    }
 }
 
 /// <b>二进制数据的同步服务调用</b>消息结构体, 服务器的JSON格式物模型数据将通过物联网平台的JavaScript脚本转化为二进制数据, 用户在接收此消息前应确保已正确启用云端解析脚本
@@ -93,6 +131,16 @@ pub struct RawServiceInvoke {
     pub data: Vec<u8>,
 }
 
+impl DataModelRecv {
+    pub fn raw_sync_service_invoke(pk: &str, dn: &str, data: RawServiceInvoke) -> Self {
+        Self {
+            product_key: pk.to_string(),
+            device_name: dn.to_string(),
+            data: RecvEnum::RawSyncServiceInvoke(data),
+        }
+    }
+}
+
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub enum RecvEnum {
     /// 上报属性/实践后服务器返回的应答消息
@@ -100,7 +148,7 @@ pub enum RecvEnum {
     /// 服务器下发的属性设置消息
     PropertySet(PropertySet),
     /// 服务器下发的异步服务调用消息
-    AsyncServiceInvoke(ASyncServiceInvoke),
+    AsyncServiceInvoke(AsyncServiceInvoke),
     /// 服务器下发的同步服务调用消息
     SyncServiceInvoke(SyncServiceInvoke),
     /// 服务器对设备上报的二进制数据应答

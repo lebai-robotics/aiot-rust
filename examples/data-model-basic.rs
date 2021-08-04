@@ -1,7 +1,7 @@
-use aiot::{DataModelMsg, DataModelOptions, DataModelTrait, MqttClient, MsgEnum, RecvEnum, ThreeTuple};
+use aiot::{DataModelMsg, DataModelOptions, DataModelTrait, MqttClient, RecvEnum, ThreeTuple};
 use anyhow::Result;
 use log::*;
-use serde_json::{json, Map, Value};
+use serde_json::json;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -34,13 +34,40 @@ async fn main() -> Result<()> {
                 info!("Received = {:?}", notification);
             },
             Ok(recv) = dm.poll() => {
-                info!("物模型收到 = {:?}", recv);
                 match recv.data {
                     RecvEnum::PropertySet(data) => {
-                        debug!("设置属性 {:?}", data.params);
-                        dm.send(DataModelMsg::property_set_reply(data.msg_id, 200, data.params.clone())).await?;
+                        info!("属性设置 {:?}", data);
+                        // 以下代码演示如何对来自云平台的属性设置指令进行应答
+                        dm.send(DataModelMsg::property_set_reply(200, json!({}), data.msg_id)).await?;
                     },
-                    _ => {},
+                    RecvEnum::GenericReply(data) => {
+                        // 属性上报, 事件上报, 获取期望属性值或者删除期望属性值的应答
+                        info!("服务端应答 {:?}", data);
+                    },
+                    RecvEnum::AsyncServiceInvoke(data) => {
+                        info!("异步服务调用 {:?}", data);
+                        // 以下代码演示如何对来自云平台的异步服务调用进行应答
+                        dm.send(DataModelMsg::async_service_reply(200, json!({"dataA": 20}), data.msg_id, data.service_id)).await?;
+                    },
+                    RecvEnum::SyncServiceInvoke(data) => {
+                        info!("同步服务调用 {:?}", data);
+                        // 以下代码演示如何对来自云平台的同步服务调用进行应答
+                        dm.send(DataModelMsg::sync_service_reply(200, json!({}), data.rrpc_id, data.msg_id, data.service_id)).await?;
+                    },
+                    RecvEnum::RawData(data) => {
+                        info!("下行二进制数据 {:?}", data);
+                        // 以下代码演示如何发送二进制格式数据, 若使用需要有相应的数据透传脚本部署在云端
+                        let raw = vec![0x01, 0x02];
+                        dm.send(DataModelMsg::raw_data(raw)).await?;
+                    },
+                    RecvEnum::RawSyncServiceInvoke(data) => {
+                        info!("二进制格式的同步服务调用 {:?}", data);
+                        let raw = vec![0x01, 0x02];
+                        dm.send(DataModelMsg::raw_service_reply(raw, data.rrpc_id)).await?;
+                    },
+                    RecvEnum::RawDataReply(data) => {
+                        info!("上行二进制数据后, 云端的回复报文 {:?}", data);
+                    },
                 }
             }
         }
