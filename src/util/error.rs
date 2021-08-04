@@ -17,6 +17,8 @@ pub enum Error {
     #[error(transparent)]
     RequestError(#[from] reqwest::Error),
     #[error(transparent)]
+    RegexError(#[from] regex::Error),
+    #[error(transparent)]
     HttpError(#[from] crate::http::HttpError),
     #[error("tokio mpsc send error")]
     MpscSendError,
@@ -26,6 +28,8 @@ pub enum Error {
     SessionNotFound(String),
     #[error("send topic to proxy failed")]
     SendTopicError,
+    #[error("recv topic from tx failed")]
+    RecvTopicError,
     #[error("proxy upload data failed")]
     UploadDataError,
     #[error("keepalive timeout")]

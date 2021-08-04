@@ -15,9 +15,9 @@ async fn main() -> Result<()> {
     let (client, mut eventloop) = client.connect();
     let mut dm = dm.init(client.clone()).await?;
 
-    let data = DataModelMsg::new(MsgEnum::new_property_post(json!({
+    let data = DataModelMsg::property_post(json!({
         "LightSwitch": 0
-    })));
+    }));
     dm.send(data).await?;
 
     loop {
@@ -25,6 +25,9 @@ async fn main() -> Result<()> {
             Ok(notification) = eventloop.poll() => {
                 // 主循环的 poll 是必须的
                 info!("Received = {:?}", notification);
+            },
+            Ok(recv) = dm.poll() => {
+                info!("物模型收到 = {:?}", recv);
             }
         }
     }

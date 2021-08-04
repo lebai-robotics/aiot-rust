@@ -4,8 +4,10 @@ pub mod recv;
 use crate::alink::*;
 use crate::{Error, Result, ThreeTuple};
 use log::*;
+use regex::Regex;
 use rumqttc::{AsyncClient, QoS};
 use serde_json::Value;
+use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
 
@@ -22,9 +24,9 @@ impl DataModelOptions {
 }
 
 pub struct HalfRunner {
-    rx: Receiver<recv::RecvEnum>,
+    rx: Receiver<recv::DataModelRecv>,
     post_reply: bool,
-    three: ThreeTuple,
+    three: Arc<ThreeTuple>,
 }
 
 impl HalfRunner {
@@ -38,16 +40,16 @@ impl HalfRunner {
             rx: self.rx,
             ack: if self.post_reply { 1 } else { 0 },
             client,
-            three: self.three,
+            three: self.three.clone(),
         })
     }
 }
 
 pub struct Runner {
-    rx: Receiver<recv::RecvEnum>,
+    rx: Receiver<recv::DataModelRecv>,
     client: AsyncClient,
     ack: i32,
-    three: ThreeTuple,
+    three: Arc<ThreeTuple>,
 }
 
 impl Runner {
@@ -68,25 +70,36 @@ impl Runner {
         Ok(())
     }
 
-    pub async fn poll(&mut self) -> Result<()> {
-        // self.rap.process().await
-        Ok(())
+    pub async fn poll(&mut self) -> Result<recv::DataModelRecv> {
+        self.rx.recv().await.ok_or(Error::RecvTopicError)
     }
 }
 
 pub struct Executor {
-    tx: Sender<recv::RecvEnum>,
+    three: Arc<ThreeTuple>,
+    tx: Sender<recv::DataModelRecv>,
+    regs: [Regex; 10],
 }
 
 #[async_trait::async_trait]
 impl crate::Executor for Executor {
     async fn execute(&self, topic: &str, payload: &[u8]) -> Result<()> {
-        // if topic == &self.topic {
-        //     // self.tx
-        //     //     .send(payload.to_vec())
-        //     //     .await
-        //     //     .map_err(|_| Error::SendTopicError)?;
-        // }
+        debug!("{} {}", topic, String::from_utf8_lossy(payload));
+        if let Some(caps) = self.regs[0].captures(topic) {
+            debug!("{:?}", caps);
+            if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
+                return Ok(());
+            }
+            let payload: AlinkResponse = serde_json::from_slice(&payload)?;
+            let data = recv::GenericReply {
+                msg_id: payload.msg_id(),
+                code: payload.code,
+                data: payload.data.clone(),
+                message: payload.message.unwrap_or("".to_string()),
+            };
+            let data = recv::DataModelRecv::generic_reply(&caps[1], &caps[2], data);
+            self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
+        }
         Ok(())
     }
 }
@@ -97,14 +110,26 @@ pub struct DataModel {
 }
 
 impl DataModel {
-    pub fn new(options: &DataModelOptions, three: &ThreeTuple) -> Result<Self> {
+    pub fn new(options: &DataModelOptions, three: Arc<ThreeTuple>) -> Result<Self> {
+        let regs = [
+            Regex::new(r"/sys/(.*)/(.*)/thing/event/(.*)/post_reply")?,
+            Regex::new(r"/sys/(.*)/(.*)/thing/service/property/set")?,
+            Regex::new(r"/sys/(.*)/(.*)/thing/service/(.*)")?,
+            Regex::new(r"/ext/rrpc/(.*)/sys/(.*)/(.*)/thing/service/(.*)")?,
+            Regex::new(r"/sys/(.*)/(.*)/thing/model/down_raw")?,
+            Regex::new(r"/sys/(.*)/(.*)/thing/model/up_raw_reply")?,
+            Regex::new(r"/ext/rrpc/(.*)/sys/(.*)/(.*)/thing/model/down_raw")?,
+            Regex::new(r"/sys/(.*)/(.*)/thing/property/desired/get_reply")?,
+            Regex::new(r"/sys/(.*)/(.*)/thing/property/desired/delete_reply")?,
+            Regex::new(r"/sys/(.*)/(.*)/thing/event/property/batch/post_reply")?,
+        ];
         let (tx, rx) = mpsc::channel(64);
-        let executor = Executor { tx };
         let runner = HalfRunner {
             rx,
             post_reply: options.post_reply,
             three: three.clone(),
         };
+        let executor = Executor { tx, three, regs };
         Ok(Self { runner, executor })
     }
 }
@@ -115,7 +140,7 @@ pub trait DataModelTrait {
 
 impl DataModelTrait for crate::MqttClient {
     fn data_model(&mut self, options: &DataModelOptions) -> Result<HalfRunner> {
-        let ra = DataModel::new(&options, &self.three)?;
+        let ra = DataModel::new(&options, self.three.clone())?;
         self.executors
             .push(Box::new(ra.executor) as Box<dyn crate::Executor>);
         Ok(ra.runner)

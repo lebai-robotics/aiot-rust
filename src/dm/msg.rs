@@ -28,7 +28,7 @@ pub struct EventPost {
     /// 事件标示符, <b>必须为以结束符'\0'结尾的字符串</b>
     pub event_id: String,
     /// 字符串形式的JSON结构体, <b>必须以结束符'\0'结尾</b>. 包含用户要上报的事件数据, 如<i>"{\"ErrorNum\":0}"</i>
-    pub params: Map<String, Value>,
+    pub params: Value,
 }
 
 /// <b>属性设置应答</b>消息结构体, 用户在收到@ref AIOT_DMRECV_PROPERTY_SET 类型的属性设置后, 可发送此消息进行回复
@@ -153,11 +153,13 @@ impl DataModelMsg {
     }
 }
 
-impl MsgEnum {
-    pub fn new_property_post(params: Value) -> Self {
-        MsgEnum::PropertyPost(PropertyPost { params })
+impl DataModelMsg {
+    pub fn property_post(params: Value) -> Self {
+        DataModelMsg::new(MsgEnum::PropertyPost(PropertyPost { params }))
     }
+}
 
+impl MsgEnum {
     pub fn to_requset(
         &self,
         product_key: &str,

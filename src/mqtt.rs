@@ -3,6 +3,7 @@ use crate::*;
 use log::*;
 use rumqttc::{AsyncClient, Event, EventLoop, MqttOptions, Packet, Transport};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub enum MqttInstance {
@@ -35,7 +36,7 @@ pub struct MqttPublicInstance {
 }
 
 pub struct MqttClient {
-    pub three: ThreeTuple,
+    pub three: Arc<ThreeTuple>,
     pub options: MqttOptions,
     pub(crate) executors: Vec<Box<dyn Executor>>,
 }
@@ -48,7 +49,7 @@ impl MqttClient {
         options.set_credentials(&info.username, &info.password);
 
         Ok(Self {
-            three: three.clone(),
+            three: Arc::new(three.clone()),
             options,
             executors: Vec::new(),
         })

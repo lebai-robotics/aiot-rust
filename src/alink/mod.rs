@@ -1,27 +1,36 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::sync::atomic::{AtomicI32, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 
-static ID: AtomicI32 = AtomicI32::new(1);
+static ID: AtomicU64 = AtomicU64::new(1);
 
-pub fn global_id_next() -> i32 {
+pub fn global_id_next() -> u64 {
     ID.fetch_add(1, Ordering::SeqCst)
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-struct AlinkResponse {
-    id: String,
-    code: i32,
-    data: Value,
+pub struct AlinkResponse {
+    pub id: String,
+    pub code: u32,
+    pub data: Value,
+    pub message: Option<String>,
+    pub method: Option<String>,
+    pub version: Option<String>,
+}
+
+impl AlinkResponse {
+    pub fn msg_id(&self) -> u64 {
+        self.id.parse().unwrap_or(0)
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct AlinkRequest {
-    id: String,
-    version: String,
-    params: Value,
-    sys: SysAck,
-    method: String,
+    pub id: String,
+    pub version: String,
+    pub params: Value,
+    pub sys: SysAck,
+    pub method: String,
 }
 
 impl AlinkRequest {
@@ -37,6 +46,6 @@ impl AlinkRequest {
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-struct SysAck {
-    ack: i32,
+pub struct SysAck {
+    pub ack: i32,
 }
