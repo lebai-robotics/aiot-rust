@@ -76,7 +76,7 @@ impl Runner {
 pub struct Executor {
     three: Arc<ThreeTuple>,
     tx: Sender<recv::DataModelRecv>,
-    regs: [Regex; 10],
+    regs: [Regex; 11],
 }
 
 #[async_trait::async_trait]
@@ -84,7 +84,7 @@ impl crate::Executor for Executor {
     async fn execute(&self, topic: &str, payload: &[u8]) -> Result<()> {
         debug!("{} {}", topic, String::from_utf8_lossy(payload));
 
-        for i in [0, 7, 8, 9] {
+        for i in [0, 7, 8, 9, 10] {
             if let Some(caps) = self.regs[i].captures(topic) {
                 debug!("{:?}", caps);
                 if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
@@ -211,6 +211,7 @@ const TOPICS: &'static [&str] = &[
     "/sys/+/+/thing/property/desired/get_reply",
     "/sys/+/+/thing/property/desired/delete_reply",
     "/sys/+/+/thing/event/property/batch/post_reply",
+    "/sys/+/+/thing/event/property/history/post_reply",
 ];
 
 impl DataModel {
@@ -226,6 +227,7 @@ impl DataModel {
             Regex::new(r"/sys/(.*)/(.*)/thing/property/desired/get_reply")?,
             Regex::new(r"/sys/(.*)/(.*)/thing/property/desired/delete_reply")?,
             Regex::new(r"/sys/(.*)/(.*)/thing/event/property/batch/post_reply")?,
+            Regex::new(r"/sys/(.*)/(.*)/thing/event/property/history/post_reply")?,
         ];
         let (tx, rx) = mpsc::channel(64);
         let runner = HalfRunner {
