@@ -17,7 +17,7 @@ pub use ra::{RemoteAccess, RemoteAccessTrait, Runner as RemoteAccessRunner};
 mod dm;
 pub use dm::{DataModelOptions, DataModel, DataModelTrait};
 pub use dm::msg::{DataModelMsg, MsgEnum};
-pub use dm::recv::DataModelRecv;
+pub use dm::recv::{DataModelRecv, RecvEnum};
 
 mod dynregmq;
 pub use dynregmq::{DynamicRegister, DynamicRegisterResult};

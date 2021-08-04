@@ -1,4 +1,4 @@
-use aiot::{DataModelMsg, DataModelOptions, DataModelTrait, MqttClient, MsgEnum, ThreeTuple};
+use aiot::{DataModelMsg, DataModelOptions, DataModelTrait, MqttClient, MsgEnum, RecvEnum, ThreeTuple};
 use anyhow::Result;
 use log::*;
 use serde_json::{json, Map, Value};
@@ -15,10 +15,17 @@ async fn main() -> Result<()> {
     let (client, mut eventloop) = client.connect();
     let mut dm = dm.init(client.clone()).await?;
 
-    let data = DataModelMsg::property_post(json!({
+    dm.send(DataModelMsg::property_post(json!({
         "LightSwitch": 0
-    }));
-    dm.send(data).await?;
+    })))
+    .await?;
+    dm.send(DataModelMsg::event_post(
+        "Error".to_string(),
+        json!({
+            "ErrorCode": 0
+        }),
+    ))
+    .await?;
 
     loop {
         tokio::select! {
@@ -28,6 +35,13 @@ async fn main() -> Result<()> {
             },
             Ok(recv) = dm.poll() => {
                 info!("物模型收到 = {:?}", recv);
+                match recv.data {
+                    RecvEnum::PropertySet(data) => {
+                        debug!("设置属性 {:?}", data.params);
+                        dm.send(DataModelMsg::property_set_reply(data.msg_id, 200, data.params.clone())).await?;
+                    },
+                    _ => {},
+                }
             }
         }
     }

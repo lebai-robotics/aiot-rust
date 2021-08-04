@@ -22,6 +22,17 @@ impl AlinkResponse {
     pub fn msg_id(&self) -> u64 {
         self.id.parse().unwrap_or(0)
     }
+
+    pub fn new(id: u64, code: u32, data: Value) -> Self {
+        Self {
+            id: format!("{}", id),
+            code,
+            data,
+            message: None,
+            version: None,
+            method: None,
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -29,19 +40,27 @@ pub struct AlinkRequest {
     pub id: String,
     pub version: String,
     pub params: Value,
-    pub sys: SysAck,
+    pub sys: Option<SysAck>,
     pub method: String,
 }
 
 impl AlinkRequest {
-    pub fn new(method: &str, params: Value, ack: i32) -> Self {
+    pub fn msg_id(&self) -> u64 {
+        self.id.parse().unwrap_or(0)
+    }
+
+    pub fn new_id(id: u64, method: &str, params: Value, ack: i32) -> Self {
         Self {
-            id: format!("{}", global_id_next()),
+            id: format!("{}", id),
             version: "1.0".to_string(),
             params,
-            sys: SysAck { ack },
+            sys: Some(SysAck { ack }),
             method: method.to_string(),
         }
+    }
+
+    pub fn new(method: &str, params: Value, ack: i32) -> Self {
+        Self::new_id(global_id_next(), method, params, ack)
     }
 }
 

@@ -61,9 +61,8 @@ impl Runner {
         if data.device_name.is_none() {
             data.device_name = Some(self.three.device_name.to_string());
         }
-        let (topic, payload) = data.to_requset(self.ack);
-        let payload = serde_json::to_string(&payload)?;
-        debug!("payload={}", payload);
+        let (topic, payload) = data.to_payload(self.ack)?;
+        debug!("payload={}", String::from_utf8_lossy(&payload));
         self.client
             .publish(topic, QoS::AtMostOnce, false, payload)
             .await?;
@@ -85,21 +84,40 @@ pub struct Executor {
 impl crate::Executor for Executor {
     async fn execute(&self, topic: &str, payload: &[u8]) -> Result<()> {
         debug!("{} {}", topic, String::from_utf8_lossy(payload));
-        if let Some(caps) = self.regs[0].captures(topic) {
+
+        for i in [0, 7, 8, 9] {
+            if let Some(caps) = self.regs[i].captures(topic) {
+                debug!("{:?}", caps);
+                if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
+                    return Ok(());
+                }
+                let payload: AlinkResponse = serde_json::from_slice(&payload)?;
+                let data = recv::GenericReply {
+                    msg_id: payload.msg_id(),
+                    code: payload.code,
+                    data: payload.data.clone(),
+                    message: payload.message.unwrap_or("".to_string()),
+                };
+                let data = recv::DataModelRecv::generic_reply(&caps[1], &caps[2], data);
+                self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
+                return Ok(());
+            }
+        }
+
+        if let Some(caps) = self.regs[1].captures(topic) {
             debug!("{:?}", caps);
             if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
                 return Ok(());
             }
-            let payload: AlinkResponse = serde_json::from_slice(&payload)?;
-            let data = recv::GenericReply {
+            let payload: AlinkRequest = serde_json::from_slice(&payload)?;
+            let data = recv::PropertySet {
                 msg_id: payload.msg_id(),
-                code: payload.code,
-                data: payload.data.clone(),
-                message: payload.message.unwrap_or("".to_string()),
+                params: payload.params.clone(),
             };
-            let data = recv::DataModelRecv::generic_reply(&caps[1], &caps[2], data);
+            let data = recv::DataModelRecv::property_set(&caps[1], &caps[2], data);
             self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
         }
+
         Ok(())
     }
 }

@@ -11,17 +11,6 @@ pub struct DataModelRecv {
     /// 接收消息数据
     pub data: RecvEnum,
 }
-
-impl DataModelRecv {
-    pub fn generic_reply(product_key: &str, device_name: &str, data: GenericReply) -> Self {
-        Self {
-            product_key: product_key.to_string(),
-            device_name: device_name.to_string(),
-            data: RecvEnum::GenericReply(data),
-        }
-    }
-}
-
 /// <b>云端通用应答</b>消息结构体, 设备端上报@ref AIOT_DMMSG_PROPERTY_POST, @ref AIOT_DMMSG_EVENT_POST 或者@ref AIOT_DMMSG_GET_DESIRED 等消息后, 服务器会应答此消息
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct GenericReply {
@@ -35,13 +24,33 @@ pub struct GenericReply {
     pub message: String,
 }
 
+impl DataModelRecv {
+    pub fn generic_reply(product_key: &str, device_name: &str, data: GenericReply) -> Self {
+        Self {
+            product_key: product_key.to_string(),
+            device_name: device_name.to_string(),
+            data: RecvEnum::GenericReply(data),
+        }
+    }
+}
+
 /// <b>属性设置</b>消息结构体
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct PropertySet {
     /// 消息标识符, uint64_t类型的整数
     pub msg_id: u64,
     /// 服务器下发的属性数据, 为字符串形式的JSON结构体, 此字符串<b>不</b>以结束符'\0'结尾, 如<i>"{\"LightSwitch\":0}"</i>
-    pub params: String,
+    pub params: Value,
+}
+
+impl DataModelRecv {
+    pub fn property_set(product_key: &str, device_name: &str, data: PropertySet) -> Self {
+        Self {
+            product_key: product_key.to_string(),
+            device_name: device_name.to_string(),
+            data: RecvEnum::PropertySet(data),
+        }
+    }
 }
 
 /// <b>同步服务调用</b>消息结构体, 用户收到同步服务后, 必须在超时时间(默认7s)内进行应答
@@ -54,7 +63,7 @@ pub struct SyncServiceInvoke {
     /// 服务标示符, 字符串内容由用户定义的物模型决定
     pub service_id: String,
     /// 服务调用的输入参数数据, 为字符串形式的JSON结构体, 此字符串<b>不</b>以结束符'\0'结尾, 如<i>"{\"LightSwitch\":0}"</i>
-    pub params: String,
+    pub params: Value,
 }
 
 /// <b>异步服务调用</b>消息结构体
@@ -65,7 +74,7 @@ pub struct ASyncServiceInvoke {
     /// 服务标示符, 字符串内容由用户定义的物模型决定
     pub service_id: String,
     /// 服务调用的输入参数数据, 为字符串形式的JSON结构体, 此字符串<b>不</b>以结束符'\0'结尾, 如<i>"{\"LightSwitch\":0}"</i>
-    pub params: String,
+    pub params: Value,
 }
 
 /// <b>物模型二进制数据</b>消息结构体, 服务器的JSON格式物模型数据将通过物联网平台的JavaScript脚本转化为二进制数据, 用户在接收此消息前应确保已正确启用云端解析脚本

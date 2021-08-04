@@ -1,7 +1,7 @@
-use super::recv::{DataModelRecv, RecvEnum};
-use crate::alink::AlinkRequest;
+use crate::alink::{AlinkRequest, AlinkResponse};
+use crate::{Error, Result};
 use serde::{Deserialize, Serialize};
-use serde_json::{Map, Value};
+use serde_json::Value;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct DataModelMsg {
@@ -18,7 +18,7 @@ pub struct DataModelMsg {
 /// <b>物模型属性上报</b>消息结构体
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct PropertyPost {
-    /// 字符串形式的JSON结构体, <b>必须以结束符'\0'结尾</b>. 包含用户要上报的属性数据, 如<i>"{\"LightSwitch\":0}"</i>
+    /// 字符串形式的JSON结构体. 包含用户要上报的属性数据, 如<i>"{\"LightSwitch\":0}"</i>
     pub params: Value,
 }
 
@@ -27,7 +27,7 @@ pub struct PropertyPost {
 pub struct EventPost {
     /// 事件标示符, <b>必须为以结束符'\0'结尾的字符串</b>
     pub event_id: String,
-    /// 字符串形式的JSON结构体, <b>必须以结束符'\0'结尾</b>. 包含用户要上报的事件数据, 如<i>"{\"ErrorNum\":0}"</i>
+    /// 字符串形式的JSON结构体. 包含用户要上报的事件数据, 如<i>"{\"ErrorNum\":0}"</i>
     pub params: Value,
 }
 
@@ -38,8 +38,8 @@ pub struct PropertySetReply {
     pub msg_id: u64,
     /// 设备端状态码, 200-请求成功, 更多状态码查看<a href="https://help.aliyun.com/document_detail/89309.html">设备端通用code</a>
     pub code: u32,
-    /// 设备端应答数据, 字符串形式的JSON结构体, <b>必须以结束符'\0'结尾</b>, 如<i>"{}"</i>表示应答数据为空
-    pub data: String,
+    /// 设备端应答数据, 字符串形式的JSON结构体, 如<i>"{}"</i>表示应答数据为空
+    pub data: Value,
 }
 
 /// <b>异步服务应答</b>消息结构体, 用户在收到@ref AIOT_DMRECV_ASYNC_SERVICE_INVOKE 类型的异步服务调用消息后, 应发送此消息进行应答
@@ -53,8 +53,8 @@ pub struct SyncServiceReply {
     pub service_id: String,
     /// 设备端状态码, 200-请求成功, 更多状态码查看<a href="https://help.aliyun.com/document_detail/89309.html">设备端通用code</a>
     pub code: u32,
-    /// 设备端应答数据, 字符串形式的JSON结构体, <b>必须以结束符'\0'结尾</b>, 如<i>"{}"</i>表示应答数据为空
-    pub data: String,
+    /// 设备端应答数据, 字符串形式的JSON结构体, 如<i>"{}"</i>表示应答数据为空
+    pub data: Value,
 }
 
 /// <b>异步服务应答</b>消息结构体, 用户在收到@ref AIOT_DMRECV_ASYNC_SERVICE_INVOKE 类型的异步服务调用消息后, 应发送此消息进行应答
@@ -66,8 +66,8 @@ pub struct AsyncServiceReply {
     pub service_id: String,
     /// 设备端状态码, 200-请求成功, 更多状态码查看<a href="https://help.aliyun.com/document_detail/89309.html">设备端通用code</a>
     pub code: u32,
-    /// 设备端应答数据, 字符串形式的JSON结构体, <b>必须以结束符'\0'结尾</b>, 如<i>"{}"</i>表示应答数据为空
-    pub data: String,
+    /// 设备端应答数据, 字符串形式的JSON结构体, 如<i>"{}"</i>表示应答数据为空
+    pub data: Value,
 }
 
 /// <b>物模型二进制数据</b>消息结构体, 发送的二进制数据将通过物联网平台的JavaScript脚本转化为JSON格式数据, 用户发送此消息前应确保已正确启用云端解析脚本
@@ -90,26 +90,26 @@ pub struct RawServiceReply {
 /// <b>获取期望属性值</b>消息结构体, 发送
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct GetDesired {
-    /// 字符串形式的JSON<b>数组</b>, <b>必须以结束符'\0'结尾</b>. 应包含用户要获取的期望属性的ID, 如<i>"[\"LightSwitch\"]"</i>
+    /// 字符串形式的JSON<b>数组</b>. 应包含用户要获取的期望属性的ID, 如<i>"[\"LightSwitch\"]"</i>
     pub params: Vec<String>,
 }
 
 /// <b>删除指定期望值</b>消息结构体
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct DeleteDesired {
-    /// 字符串形式的JSON结构体, <b>必须以结束符'\0'结尾</b>. 应包含用户要删除的期望属性的ID和期望值版本号, 如<i>"{\"LightSwitch\":{\"version\":1},\"Color\":{}}"</i>
-    pub params: String,
+    /// 字符串形式的JSON结构体. 应包含用户要删除的期望属性的ID和期望值版本号, 如<i>"{\"LightSwitch\":{\"version\":1},\"Color\":{}}"</i>
+    pub params: Value,
 }
 
 /// <b>物模型属性上报</b>消息结构体
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct PropertyBatchPost {
     /**
-     * @brief 字符串形式的JSON结构体, <b>必须以结束符'\0'结尾</b>. 包含用户要批量上报的属性和事件数据, 如 {"properties":{"Power": [ { "value": "on", "time": 1524448722000 },
+     * @brief 字符串形式的JSON结构体. 包含用户要批量上报的属性和事件数据, 如 {"properties":{"Power": [ { "value": "on", "time": 1524448722000 },
      *  { "value": "off", "time": 1524448722001 } ], "WF": [ { "value": 3, "time": 1524448722000 }]}, "events": {"alarmEvent": [{ "value": { "Power": "on", "WF": "2"},
      *  "time": 1524448722000}]}}
      */
-    params: String,
+    pub params: Value,
 }
 
 /// data-model模块发送消息类型
@@ -146,38 +146,103 @@ impl DataModelMsg {
         }
     }
 
-    pub fn to_requset(&self, ack: i32) -> (String, AlinkRequest) {
+    pub fn to_payload(&self, ack: i32) -> Result<(String, Vec<u8>)> {
         let pk = self.product_key.as_deref().unwrap_or("");
         let dn = self.device_name.as_deref().unwrap_or("");
-        self.data.to_requset(&pk, &dn, ack)
+        self.data.to_payload(&pk, &dn, ack)
     }
 }
 
 impl DataModelMsg {
+    #[inline]
     pub fn property_post(params: Value) -> Self {
         DataModelMsg::new(MsgEnum::PropertyPost(PropertyPost { params }))
+    }
+
+    #[inline]
+    pub fn event_post(event_id: String, params: Value) -> Self {
+        DataModelMsg::new(MsgEnum::EventPost(EventPost { event_id, params }))
+    }
+
+    #[inline]
+    pub fn property_set_reply(msg_id: u64, code: u32, data: Value) -> Self {
+        DataModelMsg::new(MsgEnum::PropertySetReply(PropertySetReply {
+            msg_id,
+            code,
+            data,
+        }))
     }
 }
 
 impl MsgEnum {
-    pub fn to_requset(
-        &self,
-        product_key: &str,
-        device_name: &str,
-        ack: i32,
-    ) -> (String, AlinkRequest) {
+    pub fn to_payload(&self, pk: &str, dn: &str, ack: i32) -> Result<(String, Vec<u8>)> {
         use MsgEnum::*;
-        let (method, topic, data) = match &self {
-            PropertyPost(data) => (
-                "thing.event.property.post",
-                format!(
-                    "/sys/{}/{}/thing/event/property/post",
-                    product_key, device_name
-                ),
-                data.params.clone(),
-            ),
-            _ => ("", format!(""), Value::Null),
-        };
-        (topic, AlinkRequest::new(method, data, ack))
+        match &self {
+            PropertyPost(data) => {
+                let topic = format!("/sys/{}/{}/thing/event/property/post", pk, dn);
+                let method = "thing.event.property.post";
+                let payload = AlinkRequest::new(&method, data.params.clone(), ack);
+                Ok((topic, serde_json::to_vec(&payload)?))
+            }
+            EventPost(data) => {
+                let topic = format!("/sys/{}/{}/thing/event/{}/post", pk, dn, data.event_id);
+                let method = format!("thing.event.{}.post", data.event_id);
+                let payload = AlinkRequest::new(&method, data.params.clone(), ack);
+                Ok((topic, serde_json::to_vec(&payload)?))
+            }
+            PropertySetReply(data) => {
+                let topic = format!("/sys/{}/{}/thing/service/property/set_reply", pk, dn);
+                let payload = AlinkResponse::new(data.msg_id, data.code, data.data.clone());
+                Ok((topic, serde_json::to_vec(&payload)?))
+            }
+            AsyncServiceReply(data) => {
+                let topic = format!("/sys/{}/{}/thing/service/{}_reply", pk, dn, data.service_id);
+                let payload = AlinkResponse::new(data.msg_id, data.code, data.data.clone());
+                Ok((topic, serde_json::to_vec(&payload)?))
+            }
+            SyncServiceReply(data) => {
+                let topic = format!(
+                    "/ext/rrpc/{}/sys/{}/{}/thing/service/{}",
+                    data.rrpc_id, pk, dn, data.service_id
+                );
+                let payload = AlinkResponse::new(data.msg_id, data.code, data.data.clone());
+                Ok((topic, serde_json::to_vec(&payload)?))
+            }
+            RawData(data) => {
+                let topic = format!("/sys/{}/{}/thing/model/up_raw", pk, dn);
+                Ok((topic, data.data.clone()))
+            }
+            RawServiceReply(data) => {
+                let topic = format!(
+                    "/ext/rrpc/{}/sys/{}/{}/thing/model/down_raw_reply",
+                    data.rrpc_id, pk, dn
+                );
+                Ok((topic, data.data.clone()))
+            }
+            GetDesired(data) => {
+                let topic = format!("/sys/{}/{}/thing/property/desired/get", pk, dn);
+                let method = "thing.property.desired.get";
+                let params = Value::Array(
+                    data.params
+                        .iter()
+                        .map(|p| Value::String(p.clone()))
+                        .collect(),
+                );
+                let payload = AlinkRequest::new(&method, params, ack);
+                Ok((topic, serde_json::to_vec(&payload)?))
+            }
+            DeleteDesired(data) => {
+                let topic = format!("/sys/{}/{}/thing/property/desired/delete", pk, dn);
+                let method = "thing.property.desired.delete";
+                let payload = AlinkRequest::new(&method, data.params.clone(), ack);
+                Ok((topic, serde_json::to_vec(&payload)?))
+            }
+            PropertyBatchPost(data) => {
+                let topic = format!("/sys/{}/{}/thing/event/property/batch/post", pk, dn);
+                let method = "thing.event.property.batch.post";
+                let payload = AlinkRequest::new(&method, data.params.clone(), ack);
+                Ok((topic, serde_json::to_vec(&payload)?))
+            }
+        }
     }
 }
