@@ -59,9 +59,9 @@ impl RemoteAccessProxy {
         // 创建云端通道连接资源
         let addr = format!("{}:{}", self.params.cloud_host, self.params.cloud_port);
         let payload = protocol::handshake_payload(
-            &self.params.pk,
-            &self.params.dn,
-            &self.params.ds,
+            &self.params.three.product_key,
+            &self.params.three.device_name,
+            &self.params.three.device_secret,
             &self.local_services,
         )?;
         let data = protocol::gen_response(

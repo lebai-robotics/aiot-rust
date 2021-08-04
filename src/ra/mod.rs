@@ -5,31 +5,31 @@ mod session;
 use crate::{Error, Result, ThreeTuple};
 use proxy::RemoteAccessProxy;
 use rumqttc::{AsyncClient, QoS};
+use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::Sender;
 
 #[derive(Debug, Clone)]
 pub struct RemoteAccessOptions {
-    pk: String,         //云端PK
-    dn: String,         //云端DN
-    ds: String,         //云端DS
+    three: Arc<ThreeTuple>,
     cloud_host: String, //远程连接通道云端服务地址，可以是域名
     cloud_port: u32,    //远程连接通道云端服务端口
 }
 
 impl RemoteAccessOptions {
-    pub fn new(three: &ThreeTuple) -> Self {
+    pub fn new(three: Arc<ThreeTuple>) -> Self {
         Self {
-            pk: three.product_key.to_string(),
-            dn: three.device_name.to_string(),
-            ds: three.device_secret.to_string(),
+            three,
             cloud_host: "backend-iotx-remote-debug.aliyun.com".to_string(),
             cloud_port: 443,
         }
     }
 
     pub fn switch_topic(&self) -> String {
-        format!("/sys/{}/{}/edge/debug/switch", self.pk, self.dn)
+        format!(
+            "/sys/{}/{}/edge/debug/switch",
+            self.three.product_key, self.three.device_name
+        )
     }
 }
 
@@ -73,8 +73,8 @@ pub struct RemoteAccess {
 }
 
 impl RemoteAccess {
-    pub fn new(three: &ThreeTuple) -> Result<Self> {
-        let ra = RemoteAccessOptions::new(&three);
+    pub fn new(three: Arc<ThreeTuple>) -> Result<Self> {
+        let ra = RemoteAccessOptions::new(three);
         let topic = ra.switch_topic();
         let (tx, rx) = mpsc::channel(16);
         let rap = RemoteAccessProxy::new(rx, ra)?;
@@ -88,12 +88,12 @@ impl RemoteAccess {
 }
 
 pub trait RemoteAccessTrait {
-    fn remote_access(&mut self, three: &ThreeTuple) -> Result<Runner>;
+    fn remote_access(&mut self) -> Result<Runner>;
 }
 
 impl RemoteAccessTrait for crate::MqttClient {
-    fn remote_access(&mut self, three: &ThreeTuple) -> Result<Runner> {
-        let ra = RemoteAccess::new(&three)?;
+    fn remote_access(&mut self) -> Result<Runner> {
+        let ra = RemoteAccess::new(self.three.clone())?;
         self.executors
             .push(Box::new(ra.executor) as Box<dyn crate::Executor>);
         Ok(ra.runner)

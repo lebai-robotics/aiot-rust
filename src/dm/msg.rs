@@ -228,6 +228,12 @@ impl DataModelMsg {
     pub fn raw_service_reply(data: Vec<u8>, rrpc_id: String) -> Self {
         DataModelMsg::new(MsgEnum::RawServiceReply(RawServiceReply { rrpc_id, data }))
     }
+
+    // 物模型历史数据上报
+    #[inline]
+    pub fn history_post(params: Vec<Value>) -> Self {
+        DataModelMsg::new(MsgEnum::HistoryPost(HistoryPost { params }))
+    }
 }
 
 impl MsgEnum {

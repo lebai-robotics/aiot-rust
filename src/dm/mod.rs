@@ -86,7 +86,6 @@ impl crate::Executor for Executor {
 
         for i in [0, 7, 8, 9, 10] {
             if let Some(caps) = self.regs[i].captures(topic) {
-                debug!("{:?}", caps);
                 if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
                     return Ok(());
                 }
@@ -104,7 +103,6 @@ impl crate::Executor for Executor {
         }
         // "/sys/+/+/thing/service/property/set"
         if let Some(caps) = self.regs[1].captures(topic) {
-            debug!("{:?}", caps);
             if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
                 return Ok(());
             }
@@ -119,7 +117,6 @@ impl crate::Executor for Executor {
         }
         // "/sys/+/+/thing/service/+"
         if let Some(caps) = self.regs[2].captures(topic) {
-            debug!("{:?}", caps);
             if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
                 return Ok(());
             }
@@ -135,7 +132,6 @@ impl crate::Executor for Executor {
         }
         // "/ext/rrpc/+/sys/+/+/thing/service/+"
         if let Some(caps) = self.regs[3].captures(topic) {
-            debug!("{:?}", caps);
             if &caps[2] != self.three.product_key || &caps[3] != self.three.device_name {
                 return Ok(());
             }
@@ -152,7 +148,6 @@ impl crate::Executor for Executor {
         }
         // "/sys/+/+/thing/model/down_raw"
         if let Some(caps) = self.regs[4].captures(topic) {
-            debug!("{:?}", caps);
             if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
                 return Ok(());
             }
@@ -165,7 +160,6 @@ impl crate::Executor for Executor {
         }
         // "/sys/+/+/thing/model/up_raw_reply"
         if let Some(caps) = self.regs[5].captures(topic) {
-            debug!("{:?}", caps);
             if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
                 return Ok(());
             }
@@ -178,7 +172,6 @@ impl crate::Executor for Executor {
         }
         // "/ext/rrpc/+/sys/+/+/thing/model/down_raw"
         if let Some(caps) = self.regs[6].captures(topic) {
-            debug!("{:?}", caps);
             if &caps[2] != self.three.product_key || &caps[3] != self.three.device_name {
                 return Ok(());
             }

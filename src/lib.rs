@@ -15,12 +15,15 @@ mod ra;
 pub use ra::{RemoteAccess, RemoteAccessTrait, Runner as RemoteAccessRunner};
 
 mod dm;
-pub use dm::{DataModelOptions, DataModel, DataModelTrait};
 pub use dm::msg::{DataModelMsg, MsgEnum};
 pub use dm::recv::{DataModelRecv, RecvEnum};
+pub use dm::{DataModel, DataModelOptions, DataModelTrait};
 
 mod dynregmq;
 pub use dynregmq::{DynamicRegister, DynamicRegisterResult};
+
+// mod ntp;
+// pub use ntp::NtpService;
 
 /// 设备证书三元组
 #[derive(Debug, Clone, Default)]

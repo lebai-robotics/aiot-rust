@@ -9,7 +9,7 @@ async fn main() -> Result<()> {
     let three = ThreeTuple::from_env();
     let mut client = MqttClient::new_public_tls(&host, &three)?;
 
-    let mut ra = client.remote_access(&three)?;
+    let mut ra = client.remote_access()?;
     let (client, mut eventloop) = client.connect();
     ra.init(&client).await?;
     tokio::spawn(async move {

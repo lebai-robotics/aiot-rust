@@ -27,6 +27,91 @@ async fn main() -> Result<()> {
     ))
     .await?;
 
+    let mut history = Vec::new();
+    history.push(json!({
+      "identity": {
+        "productKey": "",
+        "deviceName": ""
+      },
+      "properties": [
+        {
+          "Power": {
+            "value": "on",
+            "time": 1524448722000u64
+          },
+          "WF": {
+            "value": "3",
+            "time": 1524448722000u64
+          }
+        },
+        {
+          "Power": {
+            "value": "on",
+            "time": 1524448722000u64
+          },
+          "WF": {
+            "value": "3",
+            "time": 1524448722000u64
+          }
+        }
+      ],
+      "events": [
+        {
+          "alarmEvent": {
+            "value": {
+              "Power": "on",
+              "WF": "2"
+            },
+            "time": 1524448722000u64
+          },
+          "alertEvent": {
+            "value": {
+              "Power": "off",
+              "WF": "3"
+            },
+            "time": 1524448722000u64
+          }
+        }
+      ]
+    }));
+    history.push(json!({
+      "identity": {
+        "productKey": "",
+        "deviceName": ""
+      },
+      "properties": [
+        {
+          "Power": {
+            "value": "on",
+            "time": 1524448722000u64
+          },
+          "WF": {
+            "value": "3",
+            "time": 1524448722000u64
+          }
+        }
+      ],
+      "events": [
+        {
+          "alarmEvent": {
+            "value": {
+              "Power": "on",
+              "WF": "2"
+            },
+            "time": 1524448722000u64
+          },
+          "alertEvent": {
+            "value": {
+              "Power": "off",
+              "WF": "3"
+            },
+            "time": 1524448722000u64
+          }
+        }
+      ]
+    }));
+    dm.send(DataModelMsg::history_post(history)).await?;
+
     loop {
         tokio::select! {
             Ok(notification) = eventloop.poll() => {
