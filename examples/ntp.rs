@@ -1,34 +1,30 @@
-use aiot::{MqttClient, ThreeTuple};
+use aiot::{MqttClient, NtpServiceTrait, ThreeTuple};
 use anyhow::Result;
-use rumqttc::QoS;
-use tokio::task;
+use log::*;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    env_logger::init();
     let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
     let three = ThreeTuple::from_env();
-    let (client, mut eventloop) = MqttClient::new_public_tls(&host, &three)?.connect();
-    client
-        .subscribe(
-            "/sys/a13FN5TplKq/mqtt_basic_demo/thing/event/+/post_reply",
-            QoS::AtMostOnce,
-        )
-        .await?;
+    let mut client = MqttClient::new_public_tls(&host, &three)?;
 
-    task::spawn(async move {
-        client
-            .publish(
-                "/sys/a13FN5TplKq/mqtt_basic_demo/thing/event/property/post",
-                QoS::AtMostOnce,
-                false,
-                b"{\"id\":\"1\",\"version\":\"1.0\",\"params\":{\"LightSwitch\":0}}".to_vec(),
-            )
-            .await
-            .unwrap();
-    });
+    let ntp = client.ntp_service()?;
+    let (client, mut eventloop) = client.connect();
+    let mut ntp = ntp.init(&client).await?;
+
+    ntp.send().await?;
 
     loop {
-        let notification = eventloop.poll().await?;
-        println!("Received = {:?}", notification);
+        tokio::select! {
+            Ok(notification) = eventloop.poll() => {
+                // 主循环的 poll 是必须的
+                info!("Received = {:?}", notification);
+            },
+            Ok(recv) = ntp.poll() => {
+                info!("{:?}", recv);
+                recv.sync().await?;
+            }
+        }
     }
 }

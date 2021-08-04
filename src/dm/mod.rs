@@ -29,7 +29,8 @@ pub struct HalfRunner {
 }
 
 impl HalfRunner {
-    pub async fn init(self, mut client: AsyncClient) -> Result<Runner> {
+    pub async fn init(self, client: &AsyncClient) -> Result<Runner> {
+        let mut client = client.clone();
         let mut topics = rumqttc::Subscribe::empty_subscribe();
         for &topic in TOPICS {
             topics.add(topic.to_string(), QoS::AtMostOnce);

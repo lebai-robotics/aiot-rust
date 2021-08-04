@@ -13,7 +13,7 @@ async fn main() -> Result<()> {
     let options = DataModelOptions::new();
     let dm = client.data_model(&options)?;
     let (client, mut eventloop) = client.connect();
-    let mut dm = dm.init(client.clone()).await?;
+    let mut dm = dm.init(&client).await?;
 
     dm.send(DataModelMsg::property_post(json!({
         "LightSwitch": 0

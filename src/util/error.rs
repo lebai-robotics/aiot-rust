@@ -19,7 +19,11 @@ pub enum Error {
     #[error(transparent)]
     RegexError(#[from] regex::Error),
     #[error(transparent)]
+    SystemTimeError(#[from] std::time::SystemTimeError),
+    #[error(transparent)]
     HttpError(#[from] crate::http::HttpError),
+    #[error("set system time error")]
+    SetSystemTimeError,
     #[error("tokio mpsc send error")]
     MpscSendError,
     #[error("header format error: {0}")]

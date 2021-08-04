@@ -22,8 +22,8 @@ pub use dm::{DataModel, DataModelOptions, DataModelTrait};
 mod dynregmq;
 pub use dynregmq::{DynamicRegister, DynamicRegisterResult};
 
-// mod ntp;
-// pub use ntp::NtpService;
+mod ntp;
+pub use ntp::{NtpService, NtpServiceTrait};
 
 /// 设备证书三元组
 #[derive(Debug, Clone, Default)]
