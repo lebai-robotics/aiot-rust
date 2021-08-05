@@ -23,7 +23,8 @@ async fn main() -> Result<()> {
             },
             Ok(recv) = ntp.poll() => {
                 info!("{:?}", recv);
-                recv.sync().await?;
+                let now = recv.calc().await?;
+                info!("需要设置时间为 {:?}",now);
             }
         }
     }
