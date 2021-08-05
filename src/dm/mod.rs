@@ -9,6 +9,7 @@ use rumqttc::{AsyncClient, QoS};
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
+use serde_json::Value;
 
 #[derive(Debug, Clone)]
 pub struct DataModelOptions {
@@ -90,7 +91,7 @@ impl crate::Executor for Executor {
                 if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
                     return Ok(());
                 }
-                let payload: AlinkResponse = serde_json::from_slice(&payload)?;
+                let payload: AlinkResponse<Value> = serde_json::from_slice(&payload)?;
                 let data = recv::GenericReply {
                     msg_id: payload.msg_id(),
                     code: payload.code,
@@ -107,7 +108,7 @@ impl crate::Executor for Executor {
             if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
                 return Ok(());
             }
-            let payload: AlinkRequest = serde_json::from_slice(&payload)?;
+            let payload: AlinkRequest<Value> = serde_json::from_slice(&payload)?;
             let data = recv::PropertySet {
                 msg_id: payload.msg_id(),
                 params: payload.params.clone(),
@@ -121,7 +122,7 @@ impl crate::Executor for Executor {
             if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
                 return Ok(());
             }
-            let payload: AlinkRequest = serde_json::from_slice(&payload)?;
+            let payload: AlinkRequest<Value> = serde_json::from_slice(&payload)?;
             let data = recv::AsyncServiceInvoke {
                 msg_id: payload.msg_id(),
                 service_id: (&caps[3]).to_string(),
@@ -136,7 +137,7 @@ impl crate::Executor for Executor {
             if &caps[2] != self.three.product_key || &caps[3] != self.three.device_name {
                 return Ok(());
             }
-            let payload: AlinkRequest = serde_json::from_slice(&payload)?;
+            let payload: AlinkRequest<Value> = serde_json::from_slice(&payload)?;
             let data = recv::SyncServiceInvoke {
                 rrpc_id: (&caps[1]).to_string(),
                 msg_id: payload.msg_id(),

@@ -5,25 +5,28 @@ pub use util::error::{Error, Result};
 
 pub mod alink;
 
-mod mqtt;
+pub mod mqtt;
 pub use mqtt::{DeviceAuthInfo, MqttClient, MqttInstance};
 
-mod http;
+pub mod http;
 pub use http::Http;
 
-mod ra;
+pub mod ra;
 pub use ra::{RemoteAccess, RemoteAccessTrait, Runner as RemoteAccessRunner};
 
-mod dm;
+pub mod dm;
 pub use dm::msg::{DataModelMsg, MsgEnum};
 pub use dm::recv::{DataModelRecv, RecvEnum};
 pub use dm::{DataModel, DataModelOptions, DataModelTrait};
 
-mod dynregmq;
+pub mod dynregmq;
 pub use dynregmq::{DynamicRegister, DynamicRegisterResult};
 
-mod ntp;
+pub mod ntp;
 pub use ntp::{NtpService, NtpServiceTrait};
+
+pub mod logpost;
+pub use logpost::{LogPost, LogPostTrait};
 
 /// 设备证书三元组
 #[derive(Debug, Clone, Default)]

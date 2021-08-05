@@ -113,7 +113,7 @@ pub struct PropertyBatchPost {
 }
 
 /// <b>物模型属性上报</b>消息结构体
-/// https://help.aliyun.com/document_detail/89301.html#title-i50-y71-kzj
+/// <https://help.aliyun.com/document_detail/89301.html#title-i50-y71-kzj>
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct HistoryPost {
     pub params: Vec<Value>,

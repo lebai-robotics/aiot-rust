@@ -50,6 +50,10 @@ pub enum Error {
     EventLoopError,
     #[error("收取云端事件失败")]
     ReceiveCloudError,
+    #[error("解析失败")]
+    ParseTopicError,
+    #[error("产品或设备名不匹配")]
+    DeviceNameUnmatched,
     #[error("实例未初始化")]
     UnInitError,
 }
