@@ -20,7 +20,7 @@ jobs:
     #   run: cargo build
     # - name: Run tests
     #   run: cargo test
-    - name: test token
-      run: echo $CARGO_TOKEN
-    # - name: Publish to crates.io
-    #   run: cargo login $CARGO_TOKEN && cargo publish
+    - name: Publish to crates.io
+      env:
+        CARGO_TOKEN: ${{ env.CARGO_TOKEN }}
+      run: cargo login $CARGO_TOKEN && cargo publish
