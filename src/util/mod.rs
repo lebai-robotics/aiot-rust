@@ -2,9 +2,16 @@ pub mod auth;
 pub mod error;
 
 use lazy_static::lazy_static;
+use rand::distributions::Alphanumeric;
+use rand::rngs::StdRng;
+use rand::Rng;
+use rand::SeedableRng;
+use std::sync::Mutex;
+
 pub const VERSION: Option<&'static str> = std::option_env!("CARGO_PKG_VERSION");
 lazy_static! {
-    pub static ref CORE_SDK_VERSION: String = format!("sdk-rust-{}", VERSION.unwrap());
+    pub static ref CORE_SDK_VERSION: String = format!("sdk-rust-{}", VERSION.unwrap_or("unknown"));
+    pub static ref RNG: Mutex<StdRng> = Mutex::new(StdRng::seed_from_u64(timestamp()));
 }
 
 pub fn hex2str(input: &[u8]) -> String {
@@ -41,14 +48,8 @@ pub fn timestamp() -> u64 {
 }
 
 pub fn rand_string(len: usize) -> String {
-    use rand::distributions::Alphanumeric;
-    use rand::rngs::StdRng;
-    use rand::Rng;
-    use rand::SeedableRng;
-    use std::iter;
-    let mut rng = StdRng::seed_from_u64(timestamp());
-    iter::repeat(())
-        .map(|()| rng.sample(Alphanumeric))
+    std::iter::repeat(())
+        .map(|()| RNG.lock().unwrap().sample(Alphanumeric))
         .map(char::from)
         .take(len)
         .collect()
