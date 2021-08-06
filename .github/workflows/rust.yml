@@ -9,6 +9,8 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
+environment: crates.io
+
 jobs:
   build:
 
