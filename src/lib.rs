@@ -18,13 +18,6 @@
 //! 刚开始使用 Rust 时候，尝试基于 C SDK 在 [`std::ffi`] 基础上进行封装，发现这种方式性能和可扩展性都不高，于是基于 [`rumqttc`] 和 [`tokio`] 实现了现在的版本。
 //!
 //! 本 crate 遵循阿里云物联网平台定义的 [Alink 协议](https://help.aliyun.com/document_detail/90459.html)。
-//!
-//! ## 示例代码
-//!
-//! ```bash
-//! source demo.env
-//! cargo run --example mqtt-basic
-//! ```
 
 pub mod util;
 pub use util::error::{Error, Result};

@@ -19,8 +19,8 @@ jobs:
     - uses: actions/checkout@v2
     # - name: Build
     #   run: cargo build
-    # - name: Run tests
-    #   run: cargo test
+    - name: Run tests
+      run: cargo test
     - name: Publish to crates.io
       env:
         CARGO_TOKEN: ${{ secrets.CARGO_TOKEN }}
