@@ -1,9 +1,14 @@
 [package]
 name = "aiot"
-description = "Rust Link SDK (Aliyun IoT) based on Alink Protocol."
-version = "0.6.0"
+version = "0.6.1"
 edition = "2018"
 license = "MIT"
+keywords = ["alink", "aliyun", "mqtt", "iot", "sdk"]
+description = "Rust Link SDK (Aliyun IoT) based on Alink Protocol."
+repository = "https://github.com/lebai-robotics/aiot-rust"
+
+[badges]
+github = { repository = "lebai-robotics/aiot-rust" }
 
 [dependencies]
 libc = "^0.2"
