@@ -16,9 +16,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build
-    - name: Run tests
-      run: cargo test
-    - name: Publish to crates.io
-      run: cargo login $CARGO_TOKEN && cargo publish
+    # - name: Build
+    #   run: cargo build
+    # - name: Run tests
+    #   run: cargo test
+    - name: test token
+      run: echo $CARGO_TOKEN
+    # - name: Publish to crates.io
+    #   run: cargo login $CARGO_TOKEN && cargo publish
