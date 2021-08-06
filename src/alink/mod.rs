@@ -1,5 +1,56 @@
+//! ALink 基础协议。
+
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
+
+/// 设备认证三元组。
+///
+/// 这个三元组除了在一型一密的动态注册中用不到之外，所有和阿里云物联网平台发起的连接都要有这三元组生成签名。
+#[derive(Debug, Clone, Default)]
+pub struct ThreeTuple {
+    /// 产品 ProductKey，即所谓”型“。参考[创建产品](https://help.aliyun.com/document_detail/73728.html)。
+    pub product_key: String,
+    /// 设备 DeviceName，即所谓”机“。参考[创建设备](https://help.aliyun.com/document_detail/89271.html)。
+    pub device_name: String,
+    /// 设备 DeviceSecret，即所谓”密“。参考[设备安全认证](https://help.aliyun.com/document_detail/74004.html)和[设备获取设备证书](https://help.aliyun.com/document_detail/157846.html)。
+    pub device_secret: String,
+}
+
+impl ThreeTuple {
+    /// 从下列环境变量中读取三元组。
+    ///
+    /// - `PRODUCT_KEY`
+    /// - `DEVICE_NAME`
+    /// - `DEVICE_SECRET`
+    ///
+    /// 这个方法在示例代码中多处用到，但实际生产环境中建议自行编写初始化逻辑。
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// std::env::set_var("PRODUCT_KEY", "a");
+    /// std::env::set_var("DEVICE_NAME", "b");
+    /// std::env::set_var("DEVICE_SECRET", "c");
+    ///
+    /// use aiot::ThreeTuple;
+    ///
+    /// let three = ThreeTuple::from_env();
+    /// assert_eq!("a", &three.product_key);
+    /// assert_eq!("b", &three.device_name);
+    /// assert_eq!("c", &three.device_secret);
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// 如果没有设置对应的环境变量，该方法将 panic。
+    pub fn from_env() -> Self {
+        Self {
+            product_key: std::env::var("PRODUCT_KEY").unwrap(),
+            device_name: std::env::var("DEVICE_NAME").unwrap(),
+            device_secret: std::env::var("DEVICE_SECRET").unwrap(),
+        }
+    }
+}
 
 static ID: AtomicU64 = AtomicU64::new(1);
 

@@ -1,4 +1,4 @@
-use aiot::{LogPostTrait, MqttClient, ThreeTuple};
+use aiot::{LogPost, MqttClient, ThreeTuple};
 use anyhow::Result;
 use log::*;
 

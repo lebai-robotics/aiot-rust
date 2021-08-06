@@ -1,3 +1,5 @@
+//! NTP 时间同步服务。
+
 use crate::{Error, Result, ThreeTuple};
 use log::*;
 use rumqttc::{AsyncClient, QoS};
@@ -98,13 +100,13 @@ impl crate::Executor for Executor {
     }
 }
 
-pub struct NtpService {
-    pub runner: HalfRunner,
-    pub executor: Executor,
+struct NtpServiceInner {
+    runner: HalfRunner,
+    executor: Executor,
 }
 
-impl NtpService {
-    pub fn new(three: Arc<ThreeTuple>) -> Result<Self> {
+impl NtpServiceInner {
+    fn new(three: Arc<ThreeTuple>) -> Result<Self> {
         let (tx, rx) = mpsc::channel(16);
         let topic = format!(
             "/ext/ntp/{}/{}/response",
@@ -120,13 +122,13 @@ impl NtpService {
     }
 }
 
-pub trait NtpServiceTrait {
+pub trait NtpService {
     fn ntp_service(&mut self) -> Result<HalfRunner>;
 }
 
-impl NtpServiceTrait for crate::MqttClient {
+impl NtpService for crate::MqttClient {
     fn ntp_service(&mut self) -> Result<HalfRunner> {
-        let ra = NtpService::new(self.three.clone())?;
+        let ra = NtpServiceInner::new(self.three.clone())?;
         self.executors
             .push(Box::new(ra.executor) as Box<dyn crate::Executor>);
         Ok(ra.runner)

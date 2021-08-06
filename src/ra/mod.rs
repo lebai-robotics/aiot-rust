@@ -1,3 +1,5 @@
+//! 远程登录
+
 mod protocol;
 mod proxy;
 mod session;
@@ -67,13 +69,13 @@ impl crate::Executor for Executor {
     }
 }
 
-pub struct RemoteAccess {
-    pub runner: Runner,
-    pub executor: Executor,
+struct RemoteAccessInner {
+    runner: Runner,
+    executor: Executor,
 }
 
-impl RemoteAccess {
-    pub fn new(three: Arc<ThreeTuple>) -> Result<Self> {
+impl RemoteAccessInner {
+    fn new(three: Arc<ThreeTuple>) -> Result<Self> {
         let ra = RemoteAccessOptions::new(three);
         let topic = ra.switch_topic();
         let (tx, rx) = mpsc::channel(16);
@@ -87,13 +89,13 @@ impl RemoteAccess {
     }
 }
 
-pub trait RemoteAccessTrait {
+pub trait RemoteAccess {
     fn remote_access(&mut self) -> Result<Runner>;
 }
 
-impl RemoteAccessTrait for crate::MqttClient {
+impl RemoteAccess for crate::MqttClient {
     fn remote_access(&mut self) -> Result<Runner> {
-        let ra = RemoteAccess::new(self.three.clone())?;
+        let ra = RemoteAccessInner::new(self.three.clone())?;
         self.executors
             .push(Box::new(ra.executor) as Box<dyn crate::Executor>);
         Ok(ra.runner)

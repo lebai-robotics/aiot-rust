@@ -1,3 +1,5 @@
+//! HTTPS 接入。
+
 use crate::util::auth;
 use crate::ThreeTuple;
 use log::*;

@@ -1,4 +1,4 @@
-use aiot::{Error, MqttClient, RemoteAccessTrait, ThreeTuple};
+use aiot::{Error, MqttClient, RemoteAccess, ThreeTuple};
 use anyhow::Result;
 use log::*;
 

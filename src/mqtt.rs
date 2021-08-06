@@ -1,3 +1,5 @@
+//! MQTT 协议接入。
+
 use crate::util::auth;
 use crate::*;
 use log::*;

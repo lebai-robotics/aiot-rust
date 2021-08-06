@@ -1,6 +1,7 @@
 [package]
 name = "aiot"
-version = "0.5.2"
+description = "Rust Link SDK (Aliyun IoT) based on Alink Protocol."
+version = "0.6.0"
 edition = "2018"
 license = "MIT"
 

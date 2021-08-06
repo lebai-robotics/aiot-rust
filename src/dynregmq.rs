@@ -1,3 +1,5 @@
+//! 设备认证（动态注册）。
+
 use crate::util::{auth, rand_string};
 use crate::{DeviceAuthInfo, Error, MqttClient, MqttInstance, Result, ThreeTuple};
 use log::*;

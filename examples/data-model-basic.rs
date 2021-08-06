@@ -1,4 +1,4 @@
-use aiot::{DataModelMsg, DataModelOptions, DataModelTrait, MqttClient, RecvEnum, ThreeTuple};
+use aiot::{DataModelMsg, DataModelOptions, DataModel, MqttClient, RecvEnum, ThreeTuple};
 use anyhow::Result;
 use log::*;
 use serde_json::json;

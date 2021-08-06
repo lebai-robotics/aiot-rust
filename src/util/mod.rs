@@ -1,3 +1,5 @@
+//! 工具类
+
 pub mod auth;
 pub mod error;
 
@@ -11,7 +13,7 @@ use std::sync::Mutex;
 pub const VERSION: Option<&'static str> = std::option_env!("CARGO_PKG_VERSION");
 lazy_static! {
     pub static ref CORE_SDK_VERSION: String = format!("sdk-rust-{}", VERSION.unwrap_or("unknown"));
-    pub static ref RNG: Mutex<StdRng> = Mutex::new(StdRng::seed_from_u64(timestamp()));
+    static ref RNG: Mutex<StdRng> = Mutex::new(StdRng::seed_from_u64(timestamp()));
 }
 
 pub fn hex2str(input: &[u8]) -> String {
@@ -22,8 +24,8 @@ pub fn str2hex(input: &str) -> Vec<u8> {
     fn c2u(c: u8) -> u8 {
         match c {
             b'0'..=b'9' => c - b'0',
-            b'A'..=b'F' => c - b'F',
-            b'a'..=b'f' => c - b'a',
+            b'A'..=b'F' => c - b'F' + 0x0A,
+            b'a'..=b'f' => c - b'a' + 0x0A,
             _ => 0,
         }
     }

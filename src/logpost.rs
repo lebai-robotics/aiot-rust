@@ -1,3 +1,5 @@
+//! 日志上报。
+
 use crate::alink::{AlinkRequest, AlinkResponse};
 use crate::{Error, Result, ThreeTuple};
 use log::*;
@@ -134,13 +136,13 @@ impl crate::Executor for Executor {
     }
 }
 
-pub struct LogPost {
-    pub runner: HalfRunner,
-    pub executor: Executor,
+struct LogPostInner {
+    runner: HalfRunner,
+    executor: Executor,
 }
 
-impl LogPost {
-    pub fn new(three: Arc<ThreeTuple>) -> Result<Self> {
+impl LogPostInner {
+    fn new(three: Arc<ThreeTuple>) -> Result<Self> {
         let (tx, rx) = mpsc::channel(16);
 
         let get_reply = Regex::new(r"/sys/(.*)/(.*)/thing/config/log/get_reply")?;
@@ -170,13 +172,13 @@ impl LogPost {
     }
 }
 
-pub trait LogPostTrait {
+pub trait LogPost {
     fn log_post(&mut self) -> Result<HalfRunner>;
 }
 
-impl LogPostTrait for crate::MqttClient {
+impl LogPost for crate::MqttClient {
     fn log_post(&mut self) -> Result<HalfRunner> {
-        let ra = LogPost::new(self.three.clone())?;
+        let ra = LogPostInner::new(self.three.clone())?;
         self.executors
             .push(Box::new(ra.executor) as Box<dyn crate::Executor>);
         Ok(ra.runner)

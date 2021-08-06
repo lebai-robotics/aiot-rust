@@ -1,3 +1,5 @@
+//! 物模型
+
 pub mod msg;
 pub mod recv;
 
@@ -6,10 +8,10 @@ use crate::{Error, Result, ThreeTuple};
 use log::*;
 use regex::Regex;
 use rumqttc::{AsyncClient, QoS};
+use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
-use serde_json::Value;
 
 #[derive(Debug, Clone)]
 pub struct DataModelOptions {
@@ -190,7 +192,7 @@ impl crate::Executor for Executor {
     }
 }
 
-pub struct DataModel {
+struct DataModelInner {
     runner: HalfRunner,
     executor: Executor,
 }
@@ -209,8 +211,8 @@ const TOPICS: &'static [&str] = &[
     "/sys/+/+/thing/event/property/history/post_reply",
 ];
 
-impl DataModel {
-    pub fn new(options: &DataModelOptions, three: Arc<ThreeTuple>) -> Result<Self> {
+impl DataModelInner {
+    fn new(options: &DataModelOptions, three: Arc<ThreeTuple>) -> Result<Self> {
         let regs = [
             Regex::new(r"/sys/(.*)/(.*)/thing/event/(.*)/post_reply")?,
             Regex::new(r"/sys/(.*)/(.*)/thing/service/property/set")?,
@@ -235,13 +237,13 @@ impl DataModel {
     }
 }
 
-pub trait DataModelTrait {
+pub trait DataModel {
     fn data_model(&mut self, options: &DataModelOptions) -> Result<HalfRunner>;
 }
 
-impl DataModelTrait for crate::MqttClient {
+impl DataModel for crate::MqttClient {
     fn data_model(&mut self, options: &DataModelOptions) -> Result<HalfRunner> {
-        let ra = DataModel::new(&options, self.three.clone())?;
+        let ra = DataModelInner::new(&options, self.three.clone())?;
         self.executors
             .push(Box::new(ra.executor) as Box<dyn crate::Executor>);
         Ok(ra.runner)
