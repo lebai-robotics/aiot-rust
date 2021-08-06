@@ -140,7 +140,7 @@ impl crate::Executor for DynamicRegisterOptions {
             let conn_clientid = format!(
                 "{}|authType=connwl,securemode=-2,_ss=1,ext=3,_v={}|",
                 data.client_id,
-                auth::CORE_AUTH_SDK_VERSION
+                *crate::util::CORE_SDK_VERSION
             );
             let username = self.username();
             let res = DynamicRegisterResult::NoWhitelist(DeviceAuthInfo {

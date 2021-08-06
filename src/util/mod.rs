@@ -1,6 +1,12 @@
 pub mod auth;
 pub mod error;
 
+use lazy_static::lazy_static;
+pub const VERSION: Option<&'static str> = std::option_env!("CARGO_PKG_VERSION");
+lazy_static! {
+    pub static ref CORE_SDK_VERSION: String = format!("sdk-rust-{}", VERSION.unwrap());
+}
+
 pub fn hex2str(input: &[u8]) -> String {
     input.iter().map(|c| format!("{:02X}", c)).collect()
 }

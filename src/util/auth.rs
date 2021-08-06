@@ -1,7 +1,6 @@
 use crate::{Error, Result};
 use rustls::ClientConfig;
 
-pub const CORE_AUTH_SDK_VERSION: &str = "sdk-rust-0.5.0";
 pub const SIGN_METHOD: &str = "hmacsha256";
 
 pub fn sign(input: &str, key: &str) -> String {
@@ -65,7 +64,7 @@ pub mod mqtt {
         let dest = format!(
             "|timestamp={},_ss=1,_v={},securemode={},signmethod={},ext=3,{}|",
             CORE_AUTH_TIMESTAMP,
-            super::CORE_AUTH_SDK_VERSION,
+            *crate::util::CORE_SDK_VERSION,
             secure_mode,
             super::SIGN_METHOD,
             extend_client_id

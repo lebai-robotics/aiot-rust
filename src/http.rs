@@ -43,7 +43,7 @@ impl Http {
         let url = format!(
             "https://{}/auth?_v={}&{}",
             self.host,
-            auth::CORE_AUTH_SDK_VERSION,
+            *crate::util::CORE_SDK_VERSION,
             self.extend_devinfo()
         );
         let body = HttpAuthBody {
@@ -57,7 +57,6 @@ impl Http {
                 &self.three.device_secret,
             ),
             signmethod: Some(auth::SIGN_METHOD.to_string()),
-            // version: Some(auth::CORE_AUTH_SDK_VERSION.to_string()),
         };
         debug!("{}", serde_json::to_string(&body)?);
         let res = self.client.post(&url).json(&body).send().await?;
