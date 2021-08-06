@@ -9,12 +9,11 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
-environment: crates.io
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    environment: crates.io
 
     steps:
     - uses: actions/checkout@v2
