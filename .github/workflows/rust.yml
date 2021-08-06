@@ -23,5 +23,5 @@ jobs:
     #   run: cargo test
     - name: Publish to crates.io
       env:
-        CARGO_TOKEN: ${{ env.CARGO_TOKEN }}
+        CARGO_TOKEN: ${{ secrets.CARGO_TOKEN }}
       run: cargo login $CARGO_TOKEN && cargo publish
