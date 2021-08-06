@@ -41,8 +41,3 @@ lazy_static = "^1.4"
 [dev-dependencies]
 env_logger = "^0.9"
 anyhow = "^1.0"
-
-[build-dependencies]
-cc = { version = "*", features = ["parallel"] }
-glob = "*"
-bindgen = "*"
