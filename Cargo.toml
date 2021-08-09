@@ -1,6 +1,6 @@
 [package]
 name = "aiot"
-version = "0.6.3"
+version = "0.6.4"
 edition = "2018"
 license = "MIT"
 keywords = ["alink", "aliyun", "mqtt", "iot", "sdk"]

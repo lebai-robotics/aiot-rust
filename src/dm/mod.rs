@@ -217,7 +217,7 @@ impl DataModelInner {
         let regs = [
             Regex::new(r"/sys/(.*)/(.*)/thing/event/(.*)/post_reply")?,
             Regex::new(r"/sys/(.*)/(.*)/thing/service/property/set")?,
-            Regex::new(r"/sys/(.*)/(.*)/thing/service/(.*)_reply")?,
+            Regex::new(r"/sys/(.*)/(.*)/thing/service/(.*)")?,
             Regex::new(r"/ext/rrpc/(.*)/sys/(.*)/(.*)/thing/service/(.*)")?,
             Regex::new(r"/sys/(.*)/(.*)/thing/model/down_raw")?,
             Regex::new(r"/sys/(.*)/(.*)/thing/model/up_raw_reply")?,
