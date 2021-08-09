@@ -54,7 +54,7 @@ impl ThreeTuple {
 
 static ID: AtomicU64 = AtomicU64::new(1);
 
-pub fn global_id_next() -> u64 {
+fn global_id_next() -> u64 {
     ID.fetch_add(1, Ordering::SeqCst)
 }
 

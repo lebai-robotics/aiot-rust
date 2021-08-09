@@ -13,9 +13,10 @@ use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
 
+/// 物模型设置
 #[derive(Debug, Clone)]
 pub struct DataModelOptions {
-    // 用户是否希望接收post消息后的reply
+    /// 用户是否希望接收post消息后的reply
     pub post_reply: bool,
 }
 
