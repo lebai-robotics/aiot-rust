@@ -10,7 +10,7 @@ use std::sync::Arc;
 #[derive(Debug, Clone)]
 pub enum MqttInstance {
     Public(MqttPublicInstance),
-    Enterprise(String),
+    EndPoint(String),
 }
 
 impl MqttInstance {
@@ -25,7 +25,7 @@ impl MqttInstance {
     pub fn url(&self) -> (String, u16) {
         match self {
             Self::Public(p) => (format!("{}.{}", p.product_key, p.host), p.port),
-            Self::Enterprise(url) => (url.to_string(), 443),
+            Self::EndPoint(url) => (url.to_string(), 443),
         }
     }
 }
@@ -65,6 +65,14 @@ impl MqttClient {
 
     pub fn new_public_tls(host: &str, three: &ThreeTuple) -> Result<Self> {
         let mut res = Self::new_public(&host, &three)?;
+        res.enable_tls()?;
+        Ok(res)
+    }
+
+    pub fn new_tls(end_point: &str, three: &ThreeTuple) -> Result<Self> {
+        let info = DeviceAuthInfo::from_tuple(&three);
+        let instance = MqttInstance::EndPoint(end_point.to_string());
+        let mut res = Self::new(&three, &info, &instance)?;
         res.enable_tls()?;
         Ok(res)
     }
