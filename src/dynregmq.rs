@@ -12,7 +12,7 @@ pub struct DynamicRegister {
 }
 
 impl DynamicRegister {
-    pub fn new_public_tls(
+    pub fn new_tls(
         host: &str,
         product_key: &str,
         product_secret: &str,
@@ -38,7 +38,7 @@ impl DynamicRegister {
             device_name: device_name.to_string(),
             device_secret: "".to_string(),
         };
-        let instance = MqttInstance::public(&host, &product_key);
+        let instance = MqttInstance::EndPoint(host.to_string());
         let mut mqtt = MqttClient::new(&three, &info, &instance)?;
         mqtt.enable_tls()?;
         mqtt.executors.push(rego as Box<dyn crate::Executor>);
