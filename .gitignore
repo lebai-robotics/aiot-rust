@@ -12,3 +12,4 @@ Cargo.lock
 .DS_*
 lebai-*
 *.log
+.idea
