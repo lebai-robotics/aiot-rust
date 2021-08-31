@@ -33,6 +33,10 @@ pub mod ntp;
 pub use ntp::NtpService;
 
 pub mod logpost;
+pub mod ota;
+pub mod alink_topic;
+pub mod http_downloader;
+
 pub use logpost::LogPost;
 
 #[async_trait::async_trait]
