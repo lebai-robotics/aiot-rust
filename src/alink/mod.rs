@@ -54,7 +54,7 @@ impl ThreeTuple {
 
 static ID: AtomicU64 = AtomicU64::new(1);
 
-fn global_id_next() -> u64 {
+pub fn global_id_next() -> u64 {
 	ID.fetch_add(1, Ordering::SeqCst)
 }
 
@@ -85,6 +85,8 @@ impl<T> AlinkResponse<T> {
 	}
 }
 
+pub const ALINK_VERSION: &'static str = "1.0";
+
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct AlinkRequest<T> {
 	pub id: String,
@@ -102,7 +104,7 @@ impl<T> AlinkRequest<T> {
 	pub fn new_id(id: u64, method: &str, params: T, ack: i32) -> Self {
 		Self {
 			id: format!("{}", id),
-			version: "1.0".to_string(),
+			version:ALINK_VERSION.to_string(),
 			params,
 			sys: Some(SysAck { ack }),
 			method: Some(method.to_string()),
@@ -112,7 +114,7 @@ impl<T> AlinkRequest<T> {
 	pub fn from_params(params: T) -> Self {
 		Self {
 			id: global_id_next().to_string(),
-			version: "1.0".to_string(),
+			version:ALINK_VERSION.to_string(),
 			params,
 			sys: None,
 			method: None,
@@ -123,6 +125,7 @@ impl<T> AlinkRequest<T> {
 	}
 }
 
+// sys下的扩展功能字段，表示是否返回响应数据。1：云端返回响应数据。0：云端不返回响应数据。
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct SysAck {
 	pub ack: i32,

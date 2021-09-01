@@ -13,8 +13,11 @@ use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
 // use crate::alink_topic::AlinkTopic;
-use crate::ota::recv::{UpgradePackage, RecvEnum};
+use crate::ota::recv::{PackageData, RecvEnum, UpgradePackageRequest, GetFirmwareReply};
 use std::collections::HashMap;
+use crate::http_downloader::{HttpDownloader, HttpDownloadConfig};
+use crate::ota::msg::{OTAMsg, ReportProgress, ReportVersion};
+use tempdir::TempDir;
 
 /// OTA设置
 #[derive(Debug, Clone)]
@@ -42,7 +45,6 @@ impl HalfRunner {
 		Ok(Runner {
 			rx: self.rx,
 			client,
-			fs: vec![],
 			three: self.three.clone(),
 		})
 	}
@@ -76,6 +78,39 @@ impl Runner {
 		Ok(())
 	}
 
+	pub async fn receive_upgrade_package(&mut self, request: &UpgradePackageRequest) -> Result<Vec<u8>> {
+		debug!("RecvEnum::UpgradePackage(data)");
+		let module = request.data.module.clone();
+		let version = request.data.version.clone();
+		let tmp_dir = TempDir::new("ota")?;
+		let file_path = tmp_dir.path()
+			.join(format!("{}_{}", module.clone().unwrap_or(String::from("default")), version));
+		let downloader = HttpDownloader::new(HttpDownloadConfig {
+			block_size: 8000000,
+			uri: request.data.url.clone(),
+			file_path: String::from(file_path.to_str().unwrap()),
+		});
+		let results = futures_util::future::join(
+			async {
+				let process_receiver = downloader.get_process_receiver();
+				let mut mutex_guard = process_receiver.lock().await;
+				if let Some(download_process) = mutex_guard.recv().await {
+					self.send(OTAMsg::report_process(ReportProgress {
+						module: module.clone(),
+						desc: String::from(""),
+						step: ((download_process.percent * 100f64) as u32).to_string(),
+					}));
+				}
+			},
+			downloader.start(),
+		).await;
+		let data = results.1?;
+		std::fs::remove_file(file_path);
+		std::fs::remove_dir_all(tmp_dir);
+		debug!("RecvEnum::UpgradePackage(data) finished");
+		Ok(data)
+	}
+
 	pub async fn poll(&mut self) -> Result<recv::OTARecv> {
 		self.rx.recv().await.ok_or(Error::RecvTopicError)
 	}
@@ -93,28 +128,33 @@ impl crate::Executor for Executor {
 		debug!("{} {}", topic, String::from_utf8_lossy(payload));
 		// "/ota/device/upgrade/+/+",
 		if let Some(caps) = self.regs[0].captures(topic) {
-			if &caps[0] != self.three.product_key || &caps[1] != self.three.device_name {
+			debug!("upgrade validate product_key:{}, device_name:{}",caps[1].to_string(),caps[2].to_string());
+			if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
 				return Ok(());
 			}
-			let payload: AlinkRequest<UpgradePackage> = serde_json::from_slice(&payload)?;
+			debug!("upgrade");
+			let payload: UpgradePackageRequest = serde_json::from_slice(&payload)?;
+			debug!("payload");
 			let data = recv::OTARecv {
-				device_name: caps[0].to_string(),
-				product_key: caps[1].to_string(),
-				data: RecvEnum::UpgradePackage(payload.params),
+				device_name: caps[1].to_string(),
+				product_key: caps[2].to_string(),
+				data: RecvEnum::UpgradePackageRequest(payload),
 			};
+			debug!("upgrade send");
 			self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
+			debug!("upgrade send ok");
 			return Ok(());
 		}
 		// "/sys/+/+/thing/ota/firmware/get_reply",
 		if let Some(caps) = self.regs[1].captures(topic) {
-			if &caps[0] != self.three.product_key || &caps[1] != self.three.device_name {
+			if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
 				return Ok(());
 			}
-			let payload: AlinkRequest<UpgradePackage> = serde_json::from_slice(&payload)?;
-			let data = recv::RecvEnum::UpgradePackage(payload.params);
+			let payload: GetFirmwareReply = serde_json::from_slice(&payload)?;
+			let data = recv::RecvEnum::GetFirmwareReply(payload);
 			let data = recv::OTARecv {
-				device_name: caps[0].to_string(),
-				product_key: caps[1].to_string(),
+				device_name: caps[1].to_string(),
+				product_key: caps[2].to_string(),
 				data,
 			};
 			self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
@@ -125,38 +165,10 @@ impl crate::Executor for Executor {
 	}
 }
 
-struct OTAInner {
-	runner: HalfRunner,
-	executor: Executor,
-}
-
 const TOPICS: &'static [&str] = &[
 	"/ota/device/upgrade/+/+",
-	//
-	// "/ota/device/inform/+/+",
-	// "/ota/device/progress/+/+",
-	// "/sys/+/+/thing/ota/firmware/get",
-	// "/sys/+/+/thing/ota/firmware/get_reply",
+	"/sys/+/+/thing/ota/firmware/get_reply",
 ];
-
-impl OTAInner {
-	fn new(options: &OTAOptions, three: Arc<ThreeTuple>) -> Result<Self> {
-		let regs = vec![
-			Regex::new(r"/ota/device/upgrade/+/+")?,
-			Regex::new(r"/sys/+/+/thing/ota/firmware/get_reply")?,
-			// Regex::new(r"/ota/device/inform/+/+")?,
-			// Regex::new(r"/ota/device/progress/+/+")?,
-			// Regex::new(r"/sys/+/+/thing/ota/firmware/get")?,
-		];
-		let (tx, rx) = mpsc::channel(64);
-		let runner = HalfRunner {
-			rx,
-			three: three.clone(),
-		};
-		let executor = Executor { tx, three, regs };
-		Ok(Self { runner, executor })
-	}
-}
 
 pub trait OTA {
 	fn ota(&mut self, options: &OTAOptions) -> Result<HalfRunner>;
@@ -164,9 +176,20 @@ pub trait OTA {
 
 impl OTA for crate::MqttClient {
 	fn ota(&mut self, options: &OTAOptions) -> Result<HalfRunner> {
-		let ra = OTAInner::new(&options, self.three.clone())?;
+		let regs = vec![
+			Regex::new(r"/ota/device/upgrade/(.*)/(.*)")?,
+			Regex::new(r"/sys/(.*)/(.*)/thing/ota/firmware/get_reply")?,
+		];
+		let (tx, rx) = mpsc::channel(64);
+		let executor = Executor { tx, three: self.three.clone(), regs };
+
 		self.executors
-			.push(Box::new(ra.executor) as Box<dyn crate::Executor>);
-		Ok(ra.runner)
+			.push(Box::new(executor) as Box<dyn crate::Executor>);
+		let runner = HalfRunner {
+			rx,
+			three: self.three.clone(),
+		};
+
+		Ok(runner)
 	}
 }

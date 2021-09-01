@@ -21,7 +21,7 @@ pub fn sign(input: &str, key: &str) -> String {
     }
 }
 
-pub fn sign_device(uuid: &str, dn: &str, pk: &str, ds: &str, timestamp: u64) -> String {
+pub fn sign_device(uuid: &str, dn: &str, pk: &str, ds: &str, timestamp: u128) -> String {
     let res = format!(
         "clientId{}deviceName{}productKey{}timestamp{}",
         uuid, dn, pk, timestamp
@@ -30,7 +30,7 @@ pub fn sign_device(uuid: &str, dn: &str, pk: &str, ds: &str, timestamp: u64) -> 
 }
 
 pub mod mqtt {
-    const CORE_AUTH_TIMESTAMP: u64 = 2524608000000;
+    const CORE_AUTH_TIMESTAMP: u128 = 2524608000000;
 
     pub fn username(product_key: &str, device_name: &str) -> String {
         format!("{}&{}", device_name, product_key)

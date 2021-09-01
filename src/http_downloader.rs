@@ -1,6 +1,5 @@
 use reqwest::{Client, Method, Body, Response};
 use std::fs;
-use futures::executor::block_on;
 use std::sync::Arc;
 use std::os::windows::fs::FileExt;
 use tokio::sync::{mpsc, Mutex};
@@ -8,7 +7,10 @@ use tokio::sync::mpsc::Receiver;
 use reqwest::header::ToStrError;
 use std::num::ParseIntError;
 use std::fs::DirEntry;
+use tokio::sync::mpsc::error::SendError;
+use log::*;
 
+#[derive(Debug)]
 pub struct DownloadProcess {
 	pub percent: f64,
 	pub size: u64,
@@ -18,6 +20,8 @@ pub struct DownloadProcess {
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+	#[error(transparent)]
+	DownloadProcessSendError(#[from] SendError<DownloadProcess>),
 	#[error(transparent)]
 	IoError(#[from] std::io::Error),
 	#[error(transparent)]
@@ -63,21 +67,21 @@ impl HttpDownloader {
 		Ok(response)
 	}
 	async fn download_block_and_write(&self, size: u64, index: u64, start: u64, end: u64) -> Result<()> {
-		println!("download_block_and_write start {} start:{},end:{}", index + 1, start, end);
+		debug!("download_block_and_write start {} start:{},end:{}", index + 1, start, end);
 		let response = self.download_block(start, end).await?;
 		let file_name = format!("{}{}",&self.config.file_path,index);
 
 		let bytes = response.bytes().await?;
 		fs::write(&file_name, bytes.iter())?;
-		println!("write {}", file_name);
+		debug!("write {}", file_name);
 
 		self.process_sender.send(DownloadProcess {
 			percent: (end / size) as f64,
 			size,
 			current: end,
-		});
+		}).await?;
 
-		println!("download_block_and_write end {} start:{},end:{}", index + 1, start, end);
+		debug!("download_block_and_write end {} start:{},end:{}", index + 1, start, end);
 		Ok(())
 	}
 
@@ -89,14 +93,14 @@ impl HttpDownloader {
 		let bytes = response.bytes().await?;
 		let bytes = bytes.to_vec();
 		fs::write(file_name, &bytes)?;
-		println!("write {}", file_name);
+		debug!("write {}", file_name);
 
 		let size = bytes.len() as u64;
 		self.process_sender.send(DownloadProcess {
 			percent: 1f64,
 			size,
 			current: size,
-		});
+		}).await?;
 		Ok(bytes)
 	}
 
@@ -104,7 +108,7 @@ impl HttpDownloader {
 	async fn write_file(&self, response: Response, file_name: &str) -> Result<()> {
 		let bytes = response.bytes().await?;
 		fs::write(file_name, bytes.iter())?;
-		println!("write {}", file_name);
+		debug!("write {}", file_name);
 		Ok(())
 	}
 
@@ -124,10 +128,10 @@ impl HttpDownloader {
 			result.extend_from_slice(bytes);
 			// 删除临时文件
 			fs::remove_file(&path)?;
-			println!("remove {}", path)
+			debug!("remove {}", path)
 		}
 		if size as usize == result.len() {
-			println!("合并文件完成");
+			debug!("合并文件完成");
 			fs::write(&self.config.file_path, &result)?
 		} else {
 			return Err(Error::InconsistentData);
@@ -161,20 +165,20 @@ impl HttpDownloader {
 			Some(v) => v.to_str()?.eq("bytes")
 		};
 		if accept_ranges_flag && content_length.is_some() {
-			println!("支持并发下载");
+			debug!("支持并发下载");
 			let size = content_length.unwrap().to_str()?.parse::<u64>()?;
 			if size == 0 {
-				println!("数据为空");
+				debug!("数据为空");
 				return Err(Error::EmptyData);
 			}
 			let t_size = size / self.config.block_size;
 			if t_size <= 1 {
-				println!("数据分片 <= 1，单线程下载");
+				debug!("数据分片 <= 1，单线程下载");
 				return Ok(self.download().await?);
 			}
 			let first_attach = size % self.config.block_size;
-			println!("数据块长度 {}", size);
-			println!("启用 {} 个线程下载", t_size);
+			debug!("数据块长度 {}", size);
+			debug!("启用 {} 个线程下载", t_size);
 
 			let mut futures = vec![
 				Box::pin(self.download_block_and_write(size, 0, 0, self.config.block_size - 1 + first_attach))
@@ -189,10 +193,10 @@ impl HttpDownloader {
 			for result in results {
 				result?
 			}
-			println!("下载完成，开始合并文件");
+			debug!("下载完成，开始合并文件");
 			Ok(self.merge(size)?)
 		} else {
-			println!("不支持并发下载");
+			debug!("不支持并发下载");
 			Ok(self.download().await?)
 		}
 	}

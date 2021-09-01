@@ -13,22 +13,38 @@ pub struct OTARecv {
 	pub data: RecvEnum,
 }
 
-// 云端下推的固件升级任务的描述信息, 包括url, 大小, 签名等
+// 固件升级包信息
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct UpgradePackage {
+#[serde(rename_all = "camelCase")]
+pub struct PackageData {
 	pub size: u32,
 	pub version: String,
-	pub is_diff: bool,
+	pub is_diff: Option<bool>,
 	pub url: String,
 	pub md5: String,
 	pub sign: String,
 	pub sign_method: String,
-	pub module: String,
+	pub module: Option<String>,
 	pub ext_data: Value,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct UpgradePackageRequest {
+	pub code: String,
+	pub data: PackageData,
+	pub id: u64,
+	pub message: String,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct GetFirmwareReply {
+	pub code: u32,
+	pub id: String,
+	pub data: PackageData,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub enum RecvEnum {
-	UpgradePackage(UpgradePackage),
-	GetFirmwareReply(UpgradePackage),
+	UpgradePackageRequest(UpgradePackageRequest),
+	GetFirmwareReply(GetFirmwareReply),
 }

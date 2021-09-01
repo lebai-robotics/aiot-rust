@@ -33,46 +33,35 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 	let mut client = MqttClient::new_public_tls(&host, &three)?;
 
 	let options = OTAOptions::new();
-	let dm = client.ota(&options)?;
+	let ota = client.ota(&options)?;
 	let (client, mut eventloop) = client.connect();
-	let mut ota = dm.init(&client).await?;
+	let mut ota = ota.init(&client).await?;
 
 	ota.send(OTAMsg::report_version(ReportVersion {
 		module: None,
-		version: String::from(""),
-	}));
+		version: String::from("0.0.0"),
+	})).await?;
+
 
 	loop {
-		let notification = eventloop.poll().await?;
-		info!("Received = {:?}", notification);
-		if let Ok(rev) = ota.poll().await {
-			match rev.data {
-				RecvEnum::UpgradePackage(data) => {
-					let tmp_dir = TempDir::new("ota")?;
-					let file_path = tmp_dir.path().join(format!("{}_{}", data.module, data.version));
-					let downloader = HttpDownloader::new(HttpDownloadConfig {
-						block_size: 8000000,
-						uri: data.url,
-						file_path: String::from(file_path.to_str().unwrap()),
-					});
-					let results = futures_util::future::join(
-						async {
-							let process_receiver = downloader.get_process_receiver();
-							let mut mutex_guard = process_receiver.lock().await;
-							if let Some(download_process) = mutex_guard.recv().await {
-								ota.send(OTAMsg::report_process(ReportProgress {
-									module: "".to_string(),
-									desc: String::from(""),
-									step: ((download_process.percent * 100f64) as u32).to_string(),
-								}));
-							}
-						},
-						downloader.start(),
-					).await;
-					let data = results.1?;
-				}
-				RecvEnum::GetFirmwareReply(data) => {}
+		tokio::select! {
+			Ok(notification) = eventloop.poll() => {
+				 // 主循环的 poll 是必须的
+				 info!("Received = {:?}", notification);
 			}
-		}
+			Ok(recv) = ota.poll() => {
+				match recv.data {
+					RecvEnum::UpgradePackageRequest(request) => {
+						let data = ota.receive_upgrade_package(&request).await;
+						ota.send(OTAMsg::report_version(ReportVersion {
+							module: request.data.module.clone(),
+							version: request.data.version.clone(),
+						})).await?;
+					}
+					RecvEnum::GetFirmwareReply(data) => {}
+					_ => {}
+				}
+			}
+	  }
 	}
 }

@@ -23,6 +23,8 @@ pub enum Error {
     #[error(transparent)]
     SystemTimeError(#[from] std::time::SystemTimeError),
     #[error(transparent)]
+    DownloadError(#[from] crate::http_downloader::Error),
+    #[error(transparent)]
     HttpError(#[from] crate::http::HttpError),
     #[error("set system time error")]
     SetSystemTimeError,

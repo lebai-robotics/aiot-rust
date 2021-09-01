@@ -99,7 +99,7 @@ pub fn handshake_payload(
     ds: &str,
     service_meta: &[LocalServiceInfo],
 ) -> Result<String> {
-    let sign = auth::sign_device(&G_UUID, &dn, &pk, &ds, timestamp());
+    let sign = auth::sign_device(&G_UUID, &dn, &pk, &ds, timestamp() as u128);
     let msg = MsgHandshake {
         uuid: G_UUID,
         product_key: pk,

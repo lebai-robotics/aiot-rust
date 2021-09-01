@@ -2,27 +2,6 @@ use crate::alink::{AlinkRequest, AlinkResponse};
 use crate::Result;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-// use crate::alink_topic::AlinkTopic;
-
-/*pub struct OTAReportVersion {
-	pub version: String,
-	pub module: Option<String>,
-}
-
-impl AlinkTopic for OTAReportVersion {
-	fn get_topic(&self) -> String {
-		String::from("/ota/device/upgrade/+/+")
-	}
-
-	fn get_payload<T>(&self) -> T {
-		AlinkRequest {
-			params: serde_json::to_string(self),
-			sys: None,
-			method: None,
-			..AlinkRequest::default()
-		}
-	}
-}*/
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ReportVersion {
@@ -34,7 +13,7 @@ pub struct ReportVersion {
 pub struct ReportProgress {
 	pub step: String,
 	pub desc: String,
-	pub module: String,
+	pub module: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
