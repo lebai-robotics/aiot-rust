@@ -6,9 +6,10 @@ use tokio::sync::{mpsc, Mutex};
 use tokio::sync::mpsc::Receiver;
 use reqwest::header::ToStrError;
 use std::num::ParseIntError;
-use std::fs::DirEntry;
+use std::fs::{DirEntry, OpenOptions, File};
 use tokio::sync::mpsc::error::SendError;
 use log::*;
+use std::io::{Write, Seek};
 
 #[derive(Debug)]
 pub struct DownloadProcess {
@@ -69,7 +70,7 @@ impl HttpDownloader {
 	async fn download_block_and_write(&self, size: u64, index: u64, start: u64, end: u64) -> Result<()> {
 		debug!("download_block_and_write start {} start:{},end:{}", index + 1, start, end);
 		let response = self.download_block(start, end).await?;
-		let file_name = format!("{}{}",&self.config.file_path,index);
+		let file_name = format!("{}{}", &self.config.file_path, index);
 
 		let bytes = response.bytes().await?;
 		fs::write(&file_name, bytes.iter())?;
@@ -85,14 +86,20 @@ impl HttpDownloader {
 		Ok(())
 	}
 
-	async fn download(&self) -> Result<Vec<u8>> {
+	async fn download(&self) -> Result<fs::File> {
 		let request = self.client.get(&self.config.uri).build()?;
 		let response = self.client.execute(request).await?;
 		let file_name = &self.config.file_path;
 
 		let bytes = response.bytes().await?;
 		let bytes = bytes.to_vec();
-		fs::write(file_name, &bytes)?;
+
+		let mut result_file = OpenOptions::new()
+			.create(true)
+			.write(true)
+			.open(file_name)?;
+		result_file.write_all(&bytes);
+		result_file.flush();
 		debug!("write {}", file_name);
 
 		let size = bytes.len() as u64;
@@ -101,7 +108,7 @@ impl HttpDownloader {
 			size,
 			current: size,
 		}).await?;
-		Ok(bytes)
+		Ok(result_file)
 	}
 
 	/// 写入文件
@@ -113,30 +120,36 @@ impl HttpDownloader {
 	}
 
 	/// 合并文件
-	fn merge(&self, size: u64) -> Result<Vec<u8>> {
+	fn merge(&self, size: u64) -> Result<fs::File> {
 		let file_path = std::path::Path::new(&self.config.file_path);
 		let dirs = fs::read_dir(&file_path.parent().ok_or(Error::FilePathError)?)?;
+
 		let file_name = &self.config.file_path;
-		let mut result = vec![];
+		let mut result_file = OpenOptions::new()
+			.create(true)
+			.write(true)
+			.open(file_path)?;
 		let count = dirs.filter(|n| n.is_ok())
 			.map(|n| n.unwrap())
 			.filter(|n| n.path().to_str().unwrap().starts_with(file_name))
 			.count();
+		let mut result_size = 0;
 		for i in 0..count {
 			let path = format!("{}{}", file_name, i);
 			let bytes = &fs::read(&path)?;
-			result.extend_from_slice(bytes);
+			result_size = result_size + bytes.len();
+			result_file.write(bytes);
 			// 删除临时文件
 			fs::remove_file(&path)?;
 			debug!("remove {}", path)
 		}
-		if size as usize == result.len() {
+		result_file.flush()?;
+		if size as usize == result_size {
 			debug!("合并文件完成");
-			fs::write(&self.config.file_path, &result)?
 		} else {
 			return Err(Error::InconsistentData);
 		}
-		Ok(result)
+		Ok(result_file)
 	}
 
 	pub fn new(config: HttpDownloadConfig) -> Self {
@@ -154,7 +167,7 @@ impl HttpDownloader {
 	}
 
 	// pub async fn run(self: Arc<Self>) -> Result<()> {
-	pub async fn start(&self) -> Result<Vec<u8>> {
+	pub async fn start(&self) -> Result<fs::File> {
 		let request = self.client.request(Method::HEAD, &self.config.uri).build()?;
 		let response = self.client.execute(request).await?;
 		let headers = response.headers();

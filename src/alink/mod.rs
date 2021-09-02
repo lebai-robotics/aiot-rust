@@ -88,8 +88,8 @@ impl<T> AlinkResponse<T> {
 pub const ALINK_VERSION: &'static str = "1.0";
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct AlinkRequest<T> {
-	pub id: String,
+pub struct AlinkRequest<T,TId = String> {
+	pub id: TId,
 	pub version: String,
 	pub params: T,
 	pub sys: Option<SysAck>,

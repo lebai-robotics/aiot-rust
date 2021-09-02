@@ -20,6 +20,7 @@ tokio = { version = "^1.9", features = [
 rumqttc = "^0.8"
 hmac = "^0.11"
 sha2 = "^0.9"
+spin = "0.9"
 rustls = "^0.19"
 tungstenite = "^0.14"
 tokio-tungstenite = { version = "^0.15", features = ["rustls-tls"] }

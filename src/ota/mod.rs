@@ -18,6 +18,7 @@ use std::collections::HashMap;
 use crate::http_downloader::{HttpDownloader, HttpDownloadConfig};
 use crate::ota::msg::{OTAMsg, ReportProgress, ReportVersion};
 use tempdir::TempDir;
+use std::fs;
 
 /// OTA设置
 #[derive(Debug, Clone)]
@@ -78,7 +79,7 @@ impl Runner {
 		Ok(())
 	}
 
-	pub async fn receive_upgrade_package(&mut self, request: &UpgradePackageRequest) -> Result<Vec<u8>> {
+	pub async fn receive_upgrade_package(&mut self, request: &UpgradePackageRequest) -> Result<fs::File> {
 		debug!("RecvEnum::UpgradePackage(data)");
 		let module = request.data.module.clone();
 		let version = request.data.version.clone();
@@ -104,11 +105,11 @@ impl Runner {
 			},
 			downloader.start(),
 		).await;
-		let data = results.1?;
+		let file = results.1?;
 		std::fs::remove_file(file_path);
 		std::fs::remove_dir_all(tmp_dir);
 		debug!("RecvEnum::UpgradePackage(data) finished");
-		Ok(data)
+		Ok(file)
 	}
 
 	pub async fn poll(&mut self) -> Result<recv::OTARecv> {

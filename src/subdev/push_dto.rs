@@ -1,43 +1,9 @@
-use crate::subdev::recv::DeviceInfoId;
 use crate::alink::{SysAck, global_id_next};
 use std::time::{SystemTime, UNIX_EPOCH};
-use crate::util::auth::sign_device;
+use crate::util::auth::{sign_device, SIGN_METHOD};
 use serde::{Deserialize, Serialize};
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct DeviceInfo {
-	pub device_name: String,
-	pub product_key: String,
-	pub sign: String,
-	pub sign_method: String,
-	pub timestamp: String,
-	pub client_id: String,
-	// 如果取值是true，则清理所有子设备离线时的消息，即所有未接收的QoS1消息将被清除。如果取值是false，则不清理子设备离线时的消息。
-	pub clean_session: Option<String>,
-
-}
-
-impl DeviceInfo {
-	pub fn new(device_name: String, product_key: String, clean_session: Option<bool>) -> Self {
-		// client_id+device_name+product_key+timestamp;
-		let client_id = format!("{}&{}", product_key, device_name);
-		let start = SystemTime::now();
-		let since_the_epoch = start.duration_since(UNIX_EPOCH)
-			.expect("Time went backwards");
-		let timestamp = since_the_epoch.as_millis();
-		let sign = sign_device(&client_id, &device_name, &product_key, "ee1fe40b755a7034dadd0e47d69c83b7", timestamp);
-		Self {
-			device_name,
-			product_key,
-			sign,
-			sign_method: "".to_string(),
-			timestamp: timestamp.to_string(),
-			client_id,
-			clean_session: clean_session.map(|n| String::from(if n { "true" } else { "false" })),
-		}
-	}
-}
+use crate::subdev::recv_dto::{SubDevMethodResponse};
+use crate::subdev::base::*;
 
 pub type SubDevLogin = DeviceInfo;
 
@@ -47,14 +13,6 @@ pub struct SubDevBatchLoginParams {
 	pub device_list: Vec<DeviceInfo>,
 }
 
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct SubDevChangeTopologicalRelationNotifyParams {
-	pub status: u32,
-	//0-创建  1-删除 2-恢复禁用  8-禁用
-	pub sub_list: Vec<DeviceInfoId>,
-}
 
 // 子设备上线
 // /ext/session/${productKey}/${deviceName}/combine/login
@@ -139,22 +97,13 @@ pub struct SubDevGetTopologicalRelationRequest {
 // /sys/{productKey}/{deviceName}/thing/list/found
 pub type SubDevFoundReportRequest = SubDevDeleteTopologicalRelationRequest;
 
-// 通知网关添加设备拓扑关系
-// /sys/{productKey}/{deviceName}/thing/topo/add/notify
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct SubDevAddTopologicalRelationNotifyRequest {
-	pub id: String,
-	pub version: String,
-	pub method: String,
-	pub params: Vec<DeviceInfoId>,
-}
 
-// 通知网关拓扑关系变化
-// /sys/{productKey}/{deviceName}/thing/topo/change
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct SubDevChangeTopologicalRelationNotifyRequest {
+// 通知网关添加设备拓扑关系响应
+pub type SubDevAddTopologicalRelationNotifyResponse = SubDevMethodResponse;
+
+// 通知网关拓扑关系变化响应
+pub struct SubDevChangeTopologicalRelationNotifyResponse {
 	pub id: String,
-	pub version: String,
-	pub method: String,
-	pub params: SubDevChangeTopologicalRelationNotifyParams,
+	pub code: u32,
+	pub message: String,
 }

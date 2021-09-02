@@ -37,6 +37,8 @@ pub mod ota;
 pub mod alink_topic;
 pub mod http_downloader;
 pub mod subdev;
+pub mod tags;
+pub mod shadow;
 
 pub use logpost::LogPost;
 
