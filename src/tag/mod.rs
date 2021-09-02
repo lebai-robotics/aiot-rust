@@ -13,19 +13,17 @@ use serde::Serialize;
 use crate::alink_topic::ALinkSubscribeTopic;
 use std::any::{Any, TypeId};
 use spin::Lazy;
-use crate::subdev::recv_dto::*;
-use crate::subdev::push_dto::*;
+use crate::tag::recv::*;
+use crate::tag::push::*;
 
-pub mod base;
 pub mod push;
-pub mod push_dto;
 pub mod recv;
-pub mod recv_dto;
+pub mod base;
 
-type Recv = SubDevRecv;
+type Recv = TagRecv;
 
 impl crate::MqttClient {
-	fn subdev(&mut self) -> Result<HalfRunner> {
+	fn tag(&mut self) -> Result<HalfRunner> {
 		let (tx, rx) = mpsc::channel(64);
 		let executor = Executor { tx, three: self.three.clone() };
 
