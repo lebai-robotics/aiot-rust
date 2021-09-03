@@ -60,4 +60,6 @@ pub enum Error {
     DeviceNameUnmatched,
     #[error("实例未初始化")]
     UnInitError,
+    #[error("文件验证失败")]
+    FileValidateFailed,
 }

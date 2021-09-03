@@ -18,7 +18,7 @@ pub struct ReportProgress {
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct QueryFirmware {
-	pub module: String,
+	pub module: Option<String>,
 }
 
 

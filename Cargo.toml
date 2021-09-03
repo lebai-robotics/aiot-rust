@@ -42,6 +42,7 @@ hyper-tls = { version = "^0.5", features = ["vendored"] }
 chrono = "^0.4"
 lazy_static = "^1.4"
 tempdir = "0.3.7"
+rust-crypto = "0.2.36"
 
 [dev-dependencies]
 env_logger = "^0.9"

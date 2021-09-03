@@ -16,9 +16,12 @@ use tokio::sync::mpsc::{Receiver, Sender};
 use crate::ota::recv::{PackageData, RecvEnum, UpgradePackageRequest, GetFirmwareReply};
 use std::collections::HashMap;
 use crate::http_downloader::{HttpDownloader, HttpDownloadConfig};
-use crate::ota::msg::{OTAMsg, ReportProgress, ReportVersion};
+use crate::ota::msg::{OTAMsg, ReportProgress, ReportVersion, QueryFirmware};
 use tempdir::TempDir;
 use std::fs;
+use crypto::digest::Digest;
+use std::io::Read;
+use crate::util::auth::sign;
 
 /// OTA设置
 #[derive(Debug, Clone)]
@@ -72,15 +75,34 @@ impl Runner {
 			data.device_name = Some(self.three.device_name.to_string());
 		}
 		let (topic, payload) = data.to_payload(0)?;
-		debug!("payload={}", String::from_utf8_lossy(&payload));
+		debug!("publish: {} {}",topic, String::from_utf8_lossy(&payload));
 		self.client
 			.publish(topic, QoS::AtMostOnce, false, payload)
 			.await?;
 		Ok(())
 	}
 
-	pub async fn receive_upgrade_package(&mut self, request: &UpgradePackageRequest) -> Result<fs::File> {
-		debug!("RecvEnum::UpgradePackage(data)");
+	pub async fn report_version(&mut self, version: String, module: Option<String>) -> Result<()> {
+		self.send(OTAMsg::report_version(ReportVersion {
+			module,
+			version,
+		})).await?;
+		Ok(())
+	}
+	pub async fn report_process(&mut self, report_process: ReportProgress) -> Result<()> {
+		self.send(OTAMsg::report_process(report_process)).await?;
+		Ok(())
+	}
+
+	pub async fn query_firmware(&mut self, module: Option<String>) -> Result<()> {
+		self.send(OTAMsg::query_firmware(QueryFirmware {
+			module,
+		})).await?;
+		Ok(())
+	}
+
+	pub async fn receive_upgrade_package(&mut self, request: &UpgradePackageRequest) -> Result<String> {
+		debug!("start receive_upgrade_package");
 		let module = request.data.module.clone();
 		let version = request.data.version.clone();
 		let tmp_dir = TempDir::new("ota")?;
@@ -96,20 +118,48 @@ impl Runner {
 				let process_receiver = downloader.get_process_receiver();
 				let mut mutex_guard = process_receiver.lock().await;
 				if let Some(download_process) = mutex_guard.recv().await {
-					self.send(OTAMsg::report_process(ReportProgress {
+					let report_progress = ReportProgress {
 						module: module.clone(),
 						desc: String::from(""),
 						step: ((download_process.percent * 100f64) as u32).to_string(),
-					}));
+					};
+					debug!("report_process finished {}",report_progress.step);
+					self.report_process(report_progress);
 				}
 			},
 			downloader.start(),
 		).await;
-		let file = results.1?;
+		let mut ota_file_path = results.1?;
+		let mut buffer = fs::read(ota_file_path.clone())?;
+		debug!("size:{}",buffer.len());
+		match request.data.sign_method.as_str() {
+			"SHA256" => {
+				let mut sha256 = crypto::sha2::Sha256::new();
+				sha256.input(&buffer);
+				let computed_result = sha256.result_str();
+				if computed_result != request.data.sign {
+					debug!("computed_result:{} sign:{}",computed_result,request.data.sign);
+					return Err(Error::FileValidateFailed);
+				}
+			}
+			"Md5" => {
+				let mut md5 = crypto::md5::Md5::new();
+				md5.input(&buffer);
+				let computed_result = md5.result_str();
+				if computed_result != request.data.sign {
+					debug!("computed_result:{} sign:{}",computed_result,request.data.sign);
+					return Err(Error::FileValidateFailed);
+				}
+			}
+			_ => {
+				return Err(Error::FileValidateFailed);
+			}
+		}
+
 		std::fs::remove_file(file_path);
 		std::fs::remove_dir_all(tmp_dir);
-		debug!("RecvEnum::UpgradePackage(data) finished");
-		Ok(file)
+		debug!("receive_upgrade_package finished");
+		Ok(ota_file_path)
 	}
 
 	pub async fn poll(&mut self) -> Result<recv::OTARecv> {
@@ -126,24 +176,20 @@ pub struct Executor {
 #[async_trait::async_trait]
 impl crate::Executor for Executor {
 	async fn execute(&self, topic: &str, payload: &[u8]) -> Result<()> {
-		debug!("{} {}", topic, String::from_utf8_lossy(payload));
+		debug!("receive: {} {}", topic, String::from_utf8_lossy(payload));
 		// "/ota/device/upgrade/+/+",
 		if let Some(caps) = self.regs[0].captures(topic) {
-			debug!("upgrade validate product_key:{}, device_name:{}",caps[1].to_string(),caps[2].to_string());
 			if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
 				return Ok(());
 			}
-			debug!("upgrade");
 			let payload: UpgradePackageRequest = serde_json::from_slice(&payload)?;
-			debug!("payload");
+			info!("UpgradePackageRequest {:?}",&payload);
 			let data = recv::OTARecv {
 				device_name: caps[1].to_string(),
 				product_key: caps[2].to_string(),
 				data: RecvEnum::UpgradePackageRequest(payload),
 			};
-			debug!("upgrade send");
 			self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
-			debug!("upgrade send ok");
 			return Ok(());
 		}
 		// "/sys/+/+/thing/ota/firmware/get_reply",
@@ -151,7 +197,8 @@ impl crate::Executor for Executor {
 			if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
 				return Ok(());
 			}
-			let payload: GetFirmwareReply = serde_json::from_slice(&payload)?;
+			let payload: GetFirmwareReply = serde_json::from_str(&String::from_utf8_lossy(payload).replace(":{},", ":null,"))?;
+			info!("GetFirmwareReply {:?}",&payload);
 			let data = recv::RecvEnum::GetFirmwareReply(payload);
 			let data = recv::OTARecv {
 				device_name: caps[1].to_string(),

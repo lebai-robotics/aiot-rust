@@ -37,11 +37,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 	let (client, mut eventloop) = client.connect();
 	let mut ota = ota.init(&client).await?;
 
-	ota.send(OTAMsg::report_version(ReportVersion {
-		module: None,
-		version: String::from("0.0.0"),
-	})).await?;
+	ota.report_version(String::from("0.0.0"), None).await?;
 
+	// ota.query_firmware(None).await?;
 
 	loop {
 		tokio::select! {
@@ -52,11 +50,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 			Ok(recv) = ota.poll() => {
 				match recv.data {
 					RecvEnum::UpgradePackageRequest(request) => {
-						let data = ota.receive_upgrade_package(&request).await;
-						ota.send(OTAMsg::report_version(ReportVersion {
-							module: request.data.module.clone(),
-							version: request.data.version.clone(),
-						})).await?;
+						let file = ota.receive_upgrade_package(&request).await?;
+
+						ota.report_version(request.data.version, request.data.module).await?;
+						info!("file:{:?}",file);
 					}
 					RecvEnum::GetFirmwareReply(data) => {}
 					_ => {}

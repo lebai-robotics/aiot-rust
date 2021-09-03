@@ -29,7 +29,7 @@ pub enum TagRecv {
 #[async_trait::async_trait]
 impl crate::Executor for crate::tag::Executor {
 	async fn execute(&self, topic: &str, payload: &[u8]) -> crate::Result<()> {
-		debug!("{} {}", topic, String::from_utf8_lossy(payload));
+		debug!("receive: {} {}", topic, String::from_utf8_lossy(payload));
 		for item in &*TOPICS {
 			if !item.is_match(topic, &self.three.product_key, &self.three.device_name) {
 				return Ok(());

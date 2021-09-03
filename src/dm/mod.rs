@@ -87,7 +87,7 @@ pub struct Executor {
 #[async_trait::async_trait]
 impl crate::Executor for Executor {
     async fn execute(&self, topic: &str, payload: &[u8]) -> Result<()> {
-        debug!("{} {}", topic, String::from_utf8_lossy(payload));
+        debug!("receive: {} {}", topic, String::from_utf8_lossy(payload));
 
         for i in [0, 7, 8, 9, 10] {
             if let Some(caps) = self.regs[i].captures(topic) {

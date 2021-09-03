@@ -10,6 +10,7 @@ use std::fs::{DirEntry, OpenOptions, File};
 use tokio::sync::mpsc::error::SendError;
 use log::*;
 use std::io::{Write, Seek};
+use std::path::Path;
 
 #[derive(Debug)]
 pub struct DownloadProcess {
@@ -86,7 +87,7 @@ impl HttpDownloader {
 		Ok(())
 	}
 
-	async fn download(&self) -> Result<fs::File> {
+	async fn download(&self) -> Result<String> {
 		let request = self.client.get(&self.config.uri).build()?;
 		let response = self.client.execute(request).await?;
 		let file_name = &self.config.file_path;
@@ -108,7 +109,7 @@ impl HttpDownloader {
 			size,
 			current: size,
 		}).await?;
-		Ok(result_file)
+		Ok(file_name.clone())
 	}
 
 	/// 写入文件
@@ -120,7 +121,7 @@ impl HttpDownloader {
 	}
 
 	/// 合并文件
-	fn merge(&self, size: u64) -> Result<fs::File> {
+	fn merge(&self, size: u64) -> Result<String> {
 		let file_path = std::path::Path::new(&self.config.file_path);
 		let dirs = fs::read_dir(&file_path.parent().ok_or(Error::FilePathError)?)?;
 
@@ -149,7 +150,7 @@ impl HttpDownloader {
 		} else {
 			return Err(Error::InconsistentData);
 		}
-		Ok(result_file)
+		Ok(file_name.clone())
 	}
 
 	pub fn new(config: HttpDownloadConfig) -> Self {
@@ -167,7 +168,7 @@ impl HttpDownloader {
 	}
 
 	// pub async fn run(self: Arc<Self>) -> Result<()> {
-	pub async fn start(&self) -> Result<fs::File> {
+	pub async fn start(&self) -> Result<String> {
 		let request = self.client.request(Method::HEAD, &self.config.uri).build()?;
 		let response = self.client.execute(request).await?;
 		let headers = response.headers();

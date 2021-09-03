@@ -17,15 +17,15 @@ pub struct OTARecv {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct PackageData {
-	pub size: u32,
+	pub size: u64,
 	pub version: String,
 	pub is_diff: Option<bool>,
 	pub url: String,
-	pub md5: String,
+	pub md5: Option<String>,
 	pub sign: String,
 	pub sign_method: String,
 	pub module: Option<String>,
-	pub ext_data: Value,
+	pub ext_data: Option<Value>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -40,7 +40,7 @@ pub struct UpgradePackageRequest {
 pub struct GetFirmwareReply {
 	pub code: u32,
 	pub id: String,
-	pub data: PackageData,
+	pub data: Option<PackageData>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
