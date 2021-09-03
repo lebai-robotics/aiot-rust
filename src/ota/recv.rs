@@ -19,7 +19,7 @@ pub struct OTARecv {
 pub struct PackageData {
 	pub size: u64,
 	pub version: String,
-	pub is_diff: Option<bool>,
+	pub is_diff: Option<u8>,
 	pub url: String,
 	pub md5: Option<String>,
 	pub sign: String,

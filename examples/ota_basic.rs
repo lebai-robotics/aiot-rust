@@ -16,6 +16,8 @@ use std::sync::Arc;
 use tempdir::TempDir;
 use log::Level::Error;
 
+
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 	env_logger::init();
@@ -52,7 +54,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 					RecvEnum::UpgradePackageRequest(request) => {
 						let file = ota.receive_upgrade_package(&request).await?;
 
-						ota.report_version(request.data.version, request.data.module).await?;
+						ota.report_version(request.data.version.clone(), request.data.module.clone()).await?;
 						info!("file:{:?}",file);
 					}
 					RecvEnum::GetFirmwareReply(data) => {}

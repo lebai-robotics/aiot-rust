@@ -169,7 +169,12 @@ impl HttpDownloader {
 
 	// pub async fn run(self: Arc<Self>) -> Result<()> {
 	pub async fn start(&self) -> Result<String> {
-		let request = self.client.request(Method::HEAD, &self.config.uri).build()?;
+		// 403
+		// let request = self.client.request(Method::HEAD, &self.config.uri)
+		// 	.build()?;
+		let request = self.client.request(Method::GET, &self.config.uri)
+			.header("range", "bytes=0-0")
+			.build()?;
 		let response = self.client.execute(request).await?;
 		let headers = response.headers();
 		let accept_ranges = headers.get("accept-ranges");
