@@ -1,6 +1,8 @@
 //! ALink 基础协议。
 
+use serde_with::DisplayFromStr;
 use serde::{Deserialize, Serialize};
+use serde_with::serde_as;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 /// 设备认证三元组。
@@ -58,10 +60,13 @@ pub fn global_id_next() -> u64 {
 	ID.fetch_add(1, Ordering::SeqCst)
 }
 
+#[serde_as]
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct AlinkResponse<T> {
+pub struct AlinkResponse<T = ()> {
+	// #[serde_as(as = "String")]
 	pub id: String,
-	pub code: u32,
+	#[serde_as(as = "DisplayFromStr")]
+	pub code: u64,
 	pub data: T,
 	pub message: Option<String>,
 	pub method: Option<String>,
@@ -73,7 +78,7 @@ impl<T> AlinkResponse<T> {
 		self.id.parse().unwrap_or(0)
 	}
 
-	pub fn new(id: u64, code: u32, data: T) -> Self {
+	pub fn new(id: u64, code: u64, data: T) -> Self {
 		Self {
 			id: format!("{}", id),
 			code,
@@ -87,9 +92,11 @@ impl<T> AlinkResponse<T> {
 
 pub const ALINK_VERSION: &'static str = "1.0";
 
+#[serde_as]
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct AlinkRequest<T,TId = String> {
-	pub id: TId,
+pub struct AlinkRequest<T = ()> {
+	// #[serde_as(as = "String")]
+	pub id: String,
 	pub version: String,
 	pub params: T,
 	pub sys: Option<SysAck>,
@@ -104,7 +111,7 @@ impl<T> AlinkRequest<T> {
 	pub fn new_id(id: u64, method: &str, params: T, ack: i32) -> Self {
 		Self {
 			id: format!("{}", id),
-			version:ALINK_VERSION.to_string(),
+			version: ALINK_VERSION.to_string(),
 			params,
 			sys: Some(SysAck { ack }),
 			method: Some(method.to_string()),
@@ -114,7 +121,7 @@ impl<T> AlinkRequest<T> {
 	pub fn from_params(params: T) -> Self {
 		Self {
 			id: global_id_next().to_string(),
-			version:ALINK_VERSION.to_string(),
+			version: ALINK_VERSION.to_string(),
 			params,
 			sys: None,
 			method: None,

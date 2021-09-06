@@ -1,105 +1,165 @@
-use crate::subdev::base::DeviceInfoId;
+use crate::alink::{AlinkRequest, AlinkResponse};
 use crate::alink_topic::ALinkSubscribeTopic;
-use spin::Lazy;
-use std::any::TypeId;
+use crate::subdev::base::DeviceInfoId;
+use enum_iterator::IntoEnumIterator;
+use enum_kinds::EnumKind;
 use serde::{Deserialize, Serialize};
 
-pub static TOPICS: Lazy<Vec<ALinkSubscribeTopic>> = Lazy::new(|| vec![
-	ALinkSubscribeTopic::new("/ext/session/+/+/combine/login", TypeId::of::<SubDevLoginResponse>()),
-	ALinkSubscribeTopic::new("/ext/session/+/+/combine/batch_login", TypeId::of::<SubDevBatchLoginResponse>()),
-	ALinkSubscribeTopic::new("/ext/session/+/+/combine/logout", TypeId::of::<SubDevLogoutResponse>()),
-	ALinkSubscribeTopic::new("/ext/session/+/+/combine/batch_logout", TypeId::of::<SubDevBatchLogoutResponse>()),
-	ALinkSubscribeTopic::new("/sys/+/+/thing/disable", TypeId::of::<SubDevMethodResponse>()),
-	ALinkSubscribeTopic::new("/sys/+/+/thing/enable", TypeId::of::<SubDevMethodResponse>()),
-	ALinkSubscribeTopic::new("/sys/+/+/thing/delete", TypeId::of::<SubDevMethodResponse>()),
-	ALinkSubscribeTopic::new("/sys/+/+/thing/topo/add", TypeId::of::<SubDevAddTopologicalRelationResponse>()),
-	ALinkSubscribeTopic::new("/sys/+/+/thing/topo/delete", TypeId::of::<SubDevDeleteTopologicalRelationResponse>()),
-	ALinkSubscribeTopic::new("/sys/+/+/thing/topo/get", TypeId::of::<SubDevGetTopologicalRelationResponse>()),
-	ALinkSubscribeTopic::new("/sys/+/+/thing/list/found_reply", TypeId::of::<SubDevFoundReportResponse>()),
-	ALinkSubscribeTopic::new("/sys/+/+/thing/topo/add/notify", TypeId::of::<SubDevAddTopologicalRelationNotifyRequest>()),
-	ALinkSubscribeTopic::new("/sys/+/+/thing/topo/change", TypeId::of::<SubDevChangeTopologicalRelationNotifyRequest>()),
-]);
-
+#[derive(Debug, EnumKind)]
+#[enum_kind(SubDevRecvKind, derive(Serialize, IntoEnumIterator, Deserialize))]
 pub enum SubDevRecv {
 	SubDevLoginResponse(SubDevLoginResponse),
 	SubDevBatchLoginResponse(SubDevBatchLoginResponse),
 	SubDevLogoutResponse(SubDevLogoutResponse),
 	SubDevBatchLogoutResponse(SubDevBatchLogoutResponse),
-	SubDevMethodResponse(SubDevMethodResponse),
+	SubDevDisableResponse(SubDevDisableResponse),
+	SubDevEnableResponse(SubDevEnableResponse),
+	SubDevDeleteResponse(SubDevDeleteResponse),
 	SubDevAddTopologicalRelationResponse(SubDevAddTopologicalRelationResponse),
 	SubDevDeleteTopologicalRelationResponse(SubDevDeleteTopologicalRelationResponse),
 	SubDevGetTopologicalRelationResponse(SubDevGetTopologicalRelationResponse),
-	SubDevDeviceReportResponse(SubDevFoundReportResponse),
+	SubDevDeviceReportResponse(SubDevDeviceReportResponse),
 	SubDevAddTopologicalRelationNotifyRequest(SubDevAddTopologicalRelationNotifyRequest),
 	SubDevChangeTopologicalRelationNotifyRequest(SubDevChangeTopologicalRelationNotifyRequest),
 }
+impl SubDevRecvKind {
+	pub fn match_kind(topic: &str, product_key: &str, device_name: &str) -> Option<SubDevRecvKind> {
+		for item in SubDevRecvKind::into_enum_iter() {
+			let alink_topic = item.get_topic();
+			if !alink_topic.is_match(topic, product_key, device_name) {
+				continue;
+			}
+			return Some(item);
+			// self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
+		}
+		None
+	}
+	pub fn to_payload(&self, payload: &[u8]) -> crate::Result<SubDevRecv> {
+		match *self {
+			Self::SubDevLoginResponse => Ok(SubDevRecv::SubDevLoginResponse(serde_json::from_slice(
+				&payload,
+			)?)),
+			Self::SubDevBatchLoginResponse => Ok(SubDevRecv::SubDevBatchLoginResponse(
+				serde_json::from_slice(&payload)?,
+			)),
+			Self::SubDevLogoutResponse => Ok(SubDevRecv::SubDevLogoutResponse(
+				serde_json::from_slice(&payload)?,
+			)),
+			Self::SubDevBatchLogoutResponse => Ok(SubDevRecv::SubDevBatchLogoutResponse(
+				serde_json::from_slice(&payload)?,
+			)),
+			Self::SubDevDisableResponse => Ok(SubDevRecv::SubDevDisableResponse(
+				serde_json::from_slice(&payload)?,
+			)),
+			Self::SubDevEnableResponse => Ok(SubDevRecv::SubDevEnableResponse(
+				serde_json::from_slice(&payload)?,
+			)),
+			Self::SubDevDeleteResponse => Ok(SubDevRecv::SubDevDeleteResponse(
+				serde_json::from_slice(&payload)?,
+			)),
+			Self::SubDevAddTopologicalRelationResponse => Ok(
+				SubDevRecv::SubDevAddTopologicalRelationResponse(serde_json::from_slice(&payload)?),
+			),
+			Self::SubDevDeleteTopologicalRelationResponse => Ok(
+				SubDevRecv::SubDevDeleteTopologicalRelationResponse(serde_json::from_slice(&payload)?),
+			),
+			Self::SubDevGetTopologicalRelationResponse => Ok(
+				SubDevRecv::SubDevGetTopologicalRelationResponse(serde_json::from_slice(&payload)?),
+			),
+			Self::SubDevDeviceReportResponse => Ok(SubDevRecv::SubDevDeviceReportResponse(
+				serde_json::from_slice(&payload)?,
+			)),
+			Self::SubDevAddTopologicalRelationNotifyRequest => {
+				Ok(SubDevRecv::SubDevAddTopologicalRelationNotifyRequest(
+					serde_json::from_slice(&payload)?,
+				))
+			}
+			Self::SubDevChangeTopologicalRelationNotifyRequest => {
+				Ok(SubDevRecv::SubDevChangeTopologicalRelationNotifyRequest(
+					serde_json::from_slice(&payload)?,
+				))
+			}
+		}
+	}
+	pub fn get_topic(&self) -> ALinkSubscribeTopic {
+		match *self {
+			Self::SubDevLoginResponse => {
+				ALinkSubscribeTopic::new("/ext/session/+/+/combine/login_reply")
+			}
+			Self::SubDevBatchLoginResponse => {
+				ALinkSubscribeTopic::new("/ext/session/+/+/combine/batch_login_reply")
+			}
+			Self::SubDevLogoutResponse => {
+				ALinkSubscribeTopic::new("/ext/session/+/+/combine/logout_reply")
+			}
+			Self::SubDevBatchLogoutResponse => {
+				ALinkSubscribeTopic::new("/ext/session/+/+/combine/batch_logout_reply")
+			}
+			Self::SubDevDisableResponse => ALinkSubscribeTopic::new("/sys/+/+/thing/disable"),
+			Self::SubDevEnableResponse => ALinkSubscribeTopic::new("/sys/+/+/thing/enable"),
+			Self::SubDevDeleteResponse => ALinkSubscribeTopic::new("/sys/+/+/thing/delete"),
+			Self::SubDevAddTopologicalRelationResponse => {
+				ALinkSubscribeTopic::new("/sys/+/+/thing/topo/add_reply")
+			}
+			Self::SubDevDeleteTopologicalRelationResponse => {
+				ALinkSubscribeTopic::new("/sys/+/+/thing/topo/delete_reply")
+			}
+			Self::SubDevGetTopologicalRelationResponse => {
+				ALinkSubscribeTopic::new("/sys/+/+/thing/topo/get_reply")
+			}
+			Self::SubDevDeviceReportResponse => {
+				ALinkSubscribeTopic::new("/sys/+/+/thing/list/found_reply")
+			}
+			Self::SubDevAddTopologicalRelationNotifyRequest => {
+				ALinkSubscribeTopic::new("/sys/+/+/thing/topo/add/notify_reply")
+			}
+			Self::SubDevChangeTopologicalRelationNotifyRequest => {
+				ALinkSubscribeTopic::new("/sys/+/+/thing/topo/change_reply")
+			}
+		}
+	}
+}
 
+impl SubDevRecv {}
 
 // 子设备上线响应
-#[derive(Deserialize, Serialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct SubDevLoginResponse {
-	pub id: String,
-	pub code: u32,
-	pub message: String,
-	pub data: DeviceInfoId,
-}
+pub type SubDevLoginResponse = AlinkResponse<DeviceInfoId>;
 
 // 子设备批量上线响应
-#[derive(Deserialize, Serialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct SubDevBatchLoginResponse {
-	pub id: String,
-	pub code: String,
-	pub message: String,
-	pub data: Vec<DeviceInfoId>,
-}
-
+pub type SubDevBatchLoginResponse =AlinkResponse<Vec<DeviceInfoId>>;
 
 // 460	request parameter error	请求参数错误。
 // 520	device no session	子设备会话不存在。
 
 // 子设备下线响应
-pub type SubDevLogoutResponse = SubDevLoginResponse;
+pub type SubDevLogoutResponse = AlinkResponse<DeviceInfoId>;
 
 // 子设备批量下线响应
-pub type SubDevBatchLogoutResponse = SubDevBatchLoginResponse;
+pub type SubDevBatchLogoutResponse = AlinkResponse<Vec<DeviceInfoId>>;
 
-// 子设备操作，禁用，启用，删除
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct SubDevMethodResponse {
-	pub id: String,
-	pub code: u32,
-}
+// 子设备禁用
+pub type SubDevDisableResponse = AlinkRequest;
+
+// 子设备启用
+pub type SubDevEnableResponse = AlinkRequest;
+
+// 子设备删除
+pub type SubDevDeleteResponse = AlinkRequest;
 
 // 添加拓扑关系响应
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct SubDevAddTopologicalRelationResponse {
-	pub id: String,
-	pub code: u64,
-	pub data: Vec<DeviceInfoId>,
-}
+pub type SubDevAddTopologicalRelationResponse = AlinkResponse<Vec<DeviceInfoId>>;
 
 // 删除拓扑关系响应
-pub type SubDevDeleteTopologicalRelationResponse = SubDevAddTopologicalRelationResponse;
+pub type SubDevDeleteTopologicalRelationResponse = AlinkResponse<DeviceInfoId>;
 
 // 获取拓扑关系响应
-pub type SubDevGetTopologicalRelationResponse = SubDevAddTopologicalRelationResponse;
+pub type SubDevGetTopologicalRelationResponse = AlinkResponse<DeviceInfoId>;
 
 // 发现设备上报响应
-pub type SubDevFoundReportResponse = SubDevMethodResponse;
-
+pub type SubDevDeviceReportResponse = AlinkResponse;
 
 // 通知网关添加设备拓扑关系
-// /sys/{productKey}/{deviceName}/thing/topo/add/notify
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct SubDevAddTopologicalRelationNotifyRequest {
-	pub id: String,
-	pub version: String,
-	pub method: String,
-	pub params: Vec<DeviceInfoId>,
-}
-
+pub type SubDevAddTopologicalRelationNotifyRequest = AlinkRequest<Vec<DeviceInfoId>>;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -110,14 +170,8 @@ pub struct SubDevChangeTopologicalRelationNotifyParams {
 }
 
 // 通知网关拓扑关系变化
-// /sys/{productKey}/{deviceName}/thing/topo/change
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct SubDevChangeTopologicalRelationNotifyRequest {
-	pub id: String,
-	pub version: String,
-	pub method: String,
-	pub params: SubDevChangeTopologicalRelationNotifyParams,
-}
+pub type SubDevChangeTopologicalRelationNotifyRequest = AlinkRequest<SubDevChangeTopologicalRelationNotifyParams>;
+
 
 /*
 #[derive(TryFromPrimitive)]

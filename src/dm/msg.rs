@@ -37,7 +37,7 @@ pub struct PropertySetReply {
     /// 消息标识符, uint64_t类型的整数, <b>必须与属性设置的消息标示符一致</b>
     pub msg_id: u64,
     /// 设备端状态码, 200-请求成功, 更多状态码查看<a href="https://help.aliyun.com/document_detail/89309.html">设备端通用code</a>
-    pub code: u32,
+    pub code: u64,
     /// 设备端应答数据, 字符串形式的JSON结构体, 如<i>"{}"</i>表示应答数据为空
     pub data: Value,
 }
@@ -52,7 +52,7 @@ pub struct SyncServiceReply {
     /// 服务标示符, 标识了要响应服务
     pub service_id: String,
     /// 设备端状态码, 200-请求成功, 更多状态码查看<a href="https://help.aliyun.com/document_detail/89309.html">设备端通用code</a>
-    pub code: u32,
+    pub code: u64,
     /// 设备端应答数据, 字符串形式的JSON结构体, 如<i>"{}"</i>表示应答数据为空
     pub data: Value,
 }
@@ -65,7 +65,7 @@ pub struct AsyncServiceReply {
     /// 服务标示符, 标识了要响应服务
     pub service_id: String,
     /// 设备端状态码, 200-请求成功, 更多状态码查看<a href="https://help.aliyun.com/document_detail/89309.html">设备端通用code</a>
-    pub code: u32,
+    pub code: u64,
     /// 设备端应答数据, 字符串形式的JSON结构体, 如<i>"{}"</i>表示应答数据为空
     pub data: Value,
 }
@@ -177,7 +177,7 @@ impl DataModelMsg {
 
     /// 设备设置属性响应。
     #[inline]
-    pub fn property_set_reply(code: u32, data: Value, msg_id: u64) -> Self {
+    pub fn property_set_reply(code: u64, data: Value, msg_id: u64) -> Self {
         DataModelMsg::new(MsgEnum::PropertySetReply(PropertySetReply {
             msg_id,
             code,
@@ -188,7 +188,7 @@ impl DataModelMsg {
     /// 设备异步服务调用响应。
     /// 当收到 `RecvEnum::AsyncServiceInvoke` 类型的数据时，调用该方法生成响应结构体。
     #[inline]
-    pub fn async_service_reply(code: u32, data: Value, msg_id: u64, service_id: String) -> Self {
+    pub fn async_service_reply(code: u64, data: Value, msg_id: u64, service_id: String) -> Self {
         DataModelMsg::new(MsgEnum::AsyncServiceReply(AsyncServiceReply {
             msg_id,
             code,
@@ -202,7 +202,7 @@ impl DataModelMsg {
     /// 与异步调用不同的是，这里多了一个 `rrpc_id` 参数需要透传。
     #[inline]
     pub fn sync_service_reply(
-        code: u32,
+        code: u64,
         data: Value,
         rrpc_id: String,
         msg_id: u64,

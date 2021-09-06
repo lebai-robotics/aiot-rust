@@ -17,7 +17,7 @@ pub struct GenericReply {
     /// 消息标识符, uint64_t类型的整数, 与属性上报或事件上报的消息标示符一致
     pub msg_id: u64,
     /// 设备端错误码, 200-请求成功, 更多错误码码查看<a href="https://help.aliyun.com/document_detail/120329.html">设备端错误码</a>
-    pub code: u32,
+    pub code: u64,
     /// 云端应答数据
     pub data: Value,
     /// 状态消息字符串, 当设备端上报请求成功时对应的应答消息为"success", 若请求失败则应答消息中包含错误信息

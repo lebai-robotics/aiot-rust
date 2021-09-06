@@ -1,26 +1,21 @@
-use crate::alink::*;
+
 use crate::{Error, Result, ThreeTuple};
+use enum_iterator::IntoEnumIterator;
 use log::*;
-use regex::Regex;
 use rumqttc::{AsyncClient, QoS};
-use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
 // use crate::alink_topic::AlinkTopic;
-use std::collections::HashMap;
 use serde::Serialize;
-use crate::alink_topic::ALinkSubscribeTopic;
-use std::any::{Any, TypeId};
-use spin::Lazy;
 use crate::tag::recv::*;
-use crate::tag::push::*;
 
 pub mod push;
 pub mod recv;
 pub mod base;
 
 type Recv = TagRecv;
+type RecvKind = TagRecvKind;
 
 impl crate::MqttClient {
 	fn tag(&mut self) -> Result<HalfRunner> {
@@ -51,8 +46,9 @@ impl HalfRunner {
 	pub async fn init(self, client: &AsyncClient) -> Result<Runner> {
 		let mut client = client.clone();
 		let mut topics = rumqttc::Subscribe::empty_subscribe();
-		for topic in &*TOPICS {
-			topics.add(String::from(topic.topic), QoS::AtMostOnce);
+		for item in RecvKind::into_enum_iter() {
+			let topic = item.get_topic();
+			topics.add(topic.topic.to_string(), QoS::AtMostOnce);
 		}
 		client.subscribe_many(topics.filters).await?;
 

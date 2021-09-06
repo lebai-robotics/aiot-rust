@@ -1,20 +1,12 @@
-use crate::alink::*;
+use crate::subdev::recv_dto::*;
 use crate::{Error, Result, ThreeTuple};
+use enum_iterator::IntoEnumIterator;
 use log::*;
-use regex::Regex;
 use rumqttc::{AsyncClient, QoS};
-use serde_json::Value;
+use serde::Serialize;
 use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
-// use crate::alink_topic::AlinkTopic;
-use std::collections::HashMap;
-use serde::Serialize;
-use crate::alink_topic::ALinkSubscribeTopic;
-use std::any::{Any, TypeId};
-use spin::Lazy;
-use crate::subdev::recv_dto::*;
-use crate::subdev::push_dto::*;
 
 pub mod base;
 pub mod push;
@@ -23,13 +15,18 @@ pub mod recv;
 pub mod recv_dto;
 
 type Recv = SubDevRecv;
+type RecvKind = SubDevRecvKind;
 
 impl crate::MqttClient {
-	fn subdev(&mut self) -> Result<HalfRunner> {
+	pub fn subdev(&mut self) -> Result<HalfRunner> {
 		let (tx, rx) = mpsc::channel(64);
-		let executor = Executor { tx, three: self.three.clone() };
+		let executor = Executor {
+			tx,
+			three: self.three.clone(),
+		};
 
-		self.executors
+		self
+			.executors
 			.push(Box::new(executor) as Box<dyn crate::Executor>);
 		let runner = HalfRunner {
 			rx,
@@ -53,8 +50,9 @@ impl HalfRunner {
 	pub async fn init(self, client: &AsyncClient) -> Result<Runner> {
 		let mut client = client.clone();
 		let mut topics = rumqttc::Subscribe::empty_subscribe();
-		for topic in &*TOPICS {
-			topics.add(String::from(topic.topic), QoS::AtMostOnce);
+		for item in RecvKind::into_enum_iter() {
+			let topic = item.get_topic();
+			topics.add(topic.topic.to_string(), QoS::AtMostOnce);
 		}
 		client.subscribe_many(topics.filters).await?;
 
@@ -78,10 +76,13 @@ impl Runner {
 	}
 
 	pub async fn publish<T>(&self, topic: String, payload: &T) -> Result<()>
-		where T: ?Sized + Serialize, {
+	where
+		T: ?Sized + Serialize,
+	{
 		let payload = serde_json::to_vec(payload)?;
-		debug!("payload={}", String::from_utf8_lossy(&payload));
-		self.client
+		debug!("publish: {} {}", topic, String::from_utf8_lossy(&payload));
+		self
+			.client
 			.publish(topic, QoS::AtMostOnce, false, payload)
 			.await?;
 		Ok(())

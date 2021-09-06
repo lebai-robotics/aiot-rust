@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+#![allow(unused)]
 
 //! Rust Link SDK，提供阿里云物联网平台的设备端 Rust 开发工具包（非官方）。
 //!

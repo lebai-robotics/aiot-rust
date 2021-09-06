@@ -1,49 +1,52 @@
 [package]
-name = "aiot"
-version = "0.7.0"
-edition = "2018"
-license = "MIT"
-keywords = ["alink", "aliyun", "mqtt", "iot", "sdk"]
 description = "Rust Link SDK (Aliyun IoT) based on Alink Protocol."
+edition = "2018"
+keywords = ["alink", "aliyun", "mqtt", "iot", "sdk"]
+license = "MIT"
+name = "aiot"
 repository = "https://github.com/lebai-robotics/aiot-rust"
+version = "0.7.0"
 
 [dependencies]
+async-trait = "^0.1"
+chrono = "^0.4"
+enum-iterator = "0.7.0"
+enum-kinds = "0.5.1"
+futures = "^0.3"
+futures-util = {version = "^0.3", default-features = false, features = [
+  "async-await",
+  "sink",
+  "std",
+]}
+hmac = "^0.11"
+hyper-tls = {version = "^0.5", features = ["vendored"]}
+lazy_static = "^1.4"
 libc = "^0.2"
 log = "^0.4"
-thiserror = "^1.0"
-tokio = { version = "^1.9", features = [
-    "sync",
-    "rt-multi-thread",
-    "macros",
-    "io-util",
-] }
-rumqttc = "^0.8"
-hmac = "^0.11"
-sha2 = "^0.9"
-spin = "0.9"
-rustls = "^0.19"
-tungstenite = "^0.14"
-tokio-tungstenite = { version = "^0.15", features = ["rustls-tls"] }
-serde = { version = "^1.0", features = ["derive"] }
-serde_json = "^1.0"
-serde_repr = "^0.1"
-futures-util = { version = "^0.3", default-features = false, features = [
-    "async-await",
-    "sink",
-    "std",
-] }
-url = "^2.2"
-futures = "^0.3"
 rand = "^0.8"
 regex = "^1.5"
-async-trait = "^0.1"
-reqwest = { version = "^0.11", features = ["json", "rustls-tls", "stream"] }
-hyper-tls = { version = "^0.5", features = ["vendored"] }
-chrono = "^0.4"
-lazy_static = "^1.4"
-tempdir = "0.3.7"
+reqwest = {version = "^0.11", features = ["json", "rustls-tls", "stream"]}
+rumqttc = "^0.8"
 rust-crypto = "0.2.36"
+rustls = "^0.19"
+serde = {version = "^1.0", features = ["derive"]}
+serde_json = "^1.0"
+serde_repr = "^0.1"
+serde_with = "1.10.0"
+sha2 = "^0.9"
+spin = "0.9"
+tempdir = "0.3.7"
+thiserror = "^1.0"
+tokio = {version = "^1.9", features = [
+  "sync",
+  "rt-multi-thread",
+  "macros",
+  "io-util",
+]}
+tokio-tungstenite = {version = "^0.15", features = ["rustls-tls"]}
+tungstenite = "^0.14"
+url = "^2.2"
 
 [dev-dependencies]
-env_logger = "^0.9"
 anyhow = "^1.0"
+env_logger = "^0.9"

@@ -24,14 +24,14 @@ pub struct DeviceInfo {
 }
 
 impl DeviceInfo {
-	pub fn new(device_name: String, product_key: String, clean_session: Option<bool>) -> Self {
+	pub fn new(product_key: String, device_name: String, clean_session: Option<bool>, device_secret: String) -> Self {
 		// client_id+device_name+product_key+timestamp;
 		let client_id = format!("{}&{}", product_key, device_name);
 		let start = SystemTime::now();
 		let since_the_epoch = start.duration_since(UNIX_EPOCH)
 			.expect("Time went backwards");
 		let timestamp = since_the_epoch.as_millis();
-		let sign = sign_device(&client_id, &device_name, &product_key, "ee1fe40b755a7034dadd0e47d69c83b7", timestamp);
+		let sign = sign_device(&client_id, &device_name, &product_key, &device_secret, timestamp);
 		Self {
 			device_name,
 			product_key,
