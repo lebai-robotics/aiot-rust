@@ -22,6 +22,7 @@ pub enum SubDevRecv {
 	SubDevAddTopologicalRelationNotifyRequest(SubDevAddTopologicalRelationNotifyRequest),
 	SubDevChangeTopologicalRelationNotifyRequest(SubDevChangeTopologicalRelationNotifyRequest),
 }
+
 impl SubDevRecvKind {
 	pub fn match_kind(topic: &str, product_key: &str, device_name: &str) -> Option<SubDevRecvKind> {
 		for item in SubDevRecvKind::into_enum_iter() {
@@ -119,8 +120,6 @@ impl SubDevRecvKind {
 		}
 	}
 }
-
-impl SubDevRecv {}
 
 // 子设备上线响应
 pub type SubDevLoginResponse = AlinkResponse<DeviceInfoId>;

@@ -73,7 +73,7 @@ impl Runner {
 	pub async fn publish<T>(&self, topic: String, payload: &T) -> Result<()>
 		where T: ?Sized + Serialize, {
 		let payload = serde_json::to_vec(payload)?;
-		debug!("payload={}", String::from_utf8_lossy(&payload));
+		debug!("publish: {} {}", topic, String::from_utf8_lossy(&payload));
 		self.client
 			.publish(topic, QoS::AtMostOnce, false, payload)
 			.await?;
