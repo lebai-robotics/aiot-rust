@@ -1,4 +1,4 @@
-use crate::alink::AlinkResponse;
+use crate::alink::{AlinkResponse, SimpleResponse};
 use crate::{alink_topic::ALinkSubscribeTopic, Error};
 use log::*;
 use std::any::TypeId;
@@ -8,11 +8,11 @@ use enum_kinds::EnumKind;
 use serde::{Deserialize, Serialize};
 // 标签信息上报响应
 // /sys/{productKey}/{deviceName}/thing/deviceinfo/update_reply
-pub type DeviceInfoUpdateResponse = AlinkResponse;
+pub type DeviceInfoUpdateResponse = SimpleResponse;
 
 // 标签信息删除响应
 // /sys/{productKey}/{deviceName}/thing/deviceinfo/delete_replly
-pub type DeviceInfoDeleteResponse = AlinkResponse;
+pub type DeviceInfoDeleteResponse = SimpleResponse;
 
 #[derive(Debug, EnumKind)]
 #[enum_kind(TagRecvKind, derive(Serialize, IntoEnumIterator, Deserialize))]
@@ -47,10 +47,10 @@ impl TagRecvKind {
 	pub fn get_topic(&self) -> ALinkSubscribeTopic {
 		match *self {
 			TagRecvKind::DeviceInfoUpdateResponse => {
-				ALinkSubscribeTopic::new("/sys/{}/{}/thing/deviceinfo/update_reply")
+				ALinkSubscribeTopic::new("/sys/+/+/thing/deviceinfo/update_reply")
 			}
 			TagRecvKind::DeviceInfoDeleteResponse => {
-				ALinkSubscribeTopic::new("/sys/{}/{}/thing/deviceinfo/delete_replly")
+				ALinkSubscribeTopic::new("/sys/+/+/thing/deviceinfo/delete_reply")
 			}
 		}
 	}
@@ -63,8 +63,9 @@ impl crate::Executor for crate::tag::Executor {
 		if let Some(kind) = TagRecvKind::match_kind(topic, &self.three.product_key, &self.three.device_name){
 			let data = kind.to_payload(payload)?;
 			self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
+		} else {
+			debug!("no match topic: {}", topic);
 		}
-		debug!("no match topic: {}", topic);
 		Ok(())
 	}
 }

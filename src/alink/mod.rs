@@ -62,10 +62,18 @@ pub fn global_id_next() -> u64 {
 
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct AlinkResponse<T = ()> {
+pub struct SimpleResponse{
+	pub id: String,
+	#[serde_as(as = "_")]
+	pub code: u64,
+}
+
+#[serde_as]
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct AlinkResponse<T = Option<()>> {
 	// #[serde_as(as = "String")]
 	pub id: String,
-	#[serde_as(as = "DisplayFromStr")]
+	#[serde_as(as = "_")]
 	pub code: u64,
 	pub data: T,
 	pub message: Option<String>,
@@ -94,7 +102,7 @@ pub const ALINK_VERSION: &'static str = "1.0";
 
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct AlinkRequest<T = ()> {
+pub struct AlinkRequest<T = Option<()>> {
 	// #[serde_as(as = "String")]
 	pub id: String,
 	pub version: String,

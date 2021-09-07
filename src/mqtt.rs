@@ -107,7 +107,7 @@ impl MqttEventLoop {
                 Packet::Publish(data) => {
                     for e in &self.executors {
                         if let Err(err) = e.execute(&data.topic, &data.payload).await {
-                            debug!("{} error: {}", data.topic, err);
+                            error!("{} error: {}", data.topic, err);
                         }
                     }
                 }

@@ -13,7 +13,6 @@ use enum_kinds::EnumKind;
 pub struct ShadowGetTopic {
 	method: String,
 	payload: Value,
-	version: u32,
 	timestamp: u64,
 }
 
@@ -45,7 +44,7 @@ impl ShadowRecvKind {
 	pub fn get_topic(&self) -> ALinkSubscribeTopic {
 		match *self {
 			ShadowRecvKind::ShadowGetTopic => {
-				ALinkSubscribeTopic::new("/shadow/get/{}/{}")
+				ALinkSubscribeTopic::new_we("/shadow/get/+/+")
 			}
 		}
 	}
@@ -59,8 +58,9 @@ impl crate::Executor for crate::shadow::Executor {
 		if let Some(kind) = ShadowRecvKind::match_kind(topic, &self.three.product_key, &self.three.device_name){
 			let data = kind.to_payload(payload)?;
 			self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
+		} else {
+			debug!("no match topic: {}", topic);
 		}
-		debug!("no match topic: {}", topic);
 		Ok(())
 	}
 }

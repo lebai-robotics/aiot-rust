@@ -112,10 +112,10 @@ impl SubDevRecvKind {
 				ALinkSubscribeTopic::new("/sys/+/+/thing/list/found_reply")
 			}
 			Self::SubDevAddTopologicalRelationNotifyRequest => {
-				ALinkSubscribeTopic::new("/sys/+/+/thing/topo/add/notify_reply")
+				ALinkSubscribeTopic::new("/sys/+/+/thing/topo/add/notify")
 			}
 			Self::SubDevChangeTopologicalRelationNotifyRequest => {
-				ALinkSubscribeTopic::new("/sys/+/+/thing/topo/change_reply")
+				ALinkSubscribeTopic::new("/sys/+/+/thing/topo/change")
 			}
 		}
 	}
@@ -149,10 +149,10 @@ pub type SubDevDeleteResponse = AlinkRequest;
 pub type SubDevAddTopologicalRelationResponse = AlinkResponse<Vec<DeviceInfoId>>;
 
 // 删除拓扑关系响应
-pub type SubDevDeleteTopologicalRelationResponse = AlinkResponse<DeviceInfoId>;
+pub type SubDevDeleteTopologicalRelationResponse = AlinkResponse<Vec<DeviceInfoId>>;
 
 // 获取拓扑关系响应
-pub type SubDevGetTopologicalRelationResponse = AlinkResponse<DeviceInfoId>;
+pub type SubDevGetTopologicalRelationResponse = AlinkResponse<Vec<DeviceInfoId>>;
 
 // 发现设备上报响应
 pub type SubDevDeviceReportResponse = AlinkResponse;

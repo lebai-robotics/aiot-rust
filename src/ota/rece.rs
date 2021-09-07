@@ -9,8 +9,9 @@ impl crate::Executor for crate::ota::Executor {
 		if let Some(kind) = OTARecvKind::match_kind(topic, &self.three.product_key, &self.three.device_name){
 			let data = kind.to_payload(payload)?;
 			self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
+		} else {
+			debug!("no match topic: {}", topic);
 		}
-		debug!("no match topic: {}", topic);
 		Ok(())
 	}
 }

@@ -1,3 +1,4 @@
+use crate::alink::{AlinkRequest, AlinkResponse};
 use crate::alink::{global_id_next, SysAck, ALINK_VERSION};
 use crate::subdev::base::*;
 use crate::subdev::push_dto::*;
@@ -11,6 +12,89 @@ pub struct LoginParam {
 }
 
 impl crate::subdev::Runner {
+
+	// 通知网关添加设备拓扑关系
+	pub async fn notify_add_topological_relation(&self, id: String, code: u64) -> crate::Result<()> {
+		let payload = AlinkResponse {
+			id,
+			code,
+			method: None,
+			version: None,
+			data: (),
+			message: None,
+		};
+		self
+			.publish(
+				format!(
+					"/sys/{}/{}/thing/topo/add/notify_reply",
+					self.three.product_key, self.three.device_name
+				),
+				&payload,
+			)
+			.await
+	}
+	// 禁用设备回应
+	pub async fn disable_reply(&self, id: String, code: u64) -> crate::Result<()> {
+		let payload = AlinkResponse {
+			id,
+			code,
+			data: (),
+			message: None,
+			method: None,
+			version: None,
+		};
+		self
+			.publish(
+				format!(
+					"/sys/{}/{}/thing/disable_reply",
+					self.three.product_key, self.three.device_name
+				),
+				&payload,
+			)
+			.await
+	}
+
+	// 启用设备回应
+	pub async fn enable_reply(&self, id: String, code: u64) -> crate::Result<()> {
+		let payload = AlinkResponse {
+			id,
+			code,
+			data: (),
+			message: None,
+			method: None,
+			version: None,
+		};
+		self
+			.publish(
+				format!(
+					"/sys/{}/{}/thing/enable_reply",
+					self.three.product_key, self.three.device_name
+				),
+				&payload,
+			)
+			.await
+	}
+
+	// 删除设备回应
+	pub async fn delete_reply(&self, id: String, code: u64) -> crate::Result<()> {
+		let payload = AlinkResponse {
+			id,
+			code,
+			data: (),
+			message: None,
+			method: None,
+			version: None,
+		};
+		self
+			.publish(
+				format!(
+					"/sys/{}/{}/thing/delete_reply",
+					self.three.product_key, self.three.device_name
+				),
+				&payload,
+			)
+			.await
+	}
 	// 子设备上线
 	pub async fn login(&self, login_param: LoginParam) -> crate::Result<()> {
 		let payload = SubDevLoginRequest {
@@ -19,7 +103,7 @@ impl crate::subdev::Runner {
 				login_param.product_key,
 				login_param.device_name,
 				Some(login_param.clean_session),
-				login_param.device_secret,
+				login_param.device_secret,None
 			),
 			version: ALINK_VERSION.to_string(),
 			sys: None,
@@ -49,6 +133,7 @@ impl crate::subdev::Runner {
 							n.device_name.clone(),
 							Some(n.clean_session),
 							n.device_secret.clone(),
+							None
 						)
 					})
 					.collect(),
@@ -111,8 +196,7 @@ impl crate::subdev::Runner {
 	// 添加拓扑关系
 	pub async fn add_topological_relation(
 		&self,
-		device_infos: &[DeviceInfo],
-		device_secret: String,
+		device_infos: &[DeviceInfoWithSecret],
 		ack: bool,
 	) -> crate::Result<()> {
 		let payload = SubDevAddTopologicalRelationRequest {
@@ -125,7 +209,8 @@ impl crate::subdev::Runner {
 						n.product_key.clone(),
 						n.device_name.clone(),
 						None,
-						device_secret.clone(),
+						n.device_secret.clone(),
+						None
 					)
 				})
 				.collect::<Vec<DeviceInfo>>(),
@@ -174,7 +259,7 @@ impl crate::subdev::Runner {
 			version: String::from(ALINK_VERSION),
 			sys: Some(SysAck { ack: ack.into() }),
 			method: Some(String::from("thing.topo.get")),
-			params: (),
+			params: None,
 		};
 		self
 			.publish(
@@ -206,4 +291,6 @@ impl crate::subdev::Runner {
 			)
 			.await
 	}
+
+
 }

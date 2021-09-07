@@ -17,7 +17,7 @@ type Recv = ShadowRecv;
 type RecvKind = ShadowRecvKind;
 
 impl crate::MqttClient {
-	fn shadow(&mut self) -> Result<HalfRunner> {
+	pub fn shadow(&mut self) -> Result<HalfRunner> {
 		let (tx, rx) = mpsc::channel(64);
 		let executor = Executor { tx, three: self.three.clone() };
 

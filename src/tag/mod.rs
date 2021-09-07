@@ -18,7 +18,7 @@ type Recv = TagRecv;
 type RecvKind = TagRecvKind;
 
 impl crate::MqttClient {
-	fn tag(&mut self) -> Result<HalfRunner> {
+	pub fn tag(&mut self) -> Result<HalfRunner> {
 		let (tx, rx) = mpsc::channel(64);
 		let executor = Executor { tx, three: self.three.clone() };
 

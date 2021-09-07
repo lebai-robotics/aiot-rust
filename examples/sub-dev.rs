@@ -1,3 +1,4 @@
+use aiot::subdev::base::DeviceInfoWithSecret;
 use anyhow::Result;
 use log::*;
 use regex::internal::Input;
@@ -32,41 +33,45 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
 	let sub_device_id = DeviceInfoId {
 		product_key: "gbgmHl8l0ee".to_string(),
-		device_name: "subDevice".to_string(), // "ee1fe40b755a7034dadd0e47d69c83b7"
+		device_name: "subDevice".to_string(),
+	};
+	let sub_device_id2 = DeviceInfoId {
+		product_key: "gbgmHl8l0ee".to_string(),
+		device_name: "abcd".to_string(),
+	};
+	let sub_device_with_secret = DeviceInfoWithSecret {
+		product_key: sub_device_id.product_key.clone(),
+		device_name: sub_device_id.device_name.clone(),
+		device_secret: "9b559fb55e8c928537876d0f7aae6aaf".to_string(), // "eeee1fe40b755a7034dadd0e47d69c83b7"
+	};
+	let sub_device_with_secret2 = DeviceInfoWithSecret {
+		product_key: sub_device_id.product_key.clone(),
+		device_name: sub_device_id.device_name.clone(),
+		device_secret: "9c0adcc900f00a14f32ceb18c1efe589".to_string(), // "eeee1fe40b755a7034dadd0e47d69c83b7"
 	};
 	let sub_device_login = LoginParam {
 		product_key: sub_device_id.product_key.clone(),
 		device_name: sub_device_id.device_name.clone(),
 		clean_session: false,
-		device_secret: "9b559fb55e8c928537876d0f7aae6aaf".to_string(),
-		// "ee1fe40b755a7034dadd0e47d69c83b7"
+		device_secret: sub_device_with_secret.device_secret.clone(),
 	};
+	let sub_devices = vec![sub_device_login.clone()];
+	let sub_device_ids = vec![sub_device_id.clone(),sub_device_id2.clone()];
+	let sub_device_witch_secrets = vec![sub_device_with_secret2.clone()];
+
+	// subdev
+	// 	.get_topological_relation(
+	// 		true,
+	// 	)
+	// 	.await?;
+
+	// subdev.delete_topological_relation(&sub_device_ids.clone(), true).await?;
+	// subdev.add_topological_relation(&sub_device_witch_secrets.clone(), true).await?;
+		subdev.found_report(&sub_device_ids.clone(), true).await?;
 
 	// 子设备上线
-	subdev.login(sub_device_login.clone()).await?;
-	// std::thread::sleep(core::time::Duration::from_secs(2));
-	//
-	// std::thread::sleep(core::time::Duration::from_secs(2));
-	// // 子设备批量上线
-	// let sub_devices = vec![
-	// 	sub_device_login.clone()
-	// ];
-	// subdev.batch_login(&sub_devices).await?;
-	// std::thread::sleep(core::time::Duration::from_secs(2));
-	// // 子设备批量下线
-	// let sub_devices = vec![sub_device_id.clone()];
-	// subdev.batch_logoSubDevRecv::SubDevLogoutResponse { field1: data }ad::sleep(core::time::Duration::from_secs(2));
-	// // 子设备禁用
-	// subdev.disable(sub_device_id.clone()).await?;
-	// std::thread::sleep(core::time::Duration::from_secs(2));
-	// // 子设备启用
-	// subdev.enable(sub_device_id.clone()).await?;
-	// std::thread::sleep(core::time::Duration::from_secs(2));
-
-	// 子设备禁用
-	// subdev.disable(sub_device_id.clone()).await?;
-	// 子设备下线
-	// subdev.disable(sub_device_id.clone()).await?;
+	// subdev.login(sub_device_login.clone()).await?;
+	// subdev.batch_login(&sub_devices.clone()).await?;
 
 	loop {
 		tokio::select! {
@@ -76,19 +81,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 			 }
 			 Ok(recv) = subdev.poll() => {
 				 match recv {
-					 SubDevRecv::SubDevLoginResponse(_) => todo!(),
-					 SubDevRecv::SubDevBatchLoginResponse(_) => todo!(),
-					 SubDevRecv::SubDevLogoutResponse(_) => todo!(),
-					 SubDevRecv::SubDevBatchLogoutResponse(_) => todo!(),
-					 SubDevRecv::SubDevDisableResponse(_) => todo!(),
-					 SubDevRecv::SubDevEnableResponse(_) => todo!(),
-					 SubDevRecv::SubDevDeleteResponse(_) => todo!(),
-					 SubDevRecv::SubDevAddTopologicalRelationResponse(_) => todo!(),
-					 SubDevRecv::SubDevDeleteTopologicalRelationResponse(_) => todo!(),
-					 SubDevRecv::SubDevGetTopologicalRelationResponse(_) => todo!(),
-					 SubDevRecv::SubDevDeviceReportResponse(_) => todo!(),
-					 SubDevRecv::SubDevAddTopologicalRelationNotifyRequest(_) => todo!(),
-					 SubDevRecv::SubDevChangeTopologicalRelationNotifyRequest(_) => todo!(),
+					 SubDevRecv::SubDevLoginResponse(_) => {},
+					 SubDevRecv::SubDevBatchLoginResponse(_) => {},
+					 SubDevRecv::SubDevLogoutResponse(_) => {},
+					 SubDevRecv::SubDevBatchLogoutResponse(_) => {},
+					 SubDevRecv::SubDevDisableResponse(response) => {
+						 subdev.disable_reply(response.id,200).await?;
+						 info!("SubDevDisableResponse");
+					 },
+					 SubDevRecv::SubDevEnableResponse(response) => {
+						subdev.enable_reply(response.id,200).await?;
+						info!("SubDevEnableResponse");
+					 },
+					 SubDevRecv::SubDevDeleteResponse(response) => {
+						subdev.delete_reply(response.id,200).await?;
+						info!("SubDevDeleteResponse");
+					 },
+					 SubDevRecv::SubDevAddTopologicalRelationResponse(_) => {},
+					 SubDevRecv::SubDevDeleteTopologicalRelationResponse(_) => {},
+					 SubDevRecv::SubDevGetTopologicalRelationResponse(_) => {},
+					 SubDevRecv::SubDevDeviceReportResponse(_) => {},
+					 SubDevRecv::SubDevAddTopologicalRelationNotifyRequest(_) => {},
+					 SubDevRecv::SubDevChangeTopologicalRelationNotifyRequest(_) => {},
 				 }
 			 }
 		}
