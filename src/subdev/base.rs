@@ -8,14 +8,19 @@ use std::{
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceInfoId {
+	/// 设备名
 	pub device_name: String,
+	/// 产品key
 	pub product_key: String,
 }
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceInfoWithSecret {
+	/// 设备名
 	pub device_name: String,
+	/// 产品key
 	pub product_key: String,
+	/// 设备密钥
 	pub device_secret: String,
 }
 
@@ -32,11 +37,17 @@ impl From<DeviceInfoWithSecret> for DeviceInfoId {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceInfo {
+	/// 设备名
 	pub device_name: String,
+	/// 产品Key
 	pub product_key: String,
+	/// 签名
 	pub sign: String,
+	/// 签名方法
 	pub sign_method: String,
+	/// 时间戳
 	pub timestamp: String,
+	/// client_id
 	pub client_id: Option<String>,
 	// 如果取值是true，则清理所有子设备离线时的消息，即所有未接收的QoS1消息将被清除。如果取值是false，则不清理子设备离线时的消息。
 	pub clean_session: Option<String>,
@@ -44,11 +55,17 @@ pub struct DeviceInfo {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceInfoNoCS {
+	/// 设备名
 	pub device_name: String,
+	/// 产品Key
 	pub product_key: String,
+	/// 签名
 	pub sign: String,
+	/// 签名方法
 	pub sign_method: String,
+	/// 时间戳
 	pub timestamp: String,
+	/// client_id
 	pub client_id: Option<String>,
 }
 impl DeviceInfo {

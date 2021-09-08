@@ -10,19 +10,33 @@ use super::base::DeviceInfoWithSecret;
 #[derive(Debug, EnumKind)]
 #[enum_kind(SubDevRecvKind, derive(Serialize, IntoEnumIterator, Deserialize))]
 pub enum SubDevRecv {
+	/// 子设备上线响应
 	SubDevLoginResponse(SubDevLoginResponse),
+	/// 子设备批量上线响应
 	SubDevBatchLoginResponse(SubDevBatchLoginResponse),
+	/// 子设备下线响应
 	SubDevLogoutResponse(SubDevLogoutResponse),
+	/// 子设备批量下线响应
 	SubDevBatchLogoutResponse(SubDevBatchLogoutResponse),
+	/// 子设备禁用响应
 	SubDevDisableResponse(SubDevDisableResponse),
+	/// 子设备启用响应
 	SubDevEnableResponse(SubDevEnableResponse),
+	/// 子设备删除响应
 	SubDevDeleteResponse(SubDevDeleteResponse),
+	/// 添加拓扑关系响应
 	SubDevAddTopologicalRelationResponse(SubDevAddTopologicalRelationResponse),
+	/// 删除拓扑关系响应
 	SubDevDeleteTopologicalRelationResponse(SubDevDeleteTopologicalRelationResponse),
+	/// 获取拓扑关系响应
 	SubDevGetTopologicalRelationResponse(SubDevGetTopologicalRelationResponse),
+	/// 获取拓扑关系响应
 	SubDevDeviceReportResponse(SubDevDeviceReportResponse),
+	/// 通知网关添加设备拓扑关系
 	SubDevAddTopologicalRelationNotifyRequest(SubDevAddTopologicalRelationNotifyRequest),
+	/// 拓扑关系更改通知
 	SubDevChangeTopologicalRelationNotifyRequest(SubDevChangeTopologicalRelationNotifyRequest),
+	/// 子设备洞注册响应
 	SubDevRegisterResponse(SubDevRegisterResponse),
 }
 

@@ -1,3 +1,4 @@
+//! 设备标签
 
 use crate::{Error, Result, ThreeTuple};
 use enum_iterator::IntoEnumIterator;

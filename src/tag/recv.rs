@@ -17,7 +17,9 @@ pub type DeviceInfoDeleteResponse = SimpleResponse;
 #[derive(Debug, EnumKind)]
 #[enum_kind(TagRecvKind, derive(Serialize, IntoEnumIterator, Deserialize))]
 pub enum TagRecv {
+	/// 标签信息上报响应
 	DeviceInfoUpdateResponse(DeviceInfoUpdateResponse),
+	/// 标签信息删除响应
 	DeviceInfoDeleteResponse(DeviceInfoDeleteResponse),
 }
 

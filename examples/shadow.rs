@@ -22,28 +22,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
    let (client, mut eventloop) = client.connect();
    let mut shadow = shadow.init(&client).await?;
 
-   // shadow
-   //    .update(
-   //       json!({
-   //          "reported": {
-   //             "p":10
-   //          },
-   //          "desired": {}
-   //       }),
-   //       1,
-   //    )
-   //    .await?;
-   // shadow.get().await?;
    shadow
-      .delete(
+      .update(
          json!({
-            "reported":{
-               "p":"null"
-            }
+            "reported": {
+               "p":10
+            },
+            "desired": {}
          }),
-         2,
+         1,
       )
       .await?;
+   // shadow.get().await?;
+   // shadow
+   //    .delete(
+   //       json!({
+   //          "reported":{
+   //             "p":"null"
+   //          }
+   //       }),
+   //       2,
+   //    )
+   //    .await?;
 
    loop {
       tokio::select! {

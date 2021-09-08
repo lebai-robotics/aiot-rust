@@ -1,3 +1,5 @@
+//! 子设备管理
+
 use crate::subdev::recv_dto::*;
 use crate::{Error, Result, ThreeTuple};
 use enum_iterator::IntoEnumIterator;
@@ -63,6 +65,8 @@ impl HalfRunner {
 		})
 	}
 }
+
+
 
 pub struct Runner {
 	rx: Receiver<Recv>,

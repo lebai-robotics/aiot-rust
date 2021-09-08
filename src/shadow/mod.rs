@@ -1,3 +1,5 @@
+//! 设备影子
+
 use crate::{Error, Result, ThreeTuple};
 use log::*;
 use rumqttc::{AsyncClient, QoS};

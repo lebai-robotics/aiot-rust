@@ -71,7 +71,6 @@ pub struct SimpleResponse{
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct AlinkResponse<T = Option<()>> {
-	// #[serde_as(as = "String")]
 	pub id: String,
 	#[serde_as(as = "_")]
 	pub code: u64,

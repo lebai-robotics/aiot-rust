@@ -10,9 +10,16 @@ use crate::http_downloader::{HttpDownloadConfig, HttpDownloader};
 use crate::ota::push_dto::*;
 
 use super::Runner;
-use super::recv_dto::UpgradePackageRequest;
+use super::recv_dto::{PackageData, UpgradePackageRequest};
 
 impl Runner {
+   
+   /// 设备上报OTA模块版本
+   ///
+   /// # 参数
+   ///
+   /// * `version` - 上报的版本
+   /// * `module` - 上报的OTA模块，默认为 "default"
    pub async fn report_version(
       &mut self,
       version: String,
@@ -36,6 +43,8 @@ impl Runner {
          .await;
       Ok(())
    }
+   
+   /// 设备上报升级进度
    pub async fn report_process(&mut self, report_process: ReportProgress) -> crate::Result<()> {
       let payload = ReportProgressRequest {
          id: global_id_next().to_string(),
@@ -56,6 +65,11 @@ impl Runner {
       Ok(())
    }
 
+   /// 设备请求升级包信息
+   ///
+   /// # 参数
+   ///
+   /// * `module` - 请求的OTA模块，默认为 "default"
    pub async fn query_firmware(&mut self, module: Option<String>) -> crate::Result<()> {
       let payload = QueryFirmwareRequest {
          id: global_id_next().to_string(),
@@ -76,13 +90,18 @@ impl Runner {
       Ok(())
    }
    
-   pub async fn receive_upgrade_package(
+   /// 下载升级包直到完成，返回下载完成的升级包文件路径
+   /// 
+   /// # 参数
+   /// 
+   /// * `package` - 升级包信息
+   pub async fn download_upgrade_package(
       &mut self,
-      package: &UpgradePackageRequest,
+      package: &PackageData,
    ) -> crate::Result<String> {
       debug!("start receive_upgrade_package");
-      let module = package.data.module.clone();
-      let version = package.data.version.clone();
+      let module = package.module.clone();
+      let version = package.version.clone();
       let tmp_dir = TempDir::new("ota")?;
       let file_path = tmp_dir.path().join(format!(
          "{}_{}",
@@ -91,7 +110,7 @@ impl Runner {
       ));
       let downloader = HttpDownloader::new(HttpDownloadConfig {
          block_size: 8000000,
-         uri: package.data.url.clone(),
+         uri: package.url.clone(),
          file_path: String::from(file_path.to_str().unwrap()),
       });
       let results = futures_util::future::join(
@@ -114,15 +133,15 @@ impl Runner {
       let mut ota_file_path = results.1?;
       let mut buffer = fs::read(ota_file_path.clone())?;
       debug!("size:{}", buffer.len());
-      match package.data.sign_method.as_str() {
+      match package.sign_method.as_str() {
          "SHA256" => {
             let mut sha256 = crypto::sha2::Sha256::new();
             sha256.input(&buffer);
             let computed_result = sha256.result_str();
-            if computed_result != package.data.sign {
+            if computed_result != package.sign {
                debug!(
                   "computed_result:{} sign:{}",
-                  computed_result, package.data.sign
+                  computed_result, package.sign
                );
                return Err(Error::FileValidateFailed);
             }
@@ -131,10 +150,10 @@ impl Runner {
             let mut md5 = crypto::md5::Md5::new();
             md5.input(&buffer);
             let computed_result = md5.result_str();
-            if computed_result != package.data.sign {
+            if computed_result != package.sign {
                debug!(
                   "computed_result:{} sign:{}",
-                  computed_result, package.data.sign
+                  computed_result, package.sign
                );
                return Err(Error::FileValidateFailed);
             }

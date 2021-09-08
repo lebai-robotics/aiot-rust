@@ -18,21 +18,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
    let (client, mut eventloop) = client.connect();
    let mut tag = tag.init(&client).await?;
    
-   // tag.update(vec![
-   //    DeviceInfoKeyValue{
-   //       attr_key: String::from("key1"),
-   //       attr_value: String::from("key1_v"),
-   //    },
-   //    DeviceInfoKeyValue{
-   //       attr_key: String::from("key2"),
-   //       attr_value: String::from("key2_v"),
-   //    },
-   // ], true).await?;
-   let deleted_keys = vec![
-      "key1",
-      "key2"
-   ];
-   tag.delete(&deleted_keys, true).await?;
+   tag.update(vec![
+      DeviceInfoKeyValue{
+         attr_key: String::from("key1"),
+         attr_value: String::from("key1_v"),
+      },
+      DeviceInfoKeyValue{
+         attr_key: String::from("key2"),
+         attr_value: String::from("key2_v"),
+      },
+   ], true).await?;
+   // let deleted_keys = vec![
+   //    "key1",
+   //    "key2"
+   // ];
+   // tag.delete(&deleted_keys, true).await?;
 
 
    loop {

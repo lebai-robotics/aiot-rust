@@ -12,7 +12,12 @@ pub type DeviceInfoUpdateRequest = AlinkRequest<Vec<DeviceInfoKeyValue>>;
 pub type DeviceInfoDeleteRequest = AlinkRequest<Vec<DeviceInfoKey>>;
 
 impl crate::tag::Runner {
-	// 标签信息上报
+	/// 标签信息上报
+	/// 
+	/// # 参数
+	/// 
+	/// * `infos`： 标签信息
+	/// * `ack`：是否需要响应
 	pub async fn update(&self, infos: Vec<DeviceInfoKeyValue>, ack: bool) -> crate::Result<()> {
 		let payload = DeviceInfoUpdateRequest {
 			id: global_id_next().to_string(),
@@ -32,7 +37,12 @@ impl crate::tag::Runner {
 			.await
 	}
 
-	// 标签信息删除
+	/// 标签信息删除
+	/// 
+	/// # 参数
+	/// 
+	/// * `keys`：要删除的key数组
+	/// * `ack`：是否需要响应
 	pub async fn delete(&self, keys: &[&str], ack: bool) -> crate::Result<()> {
 		let payload = DeviceInfoDeleteRequest {
 			id: global_id_next().to_string(),

@@ -6,8 +6,8 @@ use spin::Lazy;
 use serde::{Serialize,Deserialize};
 use enum_iterator::IntoEnumIterator;
 use enum_kinds::EnumKind;
-// 影子设备获取
-// 
+
+
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ShadowGetTopic {
@@ -19,6 +19,7 @@ pub struct ShadowGetTopic {
 #[derive(Debug, EnumKind)]
 #[enum_kind(ShadowRecvKind, derive(Serialize, IntoEnumIterator, Deserialize))]
 pub enum ShadowRecv {
+	/// 设备主动获取影子内容响应
 	ShadowGetTopic(ShadowGetTopic),
 }
 impl ShadowRecvKind {

@@ -12,18 +12,10 @@ use log::Level::Error;
 use std::str::Bytes;
 use std::sync::Arc;
 use tempdir::TempDir;
-
+use recv_dto::{OTARecv};
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 	env_logger::init();
-
-	/*	let downloader = HttpDownloader::new(HttpDownloadConfig {
-		block_size: 8000000,
-		uri: "https://9c9475b931e347a2760e3f997d8a68a2.dlied1.cdntips.net/dlied1.qq.com/qqweb/PCQQ/PCQQ_EXE/PCQQ2021.exe?mkey=612d874974e972ba&f=07b4&cip=116.233.84.79&proto=https&access_type=$header_ApolloNet".to_string(),
-		path: "C:/Users/19743/Desktop/Test/".to_string(),
-		file_name: "qq.exe".to_string(),
-	});
-	let data = downloader.start().await?;*/
 
 	let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
 	let three = ThreeTuple::from_env();
@@ -45,14 +37,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 			 }
 			 Ok(recv) = ota.poll() => {
 				 match recv {
-					  recv_dto::OTARecv::UpgradePackageRequest(request) => {
+					  OTARecv::UpgradePackageRequest(request) => {
 
-						 let file = ota.receive_upgrade_package(&request).await?;
+						 let file = ota.download_upgrade_package(&request.data).await?;
 
 						 ota.report_version(request.data.version.clone(), request.data.module.clone()).await?;
 						 info!("file:{:?}",file);
 					 },
-					 recv_dto::OTARecv::GetFirmwareReply(request) => {},
+					 OTARecv::GetFirmwareReply(request) => {},
 				 }
 			 }
 		}

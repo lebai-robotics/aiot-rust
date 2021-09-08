@@ -1,3 +1,5 @@
+//! 设备OTA
+
 use crate::{Error, Result, ThreeTuple};
 use log::*;
 use rumqttc::{AsyncClient, QoS};
