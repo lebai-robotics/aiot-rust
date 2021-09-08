@@ -205,15 +205,14 @@ impl crate::subdev::Runner {
 			params: device_infos
 				.iter()
 				.map(|n| {
-					DeviceInfo::new(
+					DeviceInfoNoCS::new(
 						n.product_key.clone(),
 						n.device_name.clone(),
-						None,
 						n.device_secret.clone(),
 						None
 					)
 				})
-				.collect::<Vec<DeviceInfo>>(),
+				.collect::<Vec<DeviceInfoNoCS>>(),
 			sys: Some(SysAck { ack: ack.into() }),
 			method: Some(String::from("thing.topo.add")),
 		};
@@ -292,5 +291,25 @@ impl crate::subdev::Runner {
 			.await
 	}
 
+
+	// 动态注册
+	pub async fn register(&self, device_infos: &[DeviceInfoId], ack: bool) -> crate::Result<()> {
+		let payload = SubDevRegisterRequest {
+			id: global_id_next().to_string(),
+			version: String::from(ALINK_VERSION),
+			params: device_infos.to_vec(),
+			sys: Some(SysAck { ack: ack.into() }),
+			method: Some(String::from("thing.sub.register")),
+		};
+		self
+			.publish(
+				format!(
+					"/sys/{}/{}/thing/sub/register",
+					self.three.product_key, self.three.device_name
+				),
+				&payload,
+			)
+			.await
+	}
 
 }

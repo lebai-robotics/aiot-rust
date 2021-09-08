@@ -45,8 +45,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 		device_secret: "9b559fb55e8c928537876d0f7aae6aaf".to_string(), // "eeee1fe40b755a7034dadd0e47d69c83b7"
 	};
 	let sub_device_with_secret2 = DeviceInfoWithSecret {
-		product_key: sub_device_id.product_key.clone(),
-		device_name: sub_device_id.device_name.clone(),
+		product_key: sub_device_id2.product_key.clone(),
+		device_name: sub_device_id2.device_name.clone(),
 		device_secret: "9c0adcc900f00a14f32ceb18c1efe589".to_string(), // "eeee1fe40b755a7034dadd0e47d69c83b7"
 	};
 	let sub_device_login = LoginParam {
@@ -56,7 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 		device_secret: sub_device_with_secret.device_secret.clone(),
 	};
 	let sub_devices = vec![sub_device_login.clone()];
-	let sub_device_ids = vec![sub_device_id.clone(),sub_device_id2.clone()];
+	let sub_device_ids = vec![sub_device_id.clone()];
 	let sub_device_witch_secrets = vec![sub_device_with_secret2.clone()];
 
 	// subdev
@@ -67,7 +67,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
 	// subdev.delete_topological_relation(&sub_device_ids.clone(), true).await?;
 	// subdev.add_topological_relation(&sub_device_witch_secrets.clone(), true).await?;
-		subdev.found_report(&sub_device_ids.clone(), true).await?;
+	let sub_device_ids3 = vec![DeviceInfoId {
+		product_key: "gbgmHl8l0ee".to_string(),
+		device_name: "aaaa".to_string(),
+	}];
+	subdev.register(&sub_device_ids3, true).await?;
+	// subdev.found_report(&sub_device_ids.clone(), true).await?;
 
 	// 子设备上线
 	// subdev.login(sub_device_login.clone()).await?;
@@ -103,6 +108,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 					 SubDevRecv::SubDevDeviceReportResponse(_) => {},
 					 SubDevRecv::SubDevAddTopologicalRelationNotifyRequest(_) => {},
 					 SubDevRecv::SubDevChangeTopologicalRelationNotifyRequest(_) => {},
+					 SubDevRecv::SubDevRegisterResponse(response) => {
+						let r:Vec<DeviceInfoWithSecret> =response.data
+						 .iter()
+						 .map(|n|n.clone().into())
+						 .collect();
+						subdev.add_topological_relation(&r, true).await?;
+					 },
 				 }
 			 }
 		}

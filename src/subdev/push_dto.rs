@@ -28,7 +28,7 @@ pub type SubDevBatchLogoutRequest = AlinkRequest<Vec<DeviceInfoId>>;
 
 // 添加拓扑关系
 // /sys/{productKey}/{deviceName}/thing/topo/add
-pub type SubDevAddTopologicalRelationRequest = AlinkRequest<Vec<DeviceInfo>>;
+pub type SubDevAddTopologicalRelationRequest = AlinkRequest<Vec<DeviceInfoNoCS>>;
 
 // 删除拓扑关系
 // /sys/{productKey}/{deviceName}/thing/topo/delete
@@ -54,3 +54,6 @@ pub type SubDevDisableResponse = AlinkRequest;
 pub type SubDevEnableResponse = AlinkRequest;
 // 子设备删除
 pub type SubDevDeleteResponse = AlinkRequest;
+
+// 子设备动态注册
+pub type SubDevRegisterRequest = AlinkRequest<Vec<DeviceInfoId>>;

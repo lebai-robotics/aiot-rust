@@ -5,6 +5,8 @@ use enum_iterator::IntoEnumIterator;
 use enum_kinds::EnumKind;
 use serde::{Deserialize, Serialize};
 
+use super::base::DeviceInfoWithSecret;
+
 #[derive(Debug, EnumKind)]
 #[enum_kind(SubDevRecvKind, derive(Serialize, IntoEnumIterator, Deserialize))]
 pub enum SubDevRecv {
@@ -21,6 +23,7 @@ pub enum SubDevRecv {
 	SubDevDeviceReportResponse(SubDevDeviceReportResponse),
 	SubDevAddTopologicalRelationNotifyRequest(SubDevAddTopologicalRelationNotifyRequest),
 	SubDevChangeTopologicalRelationNotifyRequest(SubDevChangeTopologicalRelationNotifyRequest),
+	SubDevRegisterResponse(SubDevRegisterResponse),
 }
 
 impl SubDevRecvKind {
@@ -80,6 +83,11 @@ impl SubDevRecvKind {
 					serde_json::from_slice(&payload)?,
 				))
 			}
+			SubDevRecvKind::SubDevRegisterResponse => {
+				Ok(SubDevRecv::SubDevRegisterResponse(
+					serde_json::from_slice(&payload)?,
+				))
+			}
 		}
 	}
 	pub fn get_topic(&self) -> ALinkSubscribeTopic {
@@ -116,6 +124,9 @@ impl SubDevRecvKind {
 			}
 			Self::SubDevChangeTopologicalRelationNotifyRequest => {
 				ALinkSubscribeTopic::new("/sys/+/+/thing/topo/change")
+			}
+			Self::SubDevRegisterResponse => {
+				ALinkSubscribeTopic::new("/sys/+/+/thing/sub/register_reply")
 			}
 		}
 	}
@@ -170,6 +181,28 @@ pub struct SubDevChangeTopologicalRelationNotifyParams {
 
 // 通知网关拓扑关系变化
 pub type SubDevChangeTopologicalRelationNotifyRequest = AlinkRequest<SubDevChangeTopologicalRelationNotifyParams>;
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SubDevRegisterResult {
+	pub iot_id: String,
+	pub device_secret: String,
+	pub device_name: String,
+	pub product_key: String,
+}
+
+impl From<SubDevRegisterResult> for DeviceInfoWithSecret {
+    fn from(r: SubDevRegisterResult) -> Self {
+			DeviceInfoWithSecret{
+				device_name: r.device_name,
+				product_key: r.product_key,
+				device_secret: r.device_secret,
+			}
+    }
+}
+
+// 子设备动态注册响应
+pub type SubDevRegisterResponse = AlinkResponse<Vec<SubDevRegisterResult>>;
 
 
 /*
