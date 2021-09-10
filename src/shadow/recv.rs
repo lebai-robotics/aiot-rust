@@ -11,9 +11,9 @@ use enum_kinds::EnumKind;
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ShadowGetTopic {
-	method: String,
-	payload: Value,
-	timestamp: u64,
+	pub method: String,
+	pub payload: Value,
+	pub timestamp: u64,
 }
 
 #[derive(Debug, EnumKind)]

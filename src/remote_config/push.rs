@@ -18,10 +18,10 @@ use super::recv::RemoteConfigFileInfo;
 #[serde(rename_all = "camelCase")]
 pub struct RemoteConfigGetParams {
 	/// 配置范围， 目前只支持产品维度配置。 取值：product。
-	config_scope: String,
+	pub config_scope: String,
 	/// get_type
 	/// 获取配置类型。 目前支持文件类型，取值：file。
-	get_type: String,
+	pub get_type: String,
 }
 
 pub type RemoteConfigGetRequest = AlinkRequest<RemoteConfigGetParams>;
