@@ -8,9 +8,9 @@ use serde_json::Value;
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ShadowUpdateRequest {
-	method: String,
-	state: Option<Value>,
-	version: Option<u32>,
+	pub method: String,
+	pub state: Option<Value>,
+	pub version: Option<u32>,
 }
 
 impl crate::shadow::Runner {
