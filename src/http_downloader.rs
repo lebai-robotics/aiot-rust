@@ -3,7 +3,6 @@
 use reqwest::{Client, Method, Body, Response};
 use std::fs;
 use std::sync::Arc;
-use std::os::windows::fs::FileExt;
 use tokio::sync::{mpsc, Mutex};
 use tokio::sync::mpsc::Receiver;
 use reqwest::header::ToStrError;
