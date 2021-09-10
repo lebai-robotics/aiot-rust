@@ -29,13 +29,13 @@ impl OTARecvKind {
 		None
 	}
 	pub fn to_payload(&self, payload: &[u8]) -> crate::Result<OTARecv> {
+		let json_str = String::from_utf8_lossy(&payload).replace(",\"data\":{},", ",\"data\":null,");
 		match *self {
-			Self::UpgradePackageRequest => Ok(OTARecv::UpgradePackageRequest(serde_json::from_slice(
-				&payload,
-			)?)),
+			Self::UpgradePackageRequest => {
+				Ok(OTARecv::UpgradePackageRequest(serde_json::from_str(&json_str)?))
+			},
 			Self::GetFirmwareReply => {
-				let json_str = String::from_utf8_lossy(&payload);
-				Ok(OTARecv::GetFirmwareReply(serde_json::from_str(&json_str.replace(",\"data\":{},", ",\"data\":null,"))?))
+				Ok(OTARecv::GetFirmwareReply(serde_json::from_str(&json_str)?))
 			},
 		}
 	}
@@ -75,5 +75,5 @@ pub struct PackageData {
 	pub ext_data: Option<Value>,
 }
 
-pub type UpgradePackageRequest = AlinkResponse<PackageData, u128, String>;
+pub type UpgradePackageRequest = AlinkResponse<Option<PackageData>, u128, String>;
 pub type GetFirmwareReply = AlinkResponse<Option<PackageData>>;

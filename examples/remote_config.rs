@@ -1,15 +1,14 @@
-use serde_json::Value;
 use aiot::remote_config;
 use aiot::{MqttClient, ThreeTuple};
 use anyhow::Result;
 use log::*;
 use remote_config::recv::RemoteConfigRecv;
 use serde_json::json;
+use serde_json::Value;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
    env_logger::init();
-   
    let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
    let three = ThreeTuple::from_env();
    let mut client = MqttClient::new_public_tls(&host, &three)?;
@@ -29,13 +28,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
           Ok(recv) = remote_config.poll() => {
              match recv {
                RemoteConfigRecv::RemoteConfigGetReply(response) => {
-						 let data = remote_config.download_config(&response.data).await?;
-                   debug!("config: {}", String::from_utf8_lossy(&data));
+                  if let Some(config_info) = response.data{
+                     let data = remote_config.download_config(&config_info).await?;
+                     debug!("config: {}", String::from_utf8_lossy(&data));
+                  }
 
                },
                RemoteConfigRecv::RemoteConfigPush(response)=>{
-                  let data = remote_config.download_config(&response.data).await?;
-                  debug!("config: {}", String::from_utf8_lossy(&data));
+                  if let Some(config_info) = response.data{
+                     let data = remote_config.download_config(&config_info).await?;
+                     debug!("config: {}", String::from_utf8_lossy(&data));
+                  }
                },
             }
           }

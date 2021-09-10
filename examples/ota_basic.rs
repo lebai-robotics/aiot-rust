@@ -37,10 +37,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 			 Ok(recv) = ota.poll() => {
 				 match recv {
 					  OTARecv::UpgradePackageRequest(request) => {
+						if let Some(package) = request.data{
+							let data = ota.download_upgrade_package(&package).await?;
 
-						 let data = ota.download_upgrade_package(&request.data).await?;
-
-						 ota.report_version(request.data.version.clone(), request.data.module.clone()).await?;
+							ota.report_version(package.version.clone(), package.module.clone()).await?;
+						}
 						//  info!("data:{:?}",data);
 					 },
 					 OTARecv::GetFirmwareReply(request) => {

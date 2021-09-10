@@ -25,8 +25,8 @@ pub struct RemoteConfigFileInfo {
 	pub get_type: String,
 }
 
-pub type RemoteConfigGetReply = AlinkResponse<RemoteConfigFileInfo>;
-pub type RemoteConfigPush = AlinkResponse<RemoteConfigFileInfo>;
+pub type RemoteConfigGetReply = AlinkResponse<Option<RemoteConfigFileInfo>>;
+pub type RemoteConfigPush = AlinkResponse<Option<RemoteConfigFileInfo>>;
 
 #[derive(Debug, EnumKind)]
 #[enum_kind(RemoteConfigRecvKind, derive(Serialize, IntoEnumIterator, Deserialize))]
@@ -54,13 +54,14 @@ impl RemoteConfigRecvKind {
 		None
 	}
 	pub fn to_payload(&self, payload: &[u8]) -> crate::Result<RemoteConfigRecv> {
+		let json_str = String::from_utf8_lossy(&payload).replace(",\"data\":{},", ",\"data\":null,");
 		match *self {
-			RemoteConfigRecvKind::RemoteConfigGetReply => Ok(RemoteConfigRecv::RemoteConfigGetReply(
-				serde_json::from_slice(&payload)?,
-			)),
-			RemoteConfigRecvKind::RemoteConfigPush => Ok(RemoteConfigRecv::RemoteConfigPush(
-				serde_json::from_slice(&payload)?,
-			)),
+			RemoteConfigRecvKind::RemoteConfigGetReply => {
+				Ok(RemoteConfigRecv::RemoteConfigGetReply(serde_json::from_str(&json_str)?))
+			},
+			RemoteConfigRecvKind::RemoteConfigPush => {
+				Ok(RemoteConfigRecv::RemoteConfigPush(serde_json::from_str(&json_str)?))
+			},
 		}
 	}
 	pub fn get_topic(&self) -> ALinkSubscribeTopic {

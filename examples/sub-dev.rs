@@ -86,37 +86,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 			 }
 			 Ok(recv) = subdev.poll() => {
 				 match recv {
-					 SubDevRecv::SubDevLoginResponse(_) => {},
-					 SubDevRecv::SubDevBatchLoginResponse(_) => {},
-					 SubDevRecv::SubDevLogoutResponse(_) => {},
-					 SubDevRecv::SubDevBatchLogoutResponse(_) => {},
-					 SubDevRecv::SubDevDisableResponse(response) => {
-						 subdev.disable_reply(response.id,200).await?;
-						 info!("SubDevDisableResponse");
-					 },
-					 SubDevRecv::SubDevEnableResponse(response) => {
+					SubDevRecv::SubDevLoginResponse(_) => {},
+					SubDevRecv::SubDevBatchLoginResponse(_) => {},
+					SubDevRecv::SubDevLogoutResponse(_) => {},
+					SubDevRecv::SubDevBatchLogoutResponse(_) => {},
+					SubDevRecv::SubDevDisableResponse(response) => {
+						subdev.disable_reply(response.id,200).await?;
+						info!("SubDevDisableResponse");
+					},
+					SubDevRecv::SubDevEnableResponse(response) => {
 						subdev.enable_reply(response.id,200).await?;
 						info!("SubDevEnableResponse");
-					 },
-					 SubDevRecv::SubDevDeleteResponse(response) => {
+					},
+					SubDevRecv::SubDevDeleteResponse(response) => {
 						subdev.delete_reply(response.id,200).await?;
 						info!("SubDevDeleteResponse");
-					 },
-					 SubDevRecv::SubDevAddTopologicalRelationResponse(_) => {},
-					 SubDevRecv::SubDevDeleteTopologicalRelationResponse(_) => {},
-					 SubDevRecv::SubDevGetTopologicalRelationResponse(_) => {},
-					 SubDevRecv::SubDevDeviceReportResponse(_) => {},
-					 SubDevRecv::SubDevAddTopologicalRelationNotifyRequest(_) => {},
-					 SubDevRecv::SubDevChangeTopologicalRelationNotifyRequest(_) => {},
-					 SubDevRecv::SubDevRegisterResponse(response) => {
-						let r:Vec<DeviceInfoWithSecret> =response.data
-						 .iter()
-						 .map(|n|n.clone().into())
-						 .collect();
-						subdev.add_topological_relation(&r, true).await?;
-					 },
-				 }
-			 }
+					},
+					SubDevRecv::SubDevAddTopologicalRelationResponse(_) => {},
+					SubDevRecv::SubDevDeleteTopologicalRelationResponse(_) => {},
+					SubDevRecv::SubDevGetTopologicalRelationResponse(_) => {},
+					SubDevRecv::SubDevDeviceReportResponse(_) => {},
+					SubDevRecv::SubDevAddTopologicalRelationNotifyRequest(_) => {},
+					SubDevRecv::SubDevChangeTopologicalRelationNotifyRequest(_) => {},
+					SubDevRecv::SubDevRegisterResponse(response) => {
+						if let Some(data) = response.data{
+							let r:Vec<DeviceInfoWithSecret> =data
+							.iter()
+							.map(|n|n.clone().into())
+							.collect();
+							subdev.add_topological_relation(&r, true).await?;
+						}
+					},
+				}
+			}
 		}
 	}
 }

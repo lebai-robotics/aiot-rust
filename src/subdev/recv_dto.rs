@@ -53,55 +53,50 @@ impl SubDevRecvKind {
 		None
 	}
 	pub fn to_payload(&self, payload: &[u8]) -> crate::Result<SubDevRecv> {
+		let json_str = String::from_utf8_lossy(&payload).replace(",\"data\":{},", ",\"data\":null,");
 		match *self {
-			Self::SubDevLoginResponse => Ok(SubDevRecv::SubDevLoginResponse(serde_json::from_slice(
-				&payload,
-			)?)),
-			Self::SubDevBatchLoginResponse => Ok(SubDevRecv::SubDevBatchLoginResponse(
-				serde_json::from_slice(&payload)?,
-			)),
-			Self::SubDevLogoutResponse => Ok(SubDevRecv::SubDevLogoutResponse(
-				serde_json::from_slice(&payload)?,
-			)),
-			Self::SubDevBatchLogoutResponse => Ok(SubDevRecv::SubDevBatchLogoutResponse(
-				serde_json::from_slice(&payload)?,
-			)),
-			Self::SubDevDisableResponse => Ok(SubDevRecv::SubDevDisableResponse(
-				serde_json::from_slice(&payload)?,
-			)),
-			Self::SubDevEnableResponse => Ok(SubDevRecv::SubDevEnableResponse(
-				serde_json::from_slice(&payload)?,
-			)),
-			Self::SubDevDeleteResponse => Ok(SubDevRecv::SubDevDeleteResponse(
-				serde_json::from_slice(&payload)?,
-			)),
-			Self::SubDevAddTopologicalRelationResponse => Ok(
-				SubDevRecv::SubDevAddTopologicalRelationResponse(serde_json::from_slice(&payload)?),
-			),
-			Self::SubDevDeleteTopologicalRelationResponse => Ok(
-				SubDevRecv::SubDevDeleteTopologicalRelationResponse(serde_json::from_slice(&payload)?),
-			),
-			Self::SubDevGetTopologicalRelationResponse => Ok(
-				SubDevRecv::SubDevGetTopologicalRelationResponse(serde_json::from_slice(&payload)?),
-			),
-			Self::SubDevDeviceReportResponse => Ok(SubDevRecv::SubDevDeviceReportResponse(
-				serde_json::from_slice(&payload)?,
-			)),
+			Self::SubDevLoginResponse => {
+				Ok(SubDevRecv::SubDevLoginResponse(serde_json::from_str(&json_str)?))
+			}
+			Self::SubDevBatchLoginResponse => {
+				Ok(SubDevRecv::SubDevBatchLoginResponse(serde_json::from_str(&json_str)?))
+			}
+			Self::SubDevLogoutResponse => {
+				Ok(SubDevRecv::SubDevLogoutResponse(serde_json::from_str(&json_str)?))
+			}
+			Self::SubDevBatchLogoutResponse => {
+				Ok(SubDevRecv::SubDevBatchLogoutResponse(serde_json::from_str(&json_str)?))
+			}
+			Self::SubDevDisableResponse => {
+				Ok(SubDevRecv::SubDevDisableResponse(serde_json::from_str(&json_str)?))
+			}
+			Self::SubDevEnableResponse => {
+				Ok(SubDevRecv::SubDevEnableResponse(serde_json::from_str(&json_str)?))
+			}
+			Self::SubDevDeleteResponse => {
+				Ok(SubDevRecv::SubDevDeleteResponse(serde_json::from_str(&json_str)?))
+			}
+			Self::SubDevAddTopologicalRelationResponse => {
+				Ok(SubDevRecv::SubDevAddTopologicalRelationResponse(serde_json::from_str(&json_str)?))
+			}
+			Self::SubDevDeleteTopologicalRelationResponse => {
+				Ok(SubDevRecv::SubDevDeleteTopologicalRelationResponse(serde_json::from_str(&json_str)?))
+			}
+			Self::SubDevGetTopologicalRelationResponse => {
+				Ok(SubDevRecv::SubDevGetTopologicalRelationResponse(serde_json::from_str(&json_str)?))
+			}
+			Self::SubDevDeviceReportResponse => {
+				Ok(SubDevRecv::SubDevDeviceReportResponse(serde_json::from_str(&json_str)?))
+			}
 			Self::SubDevAddTopologicalRelationNotifyRequest => {
-				Ok(SubDevRecv::SubDevAddTopologicalRelationNotifyRequest(
-					serde_json::from_slice(&payload)?,
-				))
+				Ok(SubDevRecv::SubDevAddTopologicalRelationNotifyRequest(serde_json::from_str(&json_str)?))
 			}
 			Self::SubDevChangeTopologicalRelationNotifyRequest => {
-				Ok(SubDevRecv::SubDevChangeTopologicalRelationNotifyRequest(
-					serde_json::from_slice(&payload)?,
-				))
+				Ok(SubDevRecv::SubDevChangeTopologicalRelationNotifyRequest(serde_json::from_str(&json_str)?))
 			}
-			SubDevRecvKind::SubDevRegisterResponse => {
-				Ok(SubDevRecv::SubDevRegisterResponse(
-					serde_json::from_slice(&payload)?,
-				))
-			}
+			Self::SubDevRegisterResponse => {
+				Ok(SubDevRecv::SubDevRegisterResponse(serde_json::from_str(&json_str)?))
+			},
 		}
 	}
 	pub fn get_topic(&self) -> ALinkSubscribeTopic {
@@ -171,19 +166,19 @@ pub type SubDevEnableResponse = AlinkRequest;
 pub type SubDevDeleteResponse = AlinkRequest;
 
 // 添加拓扑关系响应
-pub type SubDevAddTopologicalRelationResponse = AlinkResponse<Vec<DeviceInfoId>>;
+pub type SubDevAddTopologicalRelationResponse = AlinkResponse<Option<Vec<DeviceInfoId>>>;
 
 // 删除拓扑关系响应
-pub type SubDevDeleteTopologicalRelationResponse = AlinkResponse<Vec<DeviceInfoId>>;
+pub type SubDevDeleteTopologicalRelationResponse = AlinkResponse<Option<Vec<DeviceInfoId>>>;
 
 // 获取拓扑关系响应
-pub type SubDevGetTopologicalRelationResponse = AlinkResponse<Vec<DeviceInfoId>>;
+pub type SubDevGetTopologicalRelationResponse = AlinkResponse<Option<Vec<DeviceInfoId>>>;
 
 // 发现设备上报响应
 pub type SubDevDeviceReportResponse = AlinkResponse;
 
 // 通知网关添加设备拓扑关系
-pub type SubDevAddTopologicalRelationNotifyRequest = AlinkRequest<Vec<DeviceInfoId>>;
+pub type SubDevAddTopologicalRelationNotifyRequest = AlinkRequest<Option<Vec<DeviceInfoId>>>;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -216,7 +211,7 @@ impl From<SubDevRegisterResult> for DeviceInfoWithSecret {
 }
 
 // 子设备动态注册响应
-pub type SubDevRegisterResponse = AlinkResponse<Vec<SubDevRegisterResult>>;
+pub type SubDevRegisterResponse = AlinkResponse<Option<Vec<SubDevRegisterResult>>>;
 
 
 /*

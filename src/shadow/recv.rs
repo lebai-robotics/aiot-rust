@@ -35,9 +35,10 @@ impl ShadowRecvKind {
 		None
 	}
 	pub fn to_payload(&self, payload: &[u8]) -> crate::Result<ShadowRecv> {
+		let json_str = String::from_utf8_lossy(&payload).replace(",\"data\":{},", ",\"data\":null,");
 		match *self {
 			ShadowRecvKind::ShadowGetTopic => Ok(ShadowRecv::ShadowGetTopic(
-				serde_json::from_slice(&payload)?,
+				serde_json::from_str(&json_str)?,
 			)),
 		}
 	}

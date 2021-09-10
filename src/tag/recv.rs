@@ -39,12 +39,13 @@ impl TagRecvKind {
 		None
 	}
 	pub fn to_payload(&self, payload: &[u8]) -> crate::Result<TagRecv> {
+		let json_str = String::from_utf8_lossy(&payload).replace(",\"data\":{},", ",\"data\":null,");
 		match *self {
 			TagRecvKind::DeviceInfoUpdateResponse => Ok(TagRecv::DeviceInfoUpdateResponse(
-				serde_json::from_slice(&payload)?,
+				serde_json::from_str(&json_str)?,
 			)),
 			TagRecvKind::DeviceInfoDeleteResponse => Ok(TagRecv::DeviceInfoDeleteResponse(
-				serde_json::from_slice(&payload)?,
+				serde_json::from_str(&json_str)?,
 			)),
 		}
 	}
