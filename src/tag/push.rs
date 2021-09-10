@@ -3,12 +3,10 @@ use crate::tag::base::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-// 标签信息上报
-// /sys/{productKey}/{deviceName}/thing/deviceinfo/update
+/// 标签信息上报
 pub type DeviceInfoUpdateRequest = AlinkRequest<Vec<DeviceInfoKeyValue>>;
 
-// 标签信息删除
-// /sys/{productKey}/{deviceName}/thing/deviceinfo/delete
+/// 标签信息删除
 pub type DeviceInfoDeleteRequest = AlinkRequest<Vec<DeviceInfoKey>>;
 
 impl crate::tag::Runner {

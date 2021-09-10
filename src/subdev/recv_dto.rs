@@ -1,5 +1,5 @@
 use crate::alink::{AlinkRequest, AlinkResponse};
-use crate::alink_topic::ALinkSubscribeTopic;
+use crate::alink::alink_topic::ALinkSubscribeTopic;
 use crate::subdev::base::DeviceInfoId;
 use enum_iterator::IntoEnumIterator;
 use enum_kinds::EnumKind;

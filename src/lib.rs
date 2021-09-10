@@ -7,41 +7,33 @@
 //!
 //! 遵循阿里云物联网平台定义的 [Alink 协议](https://help.aliyun.com/document_detail/90459.html)。
 
-pub mod util;
-pub use util::error::{Error, Result};
-
-pub mod alink;
 pub use alink::ThreeTuple;
-
-pub mod mqtt;
-pub use mqtt::{DeviceAuthInfo, MqttClient, MqttInstance};
-
-pub mod http;
-pub use http::Http;
-
-pub mod ra;
-pub use ra::RemoteAccess;
-
-pub mod dm;
+pub use dm::{DataModel, DataModelOptions};
 pub use dm::msg::{DataModelMsg, MsgEnum};
 pub use dm::recv::{DataModelRecv, RecvEnum};
-pub use dm::{DataModel, DataModelOptions};
-
-pub mod dynregmq;
 pub use dynregmq::{DynamicRegister, DynamicRegisterResult};
-
-pub mod ntp;
+pub use http::Http;
+pub use logpost::LogPost;
+pub use mqtt::{DeviceAuthInfo, MqttClient, MqttInstance};
 pub use ntp::NtpService;
+pub use ra::RemoteAccess;
+pub use util::error::{Error, Result};
 
+pub mod util;
+pub mod alink;
+pub mod mqtt;
+pub mod http;
+pub mod ra;
+pub mod dm;
+pub mod dynregmq;
+pub mod ntp;
 pub mod logpost;
 pub mod ota;
-pub mod alink_topic;
 pub mod http_downloader;
 pub mod subdev;
 pub mod tag;
 pub mod shadow;
-
-pub use logpost::LogPost;
+pub mod remote_config;
 
 #[async_trait::async_trait]
 pub(crate) trait Executor {

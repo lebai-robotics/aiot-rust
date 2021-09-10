@@ -90,7 +90,7 @@ impl Runner {
       Ok(())
    }
    
-   /// 下载升级包直到完成，返回下载完成的升级包文件路径
+   /// 下载升级包直到完成，返回二进制数据
    /// 
    /// # 参数
    /// 
@@ -98,7 +98,7 @@ impl Runner {
    pub async fn download_upgrade_package(
       &mut self,
       package: &PackageData,
-   ) -> crate::Result<String> {
+   ) -> crate::Result<Vec<u8>> {
       debug!("start receive_upgrade_package");
       let module = package.module.clone();
       let version = package.version.clone();
@@ -132,9 +132,9 @@ impl Runner {
       .await;
       let mut ota_file_path = results.1?;
       let mut buffer = fs::read(ota_file_path.clone())?;
-      debug!("size:{}", buffer.len());
+      debug!("file size:{}", buffer.len());
       match package.sign_method.as_str() {
-         "SHA256" => {
+         "SHA256" | "Sha256" => {
             let mut sha256 = crypto::sha2::Sha256::new();
             sha256.input(&buffer);
             let computed_result = sha256.result_str();
@@ -146,7 +146,7 @@ impl Runner {
                return Err(Error::FileValidateFailed);
             }
          }
-         "Md5" => {
+         "Md5" | "MD5" => {
             let mut md5 = crypto::md5::Md5::new();
             md5.input(&buffer);
             let computed_result = md5.result_str();
@@ -162,10 +162,6 @@ impl Runner {
             return Err(Error::FileValidateFailed);
          }
       }
-
-      std::fs::remove_file(file_path);
-      std::fs::remove_dir_all(tmp_dir);
-      debug!("receive_upgrade_package finished");
-      Ok(ota_file_path)
+      Ok(buffer)
    }
 }

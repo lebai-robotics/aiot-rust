@@ -95,6 +95,7 @@ impl crate::Executor for Executor {
                     return Ok(());
                 }
                 let payload: AlinkResponse<Value> = serde_json::from_slice(&payload)?;
+                
                 let data = recv::GenericReply {
                     msg_id: payload.msg_id(),
                     code: payload.code,

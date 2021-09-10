@@ -1,12 +1,7 @@
-use aiot::subdev::base::{DeviceInfoId, DeviceInfoWithSecret};
 use anyhow::Result;
 use log::*;
-use regex::internal::Input;
-use reqwest::Request;
-use rumqttc::Event;
 use serde_json::json;
 
-use aiot::http_downloader::{HttpDownloadConfig, HttpDownloader};
 use aiot::shadow;
 use aiot::{MqttClient, ThreeTuple};
 
@@ -22,18 +17,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
    let (client, mut eventloop) = client.connect();
    let mut shadow = shadow.init(&client).await?;
 
-   shadow
-      .update(
-         json!({
-            "reported": {
-               "p":10
-            },
-            "desired": {}
-         }),
-         1,
-      )
-      .await?;
-   // shadow.get().await?;
+   // shadow
+   //    .update(
+   //       json!({
+   //          "reported": {
+   //             "p":10
+   //          }
+   //       }),
+   //       3,
+   //    )
+   //    .await?;
+   shadow.get().await?;
    // shadow
    //    .delete(
    //       json!({
@@ -41,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
    //             "p":"null"
    //          }
    //       }),
-   //       2,
+   //       4,
    //    )
    //    .await?;
 

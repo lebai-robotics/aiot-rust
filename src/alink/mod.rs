@@ -1,9 +1,12 @@
 //! ALink 基础协议。
 
-use serde_with::DisplayFromStr;
+use std::sync::atomic::{AtomicU64, Ordering};
+
 use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
-use std::sync::atomic::{AtomicU64, Ordering};
+use serde_with::DisplayFromStr;
+
+pub mod alink_topic;
 
 /// 设备认证三元组。
 ///
@@ -62,7 +65,7 @@ pub fn global_id_next() -> u64 {
 
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct SimpleResponse{
+pub struct SimpleResponse {
 	pub id: String,
 	#[serde_as(as = "_")]
 	pub code: u64,
@@ -70,10 +73,11 @@ pub struct SimpleResponse{
 
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct AlinkResponse<T = Option<()>> {
-	pub id: String,
-	#[serde_as(as = "_")]
-	pub code: u64,
+pub struct AlinkResponse<T = Option<()>, TID = String, TCode = u64> {
+	pub id: TID,
+	// #[serde_as(as = "u64")]
+	// #[serde_as(as = "DisplayFromStr")]
+	pub code: TCode,
 	pub data: T,
 	pub message: Option<String>,
 	pub method: Option<String>,

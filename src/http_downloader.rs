@@ -1,3 +1,5 @@
+//! HTTP 下载器
+
 use reqwest::{Client, Method, Body, Response};
 use std::fs;
 use std::sync::Arc;
@@ -101,7 +103,6 @@ impl HttpDownloader {
 			.open(file_name)?;
 		result_file.write_all(&bytes);
 		result_file.flush();
-		debug!("write {}", file_name);
 
 		let size = bytes.len() as u64;
 		self.process_sender.send(DownloadProcess {

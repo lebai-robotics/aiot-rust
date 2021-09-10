@@ -27,8 +27,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
 	ota.report_version(String::from("0.0.0"), None).await?;
 
-	// ota.query_firmware(None).await?;
-
+	ota.query_firmware(None).await?;
 	loop {
 		tokio::select! {
 			 Ok(notification) = eventloop.poll() => {
@@ -39,12 +38,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 				 match recv {
 					  OTARecv::UpgradePackageRequest(request) => {
 
-						 let file = ota.download_upgrade_package(&request.data).await?;
+						 let data = ota.download_upgrade_package(&request.data).await?;
 
 						 ota.report_version(request.data.version.clone(), request.data.module.clone()).await?;
-						 info!("file:{:?}",file);
+						//  info!("data:{:?}",data);
 					 },
-					 OTARecv::GetFirmwareReply(request) => {},
+					 OTARecv::GetFirmwareReply(request) => {
+						if let Some(package) = request.data{
+							let data = ota.download_upgrade_package(&package).await?;
+
+							ota.report_version(package.version.clone(), package.module.clone()).await?;
+							info!("data:{:?}",data);
+						}
+					},
 				 }
 			 }
 		}

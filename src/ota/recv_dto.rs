@@ -1,14 +1,12 @@
 use serde_json::Value;
 use std::collections::HashMap;
 
-
+use crate::alink::alink_topic::ALinkSubscribeTopic;
 use crate::alink::{AlinkRequest, AlinkResponse};
-use crate::alink_topic::ALinkSubscribeTopic;
 use crate::subdev::base::DeviceInfoId;
 use enum_iterator::IntoEnumIterator;
 use enum_kinds::EnumKind;
 use serde::{Deserialize, Serialize};
-
 
 #[derive(Debug, EnumKind)]
 #[enum_kind(OTARecvKind, derive(Serialize, IntoEnumIterator, Deserialize))]
@@ -35,16 +33,15 @@ impl OTARecvKind {
 			Self::UpgradePackageRequest => Ok(OTARecv::UpgradePackageRequest(serde_json::from_slice(
 				&payload,
 			)?)),
-			Self::GetFirmwareReply => Ok(OTARecv::GetFirmwareReply(
-				serde_json::from_slice(&payload)?,
-			)),
+			Self::GetFirmwareReply => {
+				let json_str = String::from_utf8_lossy(&payload);
+				Ok(OTARecv::GetFirmwareReply(serde_json::from_str(&json_str.replace(",\"data\":{},", ",\"data\":null,"))?))
+			},
 		}
 	}
 	pub fn get_topic(&self) -> ALinkSubscribeTopic {
 		match *self {
-			Self::UpgradePackageRequest => {
-				ALinkSubscribeTopic::new("/ota/device/upgrade/+/+")
-			}
+			Self::UpgradePackageRequest => ALinkSubscribeTopic::new_we("/ota/device/upgrade/+/+"),
 			Self::GetFirmwareReply => {
 				ALinkSubscribeTopic::new("/sys/+/+/thing/ota/firmware/get_reply")
 			}
@@ -78,5 +75,5 @@ pub struct PackageData {
 	pub ext_data: Option<Value>,
 }
 
-pub type UpgradePackageRequest = AlinkResponse<PackageData>;
-pub type GetFirmwareReply = AlinkResponse<PackageData>;
+pub type UpgradePackageRequest = AlinkResponse<PackageData, u128, String>;
+pub type GetFirmwareReply = AlinkResponse<Option<PackageData>>;
