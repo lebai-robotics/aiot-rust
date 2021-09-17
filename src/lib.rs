@@ -34,6 +34,7 @@ pub mod subdev;
 pub mod tag;
 pub mod shadow;
 pub mod remote_config;
+pub mod bootstrap;
 
 #[async_trait::async_trait]
 pub(crate) trait Executor {

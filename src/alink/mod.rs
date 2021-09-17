@@ -7,6 +7,7 @@ use serde_with::serde_as;
 use serde_with::DisplayFromStr;
 
 pub mod alink_topic;
+pub mod aiot_module;
 
 /// 设备认证三元组。
 ///
