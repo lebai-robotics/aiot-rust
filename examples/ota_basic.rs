@@ -1,20 +1,11 @@
 use anyhow::Result;
 use log::*;
-use reqwest::Request;
-use rumqttc::Event;
-use serde_json::json;
 
-use aiot::http_downloader::{HttpDownloadConfig, HttpDownloader};
 use aiot::ota::*;
-use aiot::{DataModel, DataModelMsg, DataModelOptions, MqttClient, ThreeTuple};
-use futures_util::StreamExt;
-use log::Level::Error;
-use std::str::Bytes;
-use std::sync::Arc;
-use tempdir::TempDir;
+use aiot::{MqttClient, ThreeTuple};
 use recv_dto::{OTARecv};
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<()> {
 	env_logger::init();
 
 	let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";

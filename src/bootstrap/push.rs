@@ -6,9 +6,7 @@ use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-use super::recv::BootstrapRecv;
-
-impl crate::bootstrap::AiotModule<BootstrapRecv> {
+impl super::Module {
 	/// 设备分发通知响应
 	pub async fn notify_reply(&self, id: String, code: u64) -> crate::Result<()> {
 		let payload = AlinkResponse::<()> {

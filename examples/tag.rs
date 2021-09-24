@@ -7,7 +7,7 @@ use aiot::tag;
 use aiot::{MqttClient, ThreeTuple};
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() -> Result<()> {
    env_logger::init();
 
    let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";

@@ -37,6 +37,6 @@ pub mod remote_config;
 pub mod bootstrap;
 
 #[async_trait::async_trait]
-pub(crate) trait Executor {
+pub trait Executor {
     async fn execute(&self, topic: &str, payload: &[u8]) -> Result<()>;
 }

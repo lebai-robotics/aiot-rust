@@ -1,5 +1,9 @@
 //! 错误处理
 
+use std::sync::PoisonError;
+
+use crate::MqttClient;
+
 pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug, thiserror::Error)]
@@ -62,4 +66,7 @@ pub enum Error {
     UnInitError,
     #[error("文件验证失败")]
     FileValidateFailed,
+    #[error("Lock")]
+    Lock,
+    
 }

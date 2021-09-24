@@ -14,7 +14,13 @@ use tokio::sync::mpsc;
 
 use super::alink_topic::ALinkSubscribeTopic;
 
+pub fn get_aiot_json(payload: &[u8]) -> String
+{
+   String::from_utf8_lossy(payload).replace(",\"data\":{},", ",\"data\":null,")
+}
+
 pub trait ModuleRecvKind: IntoEnumIterator {
+   type Recv;
    fn match_kind(topic: &str, product_key: &str, device_name: &str) -> Option<Self> {
       for item in Self::into_enum_iter() {
          let alink_topic = item.get_topic();
@@ -25,17 +31,8 @@ pub trait ModuleRecvKind: IntoEnumIterator {
       }
       None
    }
-   fn to_payload<TRecv>(&self, payload: &[u8]) -> Arc<TRecv>;
+   fn to_payload(&self, payload: &[u8]) -> Result<Self::Recv>;
    fn get_topic(&self) -> ALinkSubscribeTopic;
-}
-
-pub trait ModuleRecv
-where
-   Self::Kind: ModuleRecvKind,
-{
-   type Kind;
-
-   fn new(kind: Self::Kind, payload: &[u8]) -> Self;
 }
 
 pub struct AiotModule<TRecv> {
@@ -50,12 +47,6 @@ impl MqttConnection {
       executor: Box<dyn crate::Executor>,
       rx: Receiver<TModuleRecv>,
    ) -> Result<AiotModule<TModuleRecv>> {
-      // let (tx, rx) = mpsc::channel(64);
-      // let executor = Executor::<TModuleRecv>::new {
-      //    tx,
-      //    three: self.mqtt_client.three.clone(),
-      // };
-
       self.mqtt_client.executors.push(executor);
       let runner = AiotModule::<TModuleRecv> {
          rx,
@@ -63,25 +54,6 @@ impl MqttConnection {
          client: self.mqtt.clone(),
       };
       Ok(runner)
-   }
-}
-
-impl<TModuleRecv> BaseExecutor<TModuleRecv>
-where
-   TModuleRecv: ModuleRecv,
-{
-   fn get_recv(&self, topic: &str, payload: &[u8]) -> Option<TModuleRecv> {
-      debug!("receive: {} {}", topic, String::from_utf8_lossy(payload));
-      if let Some(kind) =
-         TModuleRecv::Kind::match_kind(topic, &self.three.product_key, &self.three.device_name)
-      {
-         let data = TModuleRecv::new(kind, payload);
-         return Some(data);
-         // self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
-      } else {
-         debug!("no match topic: {}", topic);
-      }
-      None
    }
 }
 
@@ -97,16 +69,5 @@ impl<TRecv> AiotModule<TRecv> {
          .publish(topic, QoS::AtMostOnce, false, payload)
          .await?;
       Ok(())
-   }
-}
-
-pub struct BaseExecutor<TRecv> {
-   pub three: Arc<ThreeTuple>,
-   pub tx: Sender<TRecv>,
-}
-
-impl<TRecv> BaseExecutor<TRecv> {
-   pub fn new(tx: Sender<TRecv>, three: Arc<ThreeTuple>) -> Self {
-      BaseExecutor::<TRecv> { three, tx }
    }
 }

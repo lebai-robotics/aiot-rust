@@ -1,0 +1,20 @@
+
+use std::sync::Arc;
+
+use aiot::mqtt::MqttConnection;
+use anyhow::Result;
+use log::*;
+use tag::recv::{TagRecv};
+use aiot::tag;
+use aiot::{MqttClient, ThreeTuple};
+
+#[tokio::main]
+async fn main() -> Result<()> {
+   
+   let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
+   let three = ThreeTuple::from_env();
+   let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(&host, &three)?);
+   let bootstrap = mqtt_connection.bootstrap()?;
+   let bootstrap2 = mqtt_connection.bootstrap()?;
+   Ok(())
+}

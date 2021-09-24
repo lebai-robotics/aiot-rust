@@ -6,6 +6,7 @@ use log::*;
 use rumqttc::{AsyncClient, Event, EventLoop, MqttOptions, Packet, Transport};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
+use std::sync::Mutex;
 
 #[derive(Debug, Clone)]
 pub enum MqttInstance {
