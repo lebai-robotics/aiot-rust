@@ -1,3 +1,4 @@
+use crate::alink::aiot_module::{ModuleRecvKind, get_aiot_json};
 use crate::alink::alink_topic::ALinkSubscribeTopic;
 use crate::{alink::AlinkResponse, Error};
 use enum_iterator::IntoEnumIterator;
@@ -37,57 +38,25 @@ pub enum RemoteConfigRecv {
 	RemoteConfigPush(RemoteConfigPush),
 }
 
-impl RemoteConfigRecvKind {
-	pub fn match_kind(
-		topic: &str,
-		product_key: &str,
-		device_name: &str,
-	) -> Option<RemoteConfigRecvKind> {
-		for item in RemoteConfigRecvKind::into_enum_iter() {
-			let alink_topic = item.get_topic();
-			if !alink_topic.is_match(topic, product_key, device_name) {
-				continue;
-			}
-			return Some(item);
-			// self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
-		}
-		None
-	}
-	pub fn to_payload(&self, payload: &[u8]) -> crate::Result<RemoteConfigRecv> {
-		let json_str = String::from_utf8_lossy(&payload).replace(",\"data\":{},", ",\"data\":null,");
+impl ModuleRecvKind for super::RecvKind {
+	type Recv = super::Recv;
+	fn to_payload(&self, payload: &[u8]) -> crate::Result<Self::Recv> {
+		let json_str = get_aiot_json(payload);
 		match *self {
-			RemoteConfigRecvKind::RemoteConfigGetReply => {
-				Ok(RemoteConfigRecv::RemoteConfigGetReply(serde_json::from_str(&json_str)?))
-			},
-			RemoteConfigRecvKind::RemoteConfigPush => {
-				Ok(RemoteConfigRecv::RemoteConfigPush(serde_json::from_str(&json_str)?))
-			},
+			Self::RemoteConfigGetReply => Ok(Self::Recv::RemoteConfigGetReply(serde_json::from_str(
+				&json_str,
+			)?)),
+			Self::RemoteConfigPush => Ok(Self::Recv::RemoteConfigPush(serde_json::from_str(
+				&json_str,
+			)?)),
 		}
 	}
-	pub fn get_topic(&self) -> ALinkSubscribeTopic {
+	fn get_topic(&self) -> ALinkSubscribeTopic {
 		match *self {
-			RemoteConfigRecvKind::RemoteConfigGetReply => {
+			Self::RemoteConfigGetReply => {
 				ALinkSubscribeTopic::new_we("/sys/+/+/thing/config/get_reply")
 			}
-			RemoteConfigRecvKind::RemoteConfigPush => {
-				ALinkSubscribeTopic::new_we("/sys/+/+/thing/config/push")
-			}
+			Self::RemoteConfigPush => ALinkSubscribeTopic::new_we("/sys/+/+/thing/config/push"),
 		}
-	}
-}
-
-#[async_trait::async_trait]
-impl crate::Executor for crate::remote_config::Executor {
-	async fn execute(&self, topic: &str, payload: &[u8]) -> crate::Result<()> {
-		debug!("receive: {} {}", topic, String::from_utf8_lossy(payload));
-		if let Some(kind) =
-			RemoteConfigRecvKind::match_kind(topic, &self.three.product_key, &self.three.device_name)
-		{
-			let data = kind.to_payload(payload)?;
-			self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
-		} else {
-			debug!("no match topic: {}", topic);
-		}
-		Ok(())
 	}
 }

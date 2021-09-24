@@ -1,23 +1,12 @@
+use aiot::mqtt::MqttConnection;
 use aiot::subdev::base::DeviceInfoWithSecret;
+use aiot::subdev::recv::SubDevRecv;
 use anyhow::Result;
 use log::*;
-use regex::internal::Input;
-use reqwest::Request;
-use rumqttc::Event;
-use serde_json::json;
 
-use aiot::http_downloader::{HttpDownloadConfig, HttpDownloader};
-use aiot::subdev;
 use aiot::subdev::base::{DeviceInfo, DeviceInfoId};
 use aiot::subdev::push::LoginParam;
-use aiot::subdev::recv_dto::*;
-use aiot::{DataModel, DataModelMsg, DataModelOptions, MqttClient, ThreeTuple};
-use chrono::Duration;
-use futures_util::StreamExt;
-use log::Level::Error;
-use std::str::Bytes;
-use std::sync::Arc;
-use tempdir::TempDir;
+use aiot::{MqttClient, ThreeTuple};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -25,11 +14,9 @@ async fn main() -> Result<()> {
 
 	let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
 	let three = ThreeTuple::from_env();
-	let mut client = MqttClient::new_public_tls(&host, &three)?;
 
-	let subdev = client.subdev()?;
-	let (client, mut eventloop) = client.connect();
-	let mut subdev = subdev.init(&client).await?;
+	let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(&host, &three)?);
+	let mut subdev = mqtt_connection.subdev()?;
 
 	let sub_device_id = DeviceInfoId {
 		product_key: "gbgmHl8l0ee".to_string(),
@@ -80,7 +67,7 @@ async fn main() -> Result<()> {
 
 	loop {
 		tokio::select! {
-			 Ok(notification) = eventloop.poll() => {
+			 Ok(notification) = mqtt_connection.poll() => {
 				  // 主循环的 poll 是必须的
 				  info!("Received = {:?}", notification);
 			 }

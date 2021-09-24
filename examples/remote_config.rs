@@ -1,3 +1,4 @@
+use aiot::mqtt::MqttConnection;
 use aiot::remote_config;
 use aiot::{MqttClient, ThreeTuple};
 use anyhow::Result;
@@ -11,17 +12,15 @@ async fn main() -> Result<()> {
    env_logger::init();
    let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
    let three = ThreeTuple::from_env();
-   let mut client = MqttClient::new_public_tls(&host, &three)?;
 
-   let remote_config = client.remote_config()?;
-   let (client, mut eventloop) = client.connect();
-   let mut remote_config = remote_config.init(&client).await?;
+   let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(&host, &three)?);
+   let mut remote_config = mqtt_connection.remote_config()?;
 
    remote_config.get(true).await?;
 
    loop {
       tokio::select! {
-          Ok(notification) = eventloop.poll() => {
+          Ok(notification) = mqtt_connection.poll() => {
               // 主循环的 poll 是必须的
               info!("Received = {:?}", notification);
           }

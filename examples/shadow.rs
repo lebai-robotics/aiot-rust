@@ -1,9 +1,10 @@
+use aiot::mqtt::MqttConnection;
 use anyhow::Result;
 use log::*;
-use serde_json::json;
 
 use aiot::shadow;
 use aiot::{MqttClient, ThreeTuple};
+use serde_json::json;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -11,22 +12,19 @@ async fn main() -> Result<()> {
 
    let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
    let three = ThreeTuple::from_env();
-   let mut client = MqttClient::new_public_tls(&host, &three)?;
+   let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(&host, &three)?);
+   let mut shadow = mqtt_connection.shadow()?;
 
-   let shadow = client.shadow()?;
-   let (client, mut eventloop) = client.connect();
-   let mut shadow = shadow.init(&client).await?;
-
-   // shadow
-   //    .update(
-   //       json!({
-   //          "reported": {
-   //             "p":10
-   //          }
-   //       }),
-   //       3,
-   //    )
-   //    .await?;
+   shadow
+      .update(
+         json!({
+            "reported": {
+               "p":10
+            }
+         }),
+         3,
+      )
+      .await?;
    shadow.get().await?;
    // shadow
    //    .delete(
@@ -41,7 +39,7 @@ async fn main() -> Result<()> {
 
    loop {
       tokio::select! {
-          Ok(notification) = eventloop.poll() => {
+          Ok(notification) = mqtt_connection.poll() => {
               // 主循环的 poll 是必须的
               info!("Received = {:?}", notification);
           }

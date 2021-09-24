@@ -5,8 +5,9 @@ use enum_kinds::EnumKind;
 use log::*;
 use serde::{Deserialize, Serialize};
 
-use crate::alink::{AlinkResponse, SimpleResponse};
+use crate::alink::aiot_module::{get_aiot_json, ModuleRecvKind};
 use crate::alink::alink_topic::ALinkSubscribeTopic;
+use crate::alink::{AlinkResponse, SimpleResponse};
 use crate::Error;
 
 // 标签信息上报响应
@@ -26,52 +27,29 @@ pub enum TagRecv {
 	DeviceInfoDeleteResponse(DeviceInfoDeleteResponse),
 }
 
-impl TagRecvKind {
-	pub fn match_kind(topic: &str, product_key: &str, device_name: &str) -> Option<TagRecvKind> {
-		for item in TagRecvKind::into_enum_iter() {
-			let alink_topic = item.get_topic();
-			if !alink_topic.is_match(topic, product_key, device_name) {
-				continue;
-			}
-			return Some(item);
-			// self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
-		}
-		None
-	}
-	pub fn to_payload(&self, payload: &[u8]) -> crate::Result<TagRecv> {
-		let json_str = String::from_utf8_lossy(&payload).replace(",\"data\":{},", ",\"data\":null,");
+impl ModuleRecvKind for super::RecvKind {
+	type Recv = super::Recv;
+
+	fn to_payload(&self, payload: &[u8]) -> crate::Result<TagRecv> {
+		let json_str = get_aiot_json(payload);
 		match *self {
-			TagRecvKind::DeviceInfoUpdateResponse => Ok(TagRecv::DeviceInfoUpdateResponse(
+			Self::DeviceInfoUpdateResponse => Ok(Self::Recv::DeviceInfoUpdateResponse(
 				serde_json::from_str(&json_str)?,
 			)),
-			TagRecvKind::DeviceInfoDeleteResponse => Ok(TagRecv::DeviceInfoDeleteResponse(
+			Self::DeviceInfoDeleteResponse => Ok(Self::Recv::DeviceInfoDeleteResponse(
 				serde_json::from_str(&json_str)?,
 			)),
 		}
 	}
-	
-	pub fn get_topic(&self) -> ALinkSubscribeTopic {
+
+	fn get_topic(&self) -> ALinkSubscribeTopic {
 		match *self {
-			TagRecvKind::DeviceInfoUpdateResponse => {
+			Self::DeviceInfoUpdateResponse => {
 				ALinkSubscribeTopic::new("/sys/+/+/thing/deviceinfo/update_reply")
 			}
-			TagRecvKind::DeviceInfoDeleteResponse => {
+			Self::DeviceInfoDeleteResponse => {
 				ALinkSubscribeTopic::new("/sys/+/+/thing/deviceinfo/delete_reply")
 			}
 		}
-	}
-}
-
-#[async_trait::async_trait]
-impl crate::Executor for crate::tag::Executor {
-	async fn execute(&self, topic: &str, payload: &[u8]) -> crate::Result<()> {
-		debug!("receive: {} {}", topic, String::from_utf8_lossy(payload));
-		if let Some(kind) = TagRecvKind::match_kind(topic, &self.three.product_key, &self.three.device_name){
-			let data = kind.to_payload(payload)?;
-			self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
-		} else {
-			debug!("no match topic: {}", topic);
-		}
-		Ok(())
 	}
 }

@@ -1,19 +1,25 @@
 use std::fs;
 
-use crypto::digest::Digest;
-use log::{debug};
-use tempdir::TempDir;
 use crate::Error;
+use crypto::digest::Digest;
+use log::debug;
+use tempdir::TempDir;
 
 use crate::alink::{global_id_next, SysAck, ALINK_VERSION};
 use crate::http_downloader::{HttpDownloadConfig, HttpDownloader};
-use crate::ota::push_dto::*;
+use serde_json::Value;
+use std::collections::HashMap;
 
-use super::Runner;
-use super::recv_dto::{PackageData, UpgradePackageRequest};
+use crate::alink::alink_topic::ALinkSubscribeTopic;
+use crate::alink::{AlinkRequest, AlinkResponse};
+use crate::subdev::base::DeviceInfoId;
+use enum_iterator::IntoEnumIterator;
+use enum_kinds::EnumKind;
+use serde::{Deserialize, Serialize};
 
-impl Runner {
-   
+use super::base::*;
+
+impl super::Module {
    /// 设备上报OTA模块版本
    ///
    /// # 参数
@@ -43,7 +49,6 @@ impl Runner {
          .await;
       Ok(())
    }
-   
    /// 设备上报升级进度
    pub async fn report_process(&mut self, report_process: ReportProgress) -> crate::Result<()> {
       let payload = ReportProgressRequest {
@@ -89,11 +94,10 @@ impl Runner {
          .await;
       Ok(())
    }
-   
    /// 下载升级包直到完成，返回二进制数据
-   /// 
+   ///
    /// # 参数
-   /// 
+   ///
    /// * `package` - 升级包信息
    pub async fn download_upgrade_package(
       &mut self,
@@ -139,10 +143,7 @@ impl Runner {
             sha256.input(&buffer);
             let computed_result = sha256.result_str();
             if computed_result != package.sign {
-               debug!(
-                  "computed_result:{} sign:{}",
-                  computed_result, package.sign
-               );
+               debug!("computed_result:{} sign:{}", computed_result, package.sign);
                return Err(Error::FileValidateFailed);
             }
          }
@@ -151,10 +152,7 @@ impl Runner {
             md5.input(&buffer);
             let computed_result = md5.result_str();
             if computed_result != package.sign {
-               debug!(
-                  "computed_result:{} sign:{}",
-                  computed_result, package.sign
-               );
+               debug!("computed_result:{} sign:{}", computed_result, package.sign);
                return Err(Error::FileValidateFailed);
             }
          }
@@ -165,3 +163,24 @@ impl Runner {
       Ok(buffer)
    }
 }
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct ReportVersion {
+   pub version: String,
+   pub module: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct ReportProgress {
+   pub step: String,
+   pub desc: String,
+   pub module: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct QueryFirmware {
+   pub module: Option<String>,
+}
+pub type ReportVersionRequest = AlinkRequest<ReportVersion>;
+pub type ReportProgressRequest = AlinkRequest<ReportProgress>;
+pub type QueryFirmwareRequest = AlinkRequest<QueryFirmware>;

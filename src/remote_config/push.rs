@@ -13,20 +13,7 @@ use tempdir::TempDir;
 
 use super::recv::RemoteConfigFileInfo;
 
-/// 远程配置获取请求
-#[derive(Deserialize, Serialize, Debug, Clone)]
-#[serde(rename_all = "camelCase")]
-pub struct RemoteConfigGetParams {
-	/// 配置范围， 目前只支持产品维度配置。 取值：product。
-	pub config_scope: String,
-	/// get_type
-	/// 获取配置类型。 目前支持文件类型，取值：file。
-	pub get_type: String,
-}
-
-pub type RemoteConfigGetRequest = AlinkRequest<RemoteConfigGetParams>;
-
-impl crate::remote_config::Runner {
+impl super::Module {
 	/// 设备主动请求配置信息
 	pub async fn get(&self, ack: bool) -> crate::Result<()> {
 		let payload = RemoteConfigGetRequest {
@@ -145,3 +132,16 @@ impl crate::remote_config::Runner {
 			.await
 	} */
 }
+
+/// 远程配置获取请求
+#[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct RemoteConfigGetParams {
+	/// 配置范围， 目前只支持产品维度配置。 取值：product。
+	pub config_scope: String,
+	/// get_type
+	/// 获取配置类型。 目前支持文件类型，取值：file。
+	pub get_type: String,
+}
+
+pub type RemoteConfigGetRequest = AlinkRequest<RemoteConfigGetParams>;

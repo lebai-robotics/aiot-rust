@@ -1,36 +1,35 @@
-//! 设备OTA
+//! OTA
 
+use crate::alink::aiot_module::AiotModule;
+use crate::alink::aiot_module::ModuleRecvKind;
+use crate::mqtt::MqttConnection;
 use crate::{Error, Result, ThreeTuple};
+use enum_iterator::IntoEnumIterator;
 use log::*;
 use rumqttc::{AsyncClient, QoS};
-use tokio::sync::mpsc;
-use std::sync::Arc;
-use tokio::sync::mpsc::{Receiver, Sender};
 use serde::Serialize;
-use crate::ota::recv_dto::*;
-use crate::ota::push::*;
-use enum_iterator::IntoEnumIterator;
+use std::sync::Arc;
+use tokio::sync::mpsc;
+use tokio::sync::mpsc::{Receiver, Sender};
 
+use self::recv::{*};
+pub mod base;
 pub mod push;
-pub mod rece;
-pub mod push_dto;
-pub mod recv_dto;
+pub mod recv;
 
-type Recv = OTARecv;
-type RecvKind = OTARecvKind;
+pub type Recv = OTARecv;
+pub type RecvKind = OTARecvKind;
+pub type Module = AiotModule<Recv>;
 
-impl crate::MqttClient {
-	pub fn ota(&mut self) -> Result<HalfRunner> {
+impl MqttConnection {
+	pub fn ota(&mut self) -> Result<Module> {
 		let (tx, rx) = mpsc::channel(64);
-		let executor = Executor { tx, three: self.three.clone() };
-
-		self.executors
-			.push(Box::new(executor) as Box<dyn crate::Executor>);
-		let runner = HalfRunner {
-			rx,
-			three: self.three.clone(),
+		let executor = Executor {
+			tx,
+			three: self.mqtt_client.three.clone(),
 		};
-		Ok(runner)
+
+		self.module(Box::new(executor), rx)
 	}
 }
 
@@ -39,47 +38,19 @@ pub struct Executor {
 	tx: Sender<Recv>,
 }
 
-pub struct HalfRunner {
-	rx: Receiver<Recv>,
-	three: Arc<ThreeTuple>,
-}
-
-impl HalfRunner {
-	pub async fn init(self, client: &AsyncClient) -> Result<Runner> {
-		let mut client = client.clone();
-		let mut topics = rumqttc::Subscribe::empty_subscribe();
-		for item in RecvKind::into_enum_iter() {
-			let topic = item.get_topic();
-			topics.add(topic.topic.to_string(), QoS::AtMostOnce);
+#[async_trait::async_trait]
+impl crate::Executor for Executor {
+	async fn execute(&self, topic: &str, payload: &[u8]) -> crate::Result<()> {
+		debug!("receive: {} {}", topic, String::from_utf8_lossy(payload));
+		if let Some(kind) =
+			RecvKind::match_kind(topic, &self.three.product_key, &self.three.device_name)
+		{
+			let data = kind.to_payload(payload)?;
+			self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
+		} else {
+			debug!("no match topic: {}", topic);
 		}
-		client.subscribe_many(topics.filters).await?;
-
-		Ok(Runner {
-			rx: self.rx,
-			client,
-			three: self.three.clone(),
-		})
-	}
-}
-
-pub struct Runner {
-	rx: Receiver<Recv>,
-	client: AsyncClient,
-	three: Arc<ThreeTuple>,
-}
-
-impl Runner {
-	pub async fn poll(&mut self) -> Result<Recv> {
-		self.rx.recv().await.ok_or(Error::RecvTopicError)
-	}
-
-	pub async fn publish<T>(&self, topic: String, payload: &T) -> Result<()>
-		where T: ?Sized + Serialize, {
-		let payload = serde_json::to_vec(payload)?;
-		debug!("publish: {} {}", topic, String::from_utf8_lossy(&payload));
-		self.client
-			.publish(topic, QoS::AtMostOnce, false, payload)
-			.await?;
 		Ok(())
 	}
 }
+

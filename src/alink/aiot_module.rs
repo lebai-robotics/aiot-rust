@@ -6,6 +6,7 @@ use lazy_static::__Deref;
 use log::debug;
 use rumqttc::{AsyncClient, QoS};
 use serde::Serialize;
+use std::pin::Pin;
 use std::sync::Arc;
 use tokio::sync::mpsc::{Receiver, Sender};
 
@@ -13,11 +14,6 @@ use crate::ThreeTuple;
 use tokio::sync::mpsc;
 
 use super::alink_topic::ALinkSubscribeTopic;
-
-pub fn get_aiot_json(payload: &[u8]) -> String
-{
-   String::from_utf8_lossy(payload).replace(",\"data\":{},", ",\"data\":null,")
-}
 
 pub trait ModuleRecvKind: IntoEnumIterator {
    type Recv;
@@ -70,4 +66,17 @@ impl<TRecv> AiotModule<TRecv> {
          .await?;
       Ok(())
    }
+
+   pub async fn poll(&mut self) -> Result<TRecv> {
+      self
+         .rx
+         .recv()
+         .await
+         .ok_or(Error::RecvTopicError)
+   }
+}
+
+
+pub fn get_aiot_json(payload: &[u8]) -> String {
+   String::from_utf8_lossy(payload).replace(",\"data\":{},", ",\"data\":null,")
 }

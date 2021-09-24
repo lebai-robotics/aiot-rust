@@ -15,6 +15,5 @@ async fn main() -> Result<()> {
    let three = ThreeTuple::from_env();
    let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(&host, &three)?);
    let bootstrap = mqtt_connection.bootstrap()?;
-   let bootstrap2 = mqtt_connection.bootstrap()?;
    Ok(())
 }

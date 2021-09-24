@@ -1,3 +1,4 @@
+use aiot::bootstrap::recv::BootstrapRecv;
 use aiot::mqtt::MqttConnection;
 use aiot::subdev::base::{DeviceInfoId, DeviceInfoWithSecret};
 use aiot::tag::base::{DeviceInfoKey, DeviceInfoKeyValue};
@@ -15,6 +16,7 @@ async fn main() -> Result<()> {
    let three = ThreeTuple::from_env();
    let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(&host, &three)?);
    let mut tag = mqtt_connection.tag()?;
+   let mut bootstrap = mqtt_connection.bootstrap()?;
    tag.update(vec![
       DeviceInfoKeyValue{
          attr_key: String::from("key1"),
@@ -25,11 +27,6 @@ async fn main() -> Result<()> {
          attr_value: String::from("key2_v"),
       },
    ], true).await?;
-   // let deleted_keys = vec![
-   //    "key1",
-   //    "key2"
-   // ];
-   // tag.delete(&deleted_keys, true).await?;
 
 
    loop {
@@ -40,12 +37,17 @@ async fn main() -> Result<()> {
           }
           Ok(recv) = tag.poll() => {
 				 match recv {
-               TagRecv::DeviceInfoUpdateResponse(response) => {
-                  info!("DeviceInfoUpdateResponse");
+               TagRecv::DeviceInfoUpdateResponse(_) => {
 
                },
-               TagRecv::DeviceInfoDeleteResponse(response) => {
-                  info!("DeviceInfoDeleteResponse");
+               TagRecv::DeviceInfoDeleteResponse(_) => {
+               },
+            }
+          }
+          Ok(recv) = bootstrap.poll() => {
+				 match recv {
+               BootstrapRecv::BootstrapNotify(_) => {
+                  
                },
             }
           }
