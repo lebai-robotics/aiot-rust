@@ -11,43 +11,43 @@ use spin::Lazy;
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ShadowGetTopic {
-	pub method: String,
-	pub payload: Value,
-	pub timestamp: u64,
+    pub method: String,
+    pub payload: Value,
+    pub timestamp: u64,
 }
 
 #[derive(Debug, EnumKind)]
 #[enum_kind(ShadowRecvKind, derive(Serialize, IntoEnumIterator, Deserialize))]
 pub enum ShadowRecv {
-	/// 设备主动获取影子内容响应
-	ShadowGetTopic(ShadowGetTopic),
+    /// 设备主动获取影子内容响应
+    ShadowGetTopic(ShadowGetTopic),
 }
 
 impl ModuleRecvKind for super::RecvKind {
-	type Recv = super::Recv;
-	fn match_kind(topic: &str, product_key: &str, device_name: &str) -> Option<ShadowRecvKind> {
-		for item in ShadowRecvKind::into_enum_iter() {
-			let alink_topic = item.get_topic();
-			if !alink_topic.is_match(topic, product_key, device_name) {
-				continue;
-			}
-			return Some(item);
-			// self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
-		}
-		None
-	}
-	fn to_payload(&self, payload: &[u8]) -> crate::Result<ShadowRecv> {
-		let json_str = get_aiot_json(payload);
-		match *self {
-			Self::ShadowGetTopic => {
-				Ok(Self::Recv::ShadowGetTopic(serde_json::from_str(&json_str)?))
-			}
-		}
-	}
+    type Recv = super::Recv;
+    fn match_kind(topic: &str, product_key: &str, device_name: &str) -> Option<ShadowRecvKind> {
+        for item in ShadowRecvKind::into_enum_iter() {
+            let alink_topic = item.get_topic();
+            if !alink_topic.is_match(topic, product_key, device_name) {
+                continue;
+            }
+            return Some(item);
+            // self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
+        }
+        None
+    }
+    fn to_payload(&self, payload: &[u8]) -> crate::Result<ShadowRecv> {
+        let json_str = get_aiot_json(payload);
+        match *self {
+            Self::ShadowGetTopic => {
+                Ok(Self::Recv::ShadowGetTopic(serde_json::from_str(&json_str)?))
+            }
+        }
+    }
 
-	fn get_topic(&self) -> ALinkSubscribeTopic {
-		match *self {
-			Self::ShadowGetTopic => ALinkSubscribeTopic::new_we("/shadow/get/+/+"),
-		}
-	}
+    fn get_topic(&self) -> ALinkSubscribeTopic {
+        match *self {
+            Self::ShadowGetTopic => ALinkSubscribeTopic::new_we("/shadow/get/+/+"),
+        }
+    }
 }

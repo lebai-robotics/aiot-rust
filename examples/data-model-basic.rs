@@ -1,4 +1,4 @@
-use aiot::{DataModelMsg, DataModelOptions, DataModel, MqttClient, RecvEnum, ThreeTuple};
+use aiot::{DataModel, DataModelMsg, DataModelOptions, MqttClient, RecvEnum, ThreeTuple};
 use anyhow::Result;
 use log::*;
 use serde_json::json;
@@ -18,14 +18,14 @@ async fn main() -> Result<()> {
     dm.send(DataModelMsg::property_post(json!({
         "LightSwitch": 0
     })))
-    .await?;
+        .await?;
     dm.send(DataModelMsg::event_post(
         "Error".to_string(),
         json!({
             "ErrorCode": 0
         }),
     ))
-    .await?;
+        .await?;
 
     let mut history = Vec::new();
     history.push(json!({

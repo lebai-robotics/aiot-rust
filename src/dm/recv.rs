@@ -11,6 +11,7 @@ pub struct DataModelRecv {
     /// 接收消息数据
     pub data: RecvEnum,
 }
+
 /// <b>云端通用应答</b>消息结构体, 设备端上报@ref AIOT_DMMSG_PROPERTY_POST, @ref AIOT_DMMSG_EVENT_POST 或者@ref AIOT_DMMSG_GET_DESIRED 等消息后, 服务器会应答此消息
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct GenericReply {

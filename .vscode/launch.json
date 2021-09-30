@@ -1,446 +1,446 @@
 {
-   // 使用 IntelliSense 了解相关属性。 
-   // 悬停以查看现有属性的描述。
-   // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
-   "version": "0.2.0",
-   "configurations": [
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug unit tests in library 'aiot'",
-         "cargo": {
-            "args": [
-               "test",
-               "--no-run",
-               "--lib",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "aiot",
-               "kind": "lib"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+  // 使用 IntelliSense 了解相关属性。
+  // 悬停以查看现有属性的描述。
+  // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in library 'aiot'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--lib",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "aiot",
+          "kind": "lib"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug example 'data-model-basic'",
-         "cargo": {
-            "args": [
-               "build",
-               "--example=data-model-basic",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "data-model-basic",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'data-model-basic'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=data-model-basic",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "data-model-basic",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug unit tests in example 'data-model-basic'",
-         "cargo": {
-            "args": [
-               "test",
-               "--no-run",
-               "--example=data-model-basic",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "data-model-basic",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'data-model-basic'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=data-model-basic",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "data-model-basic",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug example 'dynregmq-basic'",
-         "cargo": {
-            "args": [
-               "build",
-               "--example=dynregmq-basic",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "dynregmq-basic",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'dynregmq-basic'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=dynregmq-basic",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "dynregmq-basic",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug unit tests in example 'dynregmq-basic'",
-         "cargo": {
-            "args": [
-               "test",
-               "--no-run",
-               "--example=dynregmq-basic",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "dynregmq-basic",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'dynregmq-basic'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=dynregmq-basic",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "dynregmq-basic",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug example 'http-basic'",
-         "cargo": {
-            "args": [
-               "build",
-               "--example=http-basic",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "http-basic",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'http-basic'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=http-basic",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "http-basic",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug unit tests in example 'http-basic'",
-         "cargo": {
-            "args": [
-               "test",
-               "--no-run",
-               "--example=http-basic",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "http-basic",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'http-basic'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=http-basic",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "http-basic",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug example 'logpost-basic'",
-         "cargo": {
-            "args": [
-               "build",
-               "--example=logpost-basic",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "logpost-basic",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'logpost-basic'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=logpost-basic",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "logpost-basic",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug unit tests in example 'logpost-basic'",
-         "cargo": {
-            "args": [
-               "test",
-               "--no-run",
-               "--example=logpost-basic",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "logpost-basic",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'logpost-basic'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=logpost-basic",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "logpost-basic",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug example 'mqtt-basic'",
-         "cargo": {
-            "args": [
-               "build",
-               "--example=mqtt-basic",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "mqtt-basic",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'mqtt-basic'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=mqtt-basic",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "mqtt-basic",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug unit tests in example 'mqtt-basic'",
-         "cargo": {
-            "args": [
-               "test",
-               "--no-run",
-               "--example=mqtt-basic",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "mqtt-basic",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'mqtt-basic'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=mqtt-basic",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "mqtt-basic",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug example 'mqtt-broadcast'",
-         "cargo": {
-            "args": [
-               "build",
-               "--example=mqtt-broadcast",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "mqtt-broadcast",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'mqtt-broadcast'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=mqtt-broadcast",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "mqtt-broadcast",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug unit tests in example 'mqtt-broadcast'",
-         "cargo": {
-            "args": [
-               "test",
-               "--no-run",
-               "--example=mqtt-broadcast",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "mqtt-broadcast",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'mqtt-broadcast'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=mqtt-broadcast",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "mqtt-broadcast",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug example 'mqtt-rrpc'",
-         "cargo": {
-            "args": [
-               "build",
-               "--example=mqtt-rrpc",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "mqtt-rrpc",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'mqtt-rrpc'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=mqtt-rrpc",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "mqtt-rrpc",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug unit tests in example 'mqtt-rrpc'",
-         "cargo": {
-            "args": [
-               "test",
-               "--no-run",
-               "--example=mqtt-rrpc",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "mqtt-rrpc",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'mqtt-rrpc'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=mqtt-rrpc",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "mqtt-rrpc",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug example 'ntp'",
-         "cargo": {
-            "args": [
-               "build",
-               "--example=ntp",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "ntp",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'ntp'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=ntp",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "ntp",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug unit tests in example 'ntp'",
-         "cargo": {
-            "args": [
-               "test",
-               "--no-run",
-               "--example=ntp",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "ntp",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'ntp'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=ntp",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "ntp",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug example 'ota_basic'",
-         "cargo": {
-            "args": [
-               "build",
-               "--example=ota_basic",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "ota_basic",
-               "kind": "example"
-            }
-         },
-         "env": {
-            "PRODUCT_KEY": "gbgmHl8l0ee",
-            "DEVICE_NAME": "test",
-            "DEVICE_SECRET": "ee1fe40b755a7034dadd0e47d69c83b7",
-            "RUST_LOG": "debug"
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'ota_basic'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=ota_basic",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "ota_basic",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug unit tests in example 'ota_basic'",
-         "cargo": {
-            "args": [
-               "test",
-               "--no-run",
-               "--example=ota_basic",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "ota_basic",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "env": {
+        "PRODUCT_KEY": "gbgmHl8l0ee",
+        "DEVICE_NAME": "test",
+        "DEVICE_SECRET": "ee1fe40b755a7034dadd0e47d69c83b7",
+        "RUST_LOG": "debug"
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug example 'remote-access'",
-         "cargo": {
-            "args": [
-               "build",
-               "--example=remote-access",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "remote-access",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'ota_basic'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=ota_basic",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "ota_basic",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug unit tests in example 'remote-access'",
-         "cargo": {
-            "args": [
-               "test",
-               "--no-run",
-               "--example=remote-access",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "remote-access",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'remote-access'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=remote-access",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "remote-access",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug example 'sub-dev'",
-         "cargo": {
-            "args": [
-               "build",
-               "--example=sub-dev",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "sub-dev",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "env": {
-            "PRODUCT_KEY": "gbgmxEfK1It",
-            "DEVICE_NAME": "qqqq",
-            "DEVICE_SECRET": "86d9a060a1d0e3c214667c2d648236e2",
-            "RUST_LOG": "debug"
-         },
-         "cwd": "${workspaceFolder}"
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'remote-access'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=remote-access",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "remote-access",
+          "kind": "example"
+        }
       },
-      {
-         "type": "lldb",
-         "request": "launch",
-         "name": "Debug unit tests in example 'sub-dev'",
-         "cargo": {
-            "args": [
-               "test",
-               "--no-run",
-               "--example=sub-dev",
-               "--package=aiot"
-            ],
-            "filter": {
-               "name": "sub-dev",
-               "kind": "example"
-            }
-         },
-         "args": [],
-         "cwd": "${workspaceFolder}"
-      }
-   ]
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug example 'sub-dev'",
+      "cargo": {
+        "args": [
+          "build",
+          "--example=sub-dev",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "sub-dev",
+          "kind": "example"
+        }
+      },
+      "args": [],
+      "env": {
+        "PRODUCT_KEY": "gbgmxEfK1It",
+        "DEVICE_NAME": "qqqq",
+        "DEVICE_SECRET": "86d9a060a1d0e3c214667c2d648236e2",
+        "RUST_LOG": "debug"
+      },
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Debug unit tests in example 'sub-dev'",
+      "cargo": {
+        "args": [
+          "test",
+          "--no-run",
+          "--example=sub-dev",
+          "--package=aiot"
+        ],
+        "filter": {
+          "name": "sub-dev",
+          "kind": "example"
+        }
+      },
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  ]
 }

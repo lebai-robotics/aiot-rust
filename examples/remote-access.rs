@@ -17,7 +17,7 @@ async fn main() -> Result<()> {
             ra.poll().await?;
         }
         #[allow(unreachable_code)]
-        Ok::<_, Error>(())
+            Ok::<_, Error>(())
     });
 
     loop {

@@ -65,31 +65,49 @@ pub struct MsgHandshake<'a> {
 #[derive(Serialize_repr, Deserialize_repr, Debug, Copy, Clone, PartialEq)]
 #[repr(u16)]
 pub enum MsgType {
-    RespOk = 0,                        //消息的response
-    ServiceProviderConnReq = 1,        //服务提供者发起（握手）连接请求.
-    ServiceConsumerConnReq = 2,        //服务消费者发起（握手）连接请求.
-    ServiceConsumerNewSession = 4,     //新增session
-    ServiceConsumerReleaseSession = 5, //释放session
-    ServiceVerifyAccount = 6,          //云端向边缘设备发起验证账号、密码的请求
-    ServiceProviderRawProtocol = 21,   //服务提供者发送的原始服务协议.
-    ServiceConsumerRawProtocol = 22,   //服务消费者发送的原始服务协议.
-    KeepalivePing = 256,               //心跳PING
+    RespOk = 0,
+    //消息的response
+    ServiceProviderConnReq = 1,
+    //服务提供者发起（握手）连接请求.
+    ServiceConsumerConnReq = 2,
+    //服务消费者发起（握手）连接请求.
+    ServiceConsumerNewSession = 4,
+    //新增session
+    ServiceConsumerReleaseSession = 5,
+    //释放session
+    ServiceVerifyAccount = 6,
+    //云端向边缘设备发起验证账号、密码的请求
+    ServiceProviderRawProtocol = 21,
+    //服务提供者发送的原始服务协议.
+    ServiceConsumerRawProtocol = 22,
+    //服务消费者发送的原始服务协议.
+    KeepalivePing = 256,
+    //心跳PING
     KeepalivePong = 257,               //心跳PONG
 }
 
 #[derive(Serialize_repr, Deserialize_repr, Debug, Copy, Clone, PartialEq)]
 #[repr(i32)]
 pub enum ErrorCode {
-    Ok = 0,                       //成功
-    SignatureInvalid = 101600,    //签名验证失败
-    ParamInvalid = 101601,        //入参不合法
-    SessionLimit = 101602,        //Session已达最大值
-    SessionNonexistent = 101603,  //Session不存在
-    SessionCreateFailed = 101604, //Session创建失败
+    Ok = 0,
+    //成功
+    SignatureInvalid = 101600,
+    //签名验证失败
+    ParamInvalid = 101601,
+    //入参不合法
+    SessionLimit = 101602,
+    //Session已达最大值
+    SessionNonexistent = 101603,
+    //Session不存在
+    SessionCreateFailed = 101604,
+    //Session创建失败
     // ServiceUnavalibe = 101604,        //服务不可达
-    ServiceExit = 101605,             //服务异常退出
-    ConnectionClose = 101606,         //连接异常退出
-    VerifyAccout = 101607,            //校验账号失败
+    ServiceExit = 101605,
+    //服务异常退出
+    ConnectionClose = 101606,
+    //连接异常退出
+    VerifyAccout = 101607,
+    //校验账号失败
     BackendServiceUnavalibe = 101671, //backend service not available
 }
 

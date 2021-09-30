@@ -9,17 +9,17 @@ use serde_json::Value;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-   env_logger::init();
-   let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
-   let three = ThreeTuple::from_env();
+    env_logger::init();
+    let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
+    let three = ThreeTuple::from_env();
 
-   let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(&host, &three)?);
-   let mut remote_config = mqtt_connection.remote_config()?;
+    let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(&host, &three)?);
+    let mut remote_config = mqtt_connection.remote_config()?;
 
-   remote_config.get(true).await?;
+    remote_config.get(true).await?;
 
-   loop {
-      tokio::select! {
+    loop {
+        tokio::select! {
           Ok(notification) = mqtt_connection.poll() => {
               // 主循环的 poll 是必须的
               info!("Received = {:?}", notification);
@@ -42,5 +42,5 @@ async fn main() -> Result<()> {
             }
           }
       }
-   }
+    }
 }

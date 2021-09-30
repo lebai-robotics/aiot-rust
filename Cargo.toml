@@ -13,23 +13,23 @@ chrono = "^0.4"
 enum-iterator = "0.7.0"
 enum-kinds = "0.5.1"
 futures = "^0.3"
-futures-util = {version = "^0.3", default-features = false, features = [
-  "async-await",
-  "sink",
-  "std",
-]}
+futures-util = { version = "^0.3", default-features = false, features = [
+    "async-await",
+    "sink",
+    "std",
+] }
 hmac = "^0.11"
-hyper-tls = {version = "^0.5", features = ["vendored"]}
+hyper-tls = { version = "^0.5", features = ["vendored"] }
 lazy_static = "^1.4"
 libc = "^0.2"
 log = "^0.4"
 rand = "^0.8"
 regex = "^1.5"
-reqwest = {version = "^0.11", features = ["json", "rustls-tls", "stream"]}
+reqwest = { version = "^0.11", features = ["json", "rustls-tls", "stream"] }
 rumqttc = "^0.8"
 rust-crypto = "0.2.36"
 rustls = "^0.19"
-serde = {version = "^1.0", features = ["derive"]}
+serde = { version = "^1.0", features = ["derive"] }
 serde_json = "^1.0"
 serde_repr = "^0.1"
 serde_with = "1.10.0"
@@ -37,13 +37,13 @@ sha2 = "^0.9"
 spin = "0.9"
 tempdir = "0.3.7"
 thiserror = "^1.0"
-tokio = {version = "^1.9", features = [
-  "sync",
-  "rt-multi-thread",
-  "macros",
-  "io-util",
-]}
-tokio-tungstenite = {version = "^0.15", features = ["rustls-tls"]}
+tokio = { version = "^1.9", features = [
+    "sync",
+    "rt-multi-thread",
+    "macros",
+    "io-util",
+] }
+tokio-tungstenite = { version = "^0.15", features = ["rustls-tls"] }
 tungstenite = "^0.14"
 url = "^2.2"
 
