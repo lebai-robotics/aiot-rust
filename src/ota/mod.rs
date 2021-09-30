@@ -12,7 +12,7 @@ use std::sync::Arc;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use self::recv::{*};
+use self::recv::*;
 pub mod base;
 pub mod push;
 pub mod recv;
@@ -53,4 +53,3 @@ impl crate::Executor for Executor {
 		Ok(())
 	}
 }
-

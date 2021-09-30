@@ -80,8 +80,7 @@ async fn main() -> Result<()> {
 					SubDevRecv::SubDevDisableResponse(response) => {
 						subdev.disable_reply(response.id,200).await?;
 						info!("SubDevDisableResponse");
-					},
-					SubDevRecv::SubDevEnableResponse(response) => {
+					},		SubDevRecv::SubDevEnableResponse(response) => {
 						subdev.enable_reply(response.id,200).await?;
 						info!("SubDevEnableResponse");
 					},

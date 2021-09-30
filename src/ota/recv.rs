@@ -1,15 +1,14 @@
 use serde_json::Value;
 use std::collections::HashMap;
 
-use crate::alink::aiot_module::{ModuleRecvKind, get_aiot_json};
+use super::base::*;
+use crate::alink::aiot_module::{get_aiot_json, ModuleRecvKind};
 use crate::alink::alink_topic::ALinkSubscribeTopic;
 use crate::alink::{AlinkRequest, AlinkResponse};
 use crate::subdev::base::DeviceInfoId;
 use enum_iterator::IntoEnumIterator;
 use enum_kinds::EnumKind;
 use serde::{Deserialize, Serialize};
-use super::base::*;
-
 
 pub type UpgradePackageRequest = AlinkResponse<Option<PackageData>, u128, String>;
 pub type GetFirmwareReply = AlinkResponse<Option<PackageData>>;
@@ -28,10 +27,12 @@ impl ModuleRecvKind for super::RecvKind {
 	fn to_payload(&self, payload: &[u8]) -> crate::Result<OTARecv> {
 		let json_str = get_aiot_json(payload);
 		match *self {
-			Self::UpgradePackageRequest => Ok(Self::Recv::UpgradePackageRequest(serde_json::from_str(
+			Self::UpgradePackageRequest => Ok(Self::Recv::UpgradePackageRequest(
+				serde_json::from_str(&json_str)?,
+			)),
+			Self::GetFirmwareReply => Ok(Self::Recv::GetFirmwareReply(serde_json::from_str(
 				&json_str,
 			)?)),
-			Self::GetFirmwareReply => Ok(Self::Recv::GetFirmwareReply(serde_json::from_str(&json_str)?)),
 		}
 	}
 	fn get_topic(&self) -> ALinkSubscribeTopic {
