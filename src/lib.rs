@@ -8,9 +8,9 @@
 //! 遵循阿里云物联网平台定义的 [Alink 协议](https://help.aliyun.com/document_detail/90459.html)。
 
 pub use alink::ThreeTuple;
-pub use dm::{DataModel, DataModelOptions};
 pub use dm::msg::{DataModelMsg, MsgEnum};
 pub use dm::recv::{DataModelRecv, RecvEnum};
+pub use dm::{DataModel, DataModelOptions};
 pub use dynregmq::{DynamicRegister, DynamicRegisterResult};
 pub use http::Http;
 pub use logpost::LogPost;
@@ -19,22 +19,22 @@ pub use ntp::NtpService;
 pub use ra::RemoteAccess;
 pub use util::error::{Error, Result};
 
-pub mod util;
 pub mod alink;
-pub mod mqtt;
-pub mod http;
-pub mod ra;
+pub mod bootstrap;
 pub mod dm;
 pub mod dynregmq;
-pub mod ntp;
-pub mod logpost;
-pub mod ota;
+pub mod http;
 pub mod http_downloader;
+pub mod logpost;
+pub mod mqtt;
+pub mod ntp;
+pub mod ota;
+pub mod ra;
+pub mod remote_config;
+pub mod shadow;
 pub mod subdev;
 pub mod tag;
-pub mod shadow;
-pub mod remote_config;
-pub mod bootstrap;
+pub mod util;
 
 #[async_trait::async_trait]
 pub trait Executor {

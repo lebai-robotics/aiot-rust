@@ -16,7 +16,7 @@ pub struct RemoteAccessOptions {
     three: Arc<ThreeTuple>,
     cloud_host: String,
     //远程连接通道云端服务地址，可以是域名
-    cloud_port: u32,    //远程连接通道云端服务端口
+    cloud_port: u32, //远程连接通道云端服务端口
 }
 
 impl RemoteAccessOptions {

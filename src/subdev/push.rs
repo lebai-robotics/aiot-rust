@@ -1,4 +1,4 @@
-use crate::alink::{AlinkRequest, AlinkResponse, global_id_next, SysAck, ALINK_VERSION};
+use crate::alink::{global_id_next, AlinkRequest, AlinkResponse, SysAck, ALINK_VERSION};
 use crate::subdev::base::*;
 use serde::{Deserialize, Serialize};
 
@@ -31,21 +31,21 @@ impl super::Module {
                 login_param.product_key,
                 login_param.device_name,
                 Some(login_param.clean_session),
-                login_param.device_secret, None,
+                login_param.device_secret,
+                None,
             ),
             version: ALINK_VERSION.to_string(),
             sys: None,
             method: None,
         };
-        self
-            .publish(
-                format!(
-                    "/ext/session/{}/{}/combine/login",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/ext/session/{}/{}/combine/login",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 
     /// 子设备批量上线
@@ -74,15 +74,14 @@ impl super::Module {
             sys: None,
             method: None,
         };
-        self
-            .publish(
-                format!(
-                    "/ext/session/{}/{}/combine/batch_login",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/ext/session/{}/{}/combine/batch_login",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 
     /// 子设备下线
@@ -96,15 +95,14 @@ impl super::Module {
             sys: None,
             method: None,
         };
-        self
-            .publish(
-                format!(
-                    "/ext/session/{}/{}/combine/logout",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/ext/session/{}/{}/combine/logout",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 
     /// 子设备批量下线
@@ -120,15 +118,14 @@ impl super::Module {
             sys: None,
             method: None,
         };
-        self
-            .publish(
-                format!(
-                    "/ext/session/{}/{}/combine/batch_logout",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/ext/session/{}/{}/combine/batch_logout",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 
     /// 添加拓扑关系
@@ -159,15 +156,14 @@ impl super::Module {
             sys: Some(SysAck { ack: ack.into() }),
             method: Some(String::from("thing.topo.add")),
         };
-        self
-            .publish(
-                format!(
-                    "/sys/{}/{}/thing/topo/add",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/sys/{}/{}/thing/topo/add",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 
     /// 删除拓扑关系
@@ -188,15 +184,14 @@ impl super::Module {
             sys: Some(SysAck { ack: ack.into() }),
             method: Some(String::from("thing.topo.delete")),
         };
-        self
-            .publish(
-                format!(
-                    "/sys/{}/{}/thing/topo/delete",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/sys/{}/{}/thing/topo/delete",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 
     /// 获取拓扑关系
@@ -212,15 +207,14 @@ impl super::Module {
             method: Some(String::from("thing.topo.get")),
             params: None,
         };
-        self
-            .publish(
-                format!(
-                    "/sys/{}/{}/thing/topo/get",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/sys/{}/{}/thing/topo/get",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 
     /// 发现设备信息上报
@@ -229,7 +223,11 @@ impl super::Module {
     ///
     /// * `device_infos` - 子设备信息数组
     /// * `ack` - 是否需要响应
-    pub async fn found_report(&self, device_infos: &[DeviceInfoId], ack: bool) -> crate::Result<()> {
+    pub async fn found_report(
+        &self,
+        device_infos: &[DeviceInfoId],
+        ack: bool,
+    ) -> crate::Result<()> {
         let payload = SubDevFoundReportRequest {
             id: global_id_next().to_string(),
             version: String::from(ALINK_VERSION),
@@ -237,17 +235,15 @@ impl super::Module {
             sys: Some(SysAck { ack: ack.into() }),
             method: Some(String::from("thing.topo.get")),
         };
-        self
-            .publish(
-                format!(
-                    "/sys/{}/{}/thing/list/found",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/sys/{}/{}/thing/list/found",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
-
 
     /// 动态注册
     ///
@@ -263,17 +259,15 @@ impl super::Module {
             sys: Some(SysAck { ack: ack.into() }),
             method: Some(String::from("thing.sub.register")),
         };
-        self
-            .publish(
-                format!(
-                    "/sys/{}/{}/thing/sub/register",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/sys/{}/{}/thing/sub/register",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
-
 
     /// 通知网关添加设备拓扑关系
     ///
@@ -281,7 +275,11 @@ impl super::Module {
     ///
     /// * `id` - Id
     /// * `code` - code
-    pub async fn notify_add_topological_relation(&self, id: String, code: u64) -> crate::Result<()> {
+    pub async fn notify_add_topological_relation(
+        &self,
+        id: String,
+        code: u64,
+    ) -> crate::Result<()> {
         let payload = AlinkResponse {
             id,
             code,
@@ -290,15 +288,14 @@ impl super::Module {
             data: (),
             message: None,
         };
-        self
-            .publish(
-                format!(
-                    "/sys/{}/{}/thing/topo/add/notify_reply",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/sys/{}/{}/thing/topo/add/notify_reply",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 
     /// 禁用设备回应
@@ -316,15 +313,14 @@ impl super::Module {
             method: None,
             version: None,
         };
-        self
-            .publish(
-                format!(
-                    "/sys/{}/{}/thing/disable_reply",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/sys/{}/{}/thing/disable_reply",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 
     /// 启用设备回应
@@ -342,15 +338,14 @@ impl super::Module {
             method: None,
             version: None,
         };
-        self
-            .publish(
-                format!(
-                    "/sys/{}/{}/thing/enable_reply",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/sys/{}/{}/thing/enable_reply",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 
     /// 删除设备回应
@@ -368,18 +363,16 @@ impl super::Module {
             method: None,
             version: None,
         };
-        self
-            .publish(
-                format!(
-                    "/sys/{}/{}/thing/delete_reply",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/sys/{}/{}/thing/delete_reply",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 }
-
 
 // 子设备上线
 // /ext/session/${productKey}/${deviceName}/combine/login

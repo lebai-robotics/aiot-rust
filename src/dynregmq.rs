@@ -20,9 +20,9 @@ impl DynamicRegister {
     ) -> Result<Self> {
         let (tx, rx) = mpsc::channel(4);
         let rego = Box::new(DynamicRegisterOptions::new(
-            &product_key,
-            &product_secret,
-            &device_name,
+            product_key,
+            product_secret,
+            device_name,
             tx,
         ));
         let username = rego.username();
@@ -131,14 +131,14 @@ impl DynamicRegisterOptions {
 impl crate::Executor for DynamicRegisterOptions {
     async fn execute(&self, topic: &str, payload: &[u8]) -> Result<()> {
         if topic == "/ext/register" {
-            let data: DeviceInfoWhitelist = serde_json::from_slice(&payload)?;
+            let data: DeviceInfoWhitelist = serde_json::from_slice(payload)?;
             self.tx
                 .send(DynamicRegisterResult::Whitelist(data))
                 .await
                 .map_err(|_| Error::RepeatRegisterResponse)?;
             Ok(())
         } else if topic == "/ext/regnwl" {
-            let data: RecvNoWhitelist = serde_json::from_slice(&payload)?;
+            let data: RecvNoWhitelist = serde_json::from_slice(payload)?;
             let conn_clientid = format!(
                 "{}|authType=connwl,securemode=-2,_ss=1,ext=3,_v={}|",
                 data.client_id,

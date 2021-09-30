@@ -68,5 +68,4 @@ pub enum Error {
     FileValidateFailed,
     #[error("Lock")]
     Lock,
-
 }

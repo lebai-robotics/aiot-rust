@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 use serde_with::serde_as;
 use serde_with::DisplayFromStr;
 
-pub mod alink_topic;
 pub mod aiot_module;
+pub mod alink_topic;
 
 /// 设备认证三元组。
 ///
@@ -102,7 +102,7 @@ impl<T> AlinkResponse<T> {
     }
 }
 
-pub const ALINK_VERSION: &'static str = "1.0";
+pub const ALINK_VERSION: &str = "1.0";
 
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug, Clone)]

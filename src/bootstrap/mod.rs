@@ -41,7 +41,8 @@ pub struct Executor {
 impl crate::Executor for Executor {
     async fn execute(&self, topic: &str, payload: &[u8]) -> crate::Result<()> {
         debug!("receive: {} {}", topic, String::from_utf8_lossy(payload));
-        if let Some(kind) = RecvKind::match_kind(topic, &self.three.product_key, &self.three.device_name)
+        if let Some(kind) =
+            RecvKind::match_kind(topic, &self.three.product_key, &self.three.device_name)
         {
             let data = kind.to_payload(payload)?;
             self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;

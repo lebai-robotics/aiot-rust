@@ -26,15 +26,14 @@ impl super::Module {
             sys: Some(SysAck { ack: ack.into() }),
             method: None,
         };
-        self
-            .publish(
-                format!(
-                    "/sys/{}/{}/thing/config/get",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/sys/{}/{}/thing/config/get",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
     /// 配置推送回应
     pub async fn push_reply(&self, id: String, code: u64) -> crate::Result<()> {
@@ -46,15 +45,14 @@ impl super::Module {
             method: None,
             version: None,
         };
-        self
-            .publish(
-                format!(
-                    "/sys/{}/{}/thing/config/push_reply",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/sys/{}/{}/thing/config/push_reply",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 
     /// 下载配置直到完成，返回二进制数据
@@ -68,14 +66,14 @@ impl super::Module {
     ) -> crate::Result<Vec<u8>> {
         let config_id = config_info.config_id.clone();
         let tmp_dir = TempDir::new("remote_config")?;
-        let file_path = tmp_dir.path().join(format!("{}", config_id));
+        let file_path = tmp_dir.path().join(config_id.to_string());
         let downloader = HttpDownloader::new(HttpDownloadConfig {
             block_size: 8000000,
             uri: config_info.url.clone(),
             file_path: String::from(file_path.to_str().unwrap()),
         });
         let config_file_path = downloader.start().await?;
-        let mut buffer = fs::read(config_file_path.clone())?;
+        let mut buffer = fs::read(config_file_path)?;
         debug!("size:{}", buffer.len());
         match config_info.sign_method.as_str() {
             "SHA256" | "Sha256" => {
@@ -84,9 +82,9 @@ impl super::Module {
                 let computed_result = sha256.result_str();
                 if computed_result != config_info.sign {
                     debug!(
-						"computed_result:{} sign:{}",
-						computed_result, config_info.sign
-					);
+                        "computed_result:{} sign:{}",
+                        computed_result, config_info.sign
+                    );
                     return Err(Error::FileValidateFailed);
                 }
             }
@@ -96,9 +94,9 @@ impl super::Module {
                 let computed_result = md5.result_str();
                 if computed_result != config_info.sign {
                     debug!(
-						"computed_result:{} sign:{}",
-						computed_result, config_info.sign
-					);
+                        "computed_result:{} sign:{}",
+                        computed_result, config_info.sign
+                    );
                     return Err(Error::FileValidateFailed);
                 }
             }

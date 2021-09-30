@@ -158,7 +158,7 @@ impl DataModelMsg {
     pub fn to_payload(&self, ack: i32) -> Result<(String, Vec<u8>)> {
         let pk = self.product_key.as_deref().unwrap_or("");
         let dn = self.device_name.as_deref().unwrap_or("");
-        self.data.to_payload(&pk, &dn, ack)
+        self.data.to_payload(pk, dn, ack)
     }
 }
 
@@ -243,7 +243,7 @@ impl MsgEnum {
             PropertyPost(data) => {
                 let topic = format!("/sys/{}/{}/thing/event/property/post", pk, dn);
                 let method = "thing.event.property.post";
-                let payload = AlinkRequest::new(&method, data.params.clone(), ack);
+                let payload = AlinkRequest::new(method, data.params.clone(), ack);
                 Ok((topic, serde_json::to_vec(&payload)?))
             }
             EventPost(data) => {
@@ -290,25 +290,25 @@ impl MsgEnum {
                         .map(|p| Value::String(p.clone()))
                         .collect(),
                 );
-                let payload = AlinkRequest::new(&method, params, ack);
+                let payload = AlinkRequest::new(method, params, ack);
                 Ok((topic, serde_json::to_vec(&payload)?))
             }
             DeleteDesired(data) => {
                 let topic = format!("/sys/{}/{}/thing/property/desired/delete", pk, dn);
                 let method = "thing.property.desired.delete";
-                let payload = AlinkRequest::new(&method, data.params.clone(), ack);
+                let payload = AlinkRequest::new(method, data.params.clone(), ack);
                 Ok((topic, serde_json::to_vec(&payload)?))
             }
             PropertyBatchPost(data) => {
                 let topic = format!("/sys/{}/{}/thing/event/property/batch/post", pk, dn);
                 let method = "thing.event.property.batch.post";
-                let payload = AlinkRequest::new(&method, data.params.clone(), ack);
+                let payload = AlinkRequest::new(method, data.params.clone(), ack);
                 Ok((topic, serde_json::to_vec(&payload)?))
             }
             HistoryPost(data) => {
                 let topic = format!("/sys/{}/{}/thing/event/property/history/post", pk, dn);
                 let method = "thing.event.property.history.post";
-                let payload = AlinkRequest::new(&method, Value::Array(data.params.clone()), ack);
+                let payload = AlinkRequest::new(method, Value::Array(data.params.clone()), ack);
                 Ok((topic, serde_json::to_vec(&payload)?))
             }
         }

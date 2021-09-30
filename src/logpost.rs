@@ -115,16 +115,16 @@ pub struct Executor {
 #[async_trait::async_trait]
 impl crate::Executor for Executor {
     async fn execute(&self, topic: &str, payload: &[u8]) -> Result<()> {
-        let data = if let Some(caps) = self.get_reply.captures(&topic) {
+        let data = if let Some(caps) = self.get_reply.captures(topic) {
             if &caps[1] == &self.three.product_key && &caps[2] == &self.three.device_name {
-                let data: AlinkResponse<LogConfig> = serde_json::from_slice(&payload)?;
+                let data: AlinkResponse<LogConfig> = serde_json::from_slice(payload)?;
                 Ok(data.data)
             } else {
                 Err(Error::DeviceNameUnmatched)
             }
-        } else if let Some(caps) = self.push.captures(&topic) {
+        } else if let Some(caps) = self.push.captures(topic) {
             if &caps[1] == &self.three.product_key && &caps[2] == &self.three.device_name {
-                let data: AlinkRequest<LogConfig> = serde_json::from_slice(&payload)?;
+                let data: AlinkRequest<LogConfig> = serde_json::from_slice(payload)?;
                 Ok(data.params)
             } else {
                 Err(Error::DeviceNameUnmatched)

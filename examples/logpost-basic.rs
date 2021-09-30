@@ -8,7 +8,7 @@ async fn main() -> Result<()> {
     let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
     let three = ThreeTuple::from_env();
 
-    let mut client = MqttClient::new_public_tls(&host, &three)?;
+    let mut client = MqttClient::new_public_tls(host, &three)?;
 
     let log_post = client.log_post()?;
 

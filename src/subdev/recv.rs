@@ -1,4 +1,4 @@
-use crate::alink::aiot_module::{ModuleRecvKind, get_aiot_json};
+use crate::alink::aiot_module::{get_aiot_json, ModuleRecvKind};
 use crate::alink::alink_topic::ALinkSubscribeTopic;
 use crate::alink::{AlinkRequest, AlinkResponse};
 use crate::subdev::base::DeviceInfoId;
@@ -52,36 +52,40 @@ impl ModuleRecvKind for super::RecvKind {
             Self::SubDevBatchLoginResponse => Ok(Self::Recv::SubDevBatchLoginResponse(
                 serde_json::from_str(&json_str)?,
             )),
-            Self::SubDevLogoutResponse => Ok(Self::Recv::SubDevLogoutResponse(serde_json::from_str(
-                &json_str,
-            )?)),
+            Self::SubDevLogoutResponse => Ok(Self::Recv::SubDevLogoutResponse(
+                serde_json::from_str(&json_str)?,
+            )),
             Self::SubDevBatchLogoutResponse => Ok(Self::Recv::SubDevBatchLogoutResponse(
                 serde_json::from_str(&json_str)?,
             )),
             Self::SubDevDisableResponse => Ok(Self::Recv::SubDevDisableResponse(
                 serde_json::from_str(&json_str)?,
             )),
-            Self::SubDevEnableResponse => Ok(Self::Recv::SubDevEnableResponse(serde_json::from_str(
-                &json_str,
-            )?)),
-            Self::SubDevDeleteResponse => Ok(Self::Recv::SubDevDeleteResponse(serde_json::from_str(
-                &json_str,
-            )?)),
+            Self::SubDevEnableResponse => Ok(Self::Recv::SubDevEnableResponse(
+                serde_json::from_str(&json_str)?,
+            )),
+            Self::SubDevDeleteResponse => Ok(Self::Recv::SubDevDeleteResponse(
+                serde_json::from_str(&json_str)?,
+            )),
             Self::SubDevAddTopologicalRelationResponse => Ok(
                 Self::Recv::SubDevAddTopologicalRelationResponse(serde_json::from_str(&json_str)?),
             ),
-            Self::SubDevDeleteTopologicalRelationResponse => Ok(
-                Self::Recv::SubDevDeleteTopologicalRelationResponse(serde_json::from_str(&json_str)?),
-            ),
+            Self::SubDevDeleteTopologicalRelationResponse => {
+                Ok(Self::Recv::SubDevDeleteTopologicalRelationResponse(
+                    serde_json::from_str(&json_str)?,
+                ))
+            }
             Self::SubDevGetTopologicalRelationResponse => Ok(
                 Self::Recv::SubDevGetTopologicalRelationResponse(serde_json::from_str(&json_str)?),
             ),
             Self::SubDevDeviceReportResponse => Ok(Self::Recv::SubDevDeviceReportResponse(
                 serde_json::from_str(&json_str)?,
             )),
-            Self::SubDevAddTopologicalRelationNotifyRequest => Ok(
-                Self::Recv::SubDevAddTopologicalRelationNotifyRequest(serde_json::from_str(&json_str)?),
-            ),
+            Self::SubDevAddTopologicalRelationNotifyRequest => {
+                Ok(Self::Recv::SubDevAddTopologicalRelationNotifyRequest(
+                    serde_json::from_str(&json_str)?,
+                ))
+            }
             Self::SubDevChangeTopologicalRelationNotifyRequest => {
                 Ok(Self::Recv::SubDevChangeTopologicalRelationNotifyRequest(
                     serde_json::from_str(&json_str)?,
@@ -183,7 +187,7 @@ pub struct SubDevChangeTopologicalRelationNotifyParams {
 
 // 通知网关拓扑关系变化
 pub type SubDevChangeTopologicalRelationNotifyRequest =
-AlinkRequest<SubDevChangeTopologicalRelationNotifyParams>;
+    AlinkRequest<SubDevChangeTopologicalRelationNotifyParams>;
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -211,20 +215,20 @@ pub type SubDevRegisterResponse = AlinkResponse<Option<Vec<SubDevRegisterResult>
 #[derive(TryFromPrimitive)]
 #[repr(u32)]
 enum SubDevLoginResponseCode {
-	// 请求参数错误。
-	RequestParameterError = 460,
-	// 单个设备认证过于频繁被限流。
-	RateLimitLimit = 429,
-	// 网关下同时在线子设备过多。
-	TooManySubDevicesUnderGateway = 428,
-	// 网关和子设备没有拓扑关系。
-	TopologicalRelationNotExist = 6401,
-	// 子设备不存在。
-	DeviceNotFound = 6100,
-	// 子设备已被删除。
-	DeviceDeleted = 521,
-	// 子设备已被禁用。
-	DeviceForbidden = 522,
-	// 子设备密码或者签名错误。
-	InvalidSign = 6287,
+    // 请求参数错误。
+    RequestParameterError = 460,
+    // 单个设备认证过于频繁被限流。
+    RateLimitLimit = 429,
+    // 网关下同时在线子设备过多。
+    TooManySubDevicesUnderGateway = 428,
+    // 网关和子设备没有拓扑关系。
+    TopologicalRelationNotExist = 6401,
+    // 子设备不存在。
+    DeviceNotFound = 6100,
+    // 子设备已被删除。
+    DeviceDeleted = 521,
+    // 子设备已被禁用。
+    DeviceForbidden = 522,
+    // 子设备密码或者签名错误。
+    InvalidSign = 6287,
 }*/

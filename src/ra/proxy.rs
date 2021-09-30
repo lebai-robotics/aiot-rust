@@ -66,7 +66,7 @@ impl RemoteAccessProxy {
         )?;
         let data = protocol::gen_response(
             MsgType::ServiceProviderConnReq,
-            &DEFAULT_MSG_ID_HDSK,
+            DEFAULT_MSG_ID_HDSK,
             "",
             payload.as_bytes(),
         )?;
@@ -165,15 +165,15 @@ impl RemoteAccessProxy {
                     // 发送通道保活信号
                     let n = "";
                     let msg_id = rand_string(32);
-                    write.send(protocol::gen_response(MsgType::KeepalivePing, &msg_id, &n, n.as_bytes())?.into()).await?;
+                    write.send(protocol::gen_response(MsgType::KeepalivePing, &msg_id, n, n.as_bytes())?.into()).await?;
                 }
             }
         }
     }
 
     async fn new_session(&mut self, head: &MsgHead, body: &[u8]) -> Result<Vec<u8>> {
-        debug!("new session payload: {}", String::from_utf8_lossy(&body));
-        let body = serde_json::from_slice(&body).unwrap_or_default();
+        debug!("new session payload: {}", String::from_utf8_lossy(body));
+        let body = serde_json::from_slice(body).unwrap_or_default();
         match self.session_list.new(&body, self.local_tx.clone()).await {
             Ok(id) => {
                 let session_id = SessionId::new(&id);

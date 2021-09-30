@@ -16,15 +16,14 @@ impl super::Module {
             state: Some(value),
             version: Some(version),
         };
-        self
-            .publish(
-                format!(
-                    "/shadow/update/{}/{}",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/shadow/update/{}/{}",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
     /// 影子设备属性获取
     pub async fn get(&self) -> crate::Result<()> {
@@ -33,15 +32,14 @@ impl super::Module {
             state: None,
             version: None,
         };
-        self
-            .publish(
-                format!(
-                    "/shadow/update/{}/{}",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/shadow/update/{}/{}",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
     /// 影子设备属性删除
     ///
@@ -55,15 +53,14 @@ impl super::Module {
             state: Some(value),
             version: Some(version),
         };
-        self
-            .publish(
-                format!(
-                    "/shadow/update/{}/{}",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/shadow/update/{}/{}",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 }
 

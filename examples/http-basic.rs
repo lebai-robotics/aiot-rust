@@ -7,7 +7,7 @@ async fn main() -> Result<()> {
     let host = "iot-as-http.cn-shanghai.aliyuncs.com";
     let three = ThreeTuple::from_env();
 
-    let mut client = Http::new_tls(&host, &three)?;
+    let mut client = Http::new_tls(host, &three)?;
     client.auth().await?;
 
     let topic = "/sys/a13FN5TplKq/http_basic_demo/thing/event/property/post";

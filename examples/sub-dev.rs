@@ -4,7 +4,7 @@ use aiot::subdev::recv::SubDevRecv;
 use anyhow::Result;
 use log::*;
 
-use aiot::subdev::base::{DeviceInfo, DeviceInfoId};
+use aiot::subdev::base::DeviceInfoId;
 use aiot::subdev::push::LoginParam;
 use aiot::{MqttClient, ThreeTuple};
 
@@ -15,7 +15,7 @@ async fn main() -> Result<()> {
     let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
     let three = ThreeTuple::from_env();
 
-    let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(&host, &three)?);
+    let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(host, &three)?);
     let mut subdev = mqtt_connection.subdev()?;
 
     let sub_device_id = DeviceInfoId {
@@ -42,9 +42,9 @@ async fn main() -> Result<()> {
         clean_session: false,
         device_secret: sub_device_with_secret.device_secret.clone(),
     };
-    let sub_devices = vec![sub_device_login.clone()];
-    let sub_device_ids = vec![sub_device_id.clone()];
-    let sub_device_witch_secrets = vec![sub_device_with_secret2.clone()];
+    let _sub_devices = vec![sub_device_login.clone()];
+    let _sub_device_ids = vec![sub_device_id.clone()];
+    let _sub_device_witch_secrets = vec![sub_device_with_secret2.clone()];
 
     // subdev
     // 	.get_topological_relation(
@@ -67,44 +67,44 @@ async fn main() -> Result<()> {
 
     loop {
         tokio::select! {
-			 Ok(notification) = mqtt_connection.poll() => {
-				  // 主循环的 poll 是必须的
-				  info!("Received = {:?}", notification);
-			 }
-			 Ok(recv) = subdev.poll() => {
-				 match recv {
-					SubDevRecv::SubDevLoginResponse(_) => {},
-					SubDevRecv::SubDevBatchLoginResponse(_) => {},
-					SubDevRecv::SubDevLogoutResponse(_) => {},
-					SubDevRecv::SubDevBatchLogoutResponse(_) => {},
-					SubDevRecv::SubDevDisableResponse(response) => {
-						subdev.disable_reply(response.id,200).await?;
-						info!("SubDevDisableResponse");
-					},		SubDevRecv::SubDevEnableResponse(response) => {
-						subdev.enable_reply(response.id,200).await?;
-						info!("SubDevEnableResponse");
-					},
-					SubDevRecv::SubDevDeleteResponse(response) => {
-						subdev.delete_reply(response.id,200).await?;
-						info!("SubDevDeleteResponse");
-					},
-					SubDevRecv::SubDevAddTopologicalRelationResponse(_) => {},
-					SubDevRecv::SubDevDeleteTopologicalRelationResponse(_) => {},
-					SubDevRecv::SubDevGetTopologicalRelationResponse(_) => {},
-					SubDevRecv::SubDevDeviceReportResponse(_) => {},
-					SubDevRecv::SubDevAddTopologicalRelationNotifyRequest(_) => {},
-					SubDevRecv::SubDevChangeTopologicalRelationNotifyRequest(_) => {},
-					SubDevRecv::SubDevRegisterResponse(response) => {
-						if let Some(data) = response.data{
-							let r:Vec<DeviceInfoWithSecret> =data
-							.iter()
-							.map(|n|n.clone().into())
-							.collect();
-							subdev.add_topological_relation(&r, true).await?;
-						}
-					},
-				}
-			}
-		}
+             Ok(notification) = mqtt_connection.poll() => {
+                  // 主循环的 poll 是必须的
+                  info!("Received = {:?}", notification);
+             }
+             Ok(recv) = subdev.poll() => {
+                 match recv {
+                    SubDevRecv::SubDevLoginResponse(_) => {},
+                    SubDevRecv::SubDevBatchLoginResponse(_) => {},
+                    SubDevRecv::SubDevLogoutResponse(_) => {},
+                    SubDevRecv::SubDevBatchLogoutResponse(_) => {},
+                    SubDevRecv::SubDevDisableResponse(response) => {
+                        subdev.disable_reply(response.id,200).await?;
+                        info!("SubDevDisableResponse");
+                    },		SubDevRecv::SubDevEnableResponse(response) => {
+                        subdev.enable_reply(response.id,200).await?;
+                        info!("SubDevEnableResponse");
+                    },
+                    SubDevRecv::SubDevDeleteResponse(response) => {
+                        subdev.delete_reply(response.id,200).await?;
+                        info!("SubDevDeleteResponse");
+                    },
+                    SubDevRecv::SubDevAddTopologicalRelationResponse(_) => {},
+                    SubDevRecv::SubDevDeleteTopologicalRelationResponse(_) => {},
+                    SubDevRecv::SubDevGetTopologicalRelationResponse(_) => {},
+                    SubDevRecv::SubDevDeviceReportResponse(_) => {},
+                    SubDevRecv::SubDevAddTopologicalRelationNotifyRequest(_) => {},
+                    SubDevRecv::SubDevChangeTopologicalRelationNotifyRequest(_) => {},
+                    SubDevRecv::SubDevRegisterResponse(response) => {
+                        if let Some(data) = response.data{
+                            let r:Vec<DeviceInfoWithSecret> =data
+                            .iter()
+                            .map(|n|n.clone().into())
+                            .collect();
+                            subdev.add_topological_relation(&r, true).await?;
+                        }
+                    },
+                }
+            }
+        }
     }
 }

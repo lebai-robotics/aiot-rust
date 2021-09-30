@@ -13,7 +13,7 @@ async fn main() -> Result<()> {
         device_name: "mqtt_broadcast_demo".to_string(),
         device_secret: "IQDVHqMEScjRj7DxYABKSkw8L5duQKoI".to_string(),
     };
-    let (client, mut eventloop) = MqttClient::new_public_tls(&host, &three)?.connect();
+    let (client, mut eventloop) = MqttClient::new_public_tls(host, &three)?.connect();
 
     // 指定Topic的所有设备接收广播消息，需订阅该Topic
     let topic = format!("/broadcast/{}/custom", three.product_key);

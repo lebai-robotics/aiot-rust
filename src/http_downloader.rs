@@ -1,17 +1,17 @@
 //! HTTP 下载器
 
-use reqwest::{Client, Method, Body, Response};
-use std::fs;
-use std::sync::Arc;
-use tokio::sync::{mpsc, Mutex};
-use tokio::sync::mpsc::Receiver;
-use reqwest::header::ToStrError;
-use std::num::ParseIntError;
-use std::fs::{DirEntry, OpenOptions, File};
-use tokio::sync::mpsc::error::SendError;
 use log::*;
-use std::io::{Write, Seek};
+use reqwest::header::ToStrError;
+use reqwest::{Body, Client, Method, Response};
+use std::fs;
+use std::fs::{DirEntry, File, OpenOptions};
+use std::io::{Seek, Write};
+use std::num::ParseIntError;
 use std::path::Path;
+use std::sync::Arc;
+use tokio::sync::mpsc::error::SendError;
+use tokio::sync::mpsc::Receiver;
+use tokio::sync::{mpsc, Mutex};
 
 #[derive(Debug)]
 pub struct DownloadProcess {
@@ -19,7 +19,6 @@ pub struct DownloadProcess {
     pub size: u64,
     pub current: u64,
 }
-
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -45,7 +44,6 @@ pub enum Error {
     FilePathError,
 }
 
-
 pub struct HttpDownloadConfig {
     pub block_size: u64,
     pub uri: String,
@@ -63,14 +61,27 @@ pub struct HttpDownloader {
 
 impl HttpDownloader {
     async fn download_block(&self, start: u64, end: u64) -> Result<Response> {
-        let request = self.client.request(Method::GET, &self.config.uri)
+        let request = self
+            .client
+            .request(Method::GET, &self.config.uri)
             .header("range", format!("bytes={}-{}", start, end))
             .build()?;
         let response = self.client.execute(request).await?;
         Ok(response)
     }
-    async fn download_block_and_write(&self, size: u64, index: u64, start: u64, end: u64) -> Result<()> {
-        debug!("download_block_and_write start {} start:{},end:{}", index + 1, start, end);
+    async fn download_block_and_write(
+        &self,
+        size: u64,
+        index: u64,
+        start: u64,
+        end: u64,
+    ) -> Result<()> {
+        debug!(
+            "download_block_and_write start {} start:{},end:{}",
+            index + 1,
+            start,
+            end
+        );
         let response = self.download_block(start, end).await?;
         let file_name = format!("{}{}", &self.config.file_path, index);
 
@@ -78,13 +89,20 @@ impl HttpDownloader {
         fs::write(&file_name, bytes.iter())?;
         debug!("write {}", file_name);
 
-        self.process_sender.send(DownloadProcess {
-            percent: (end / size) as f64,
-            size,
-            current: end,
-        }).await?;
+        self.process_sender
+            .send(DownloadProcess {
+                percent: (end / size) as f64,
+                size,
+                current: end,
+            })
+            .await?;
 
-        debug!("download_block_and_write end {} start:{},end:{}", index + 1, start, end);
+        debug!(
+            "download_block_and_write end {} start:{},end:{}",
+            index + 1,
+            start,
+            end
+        );
         Ok(())
     }
 
@@ -104,11 +122,13 @@ impl HttpDownloader {
         result_file.flush();
 
         let size = bytes.len() as u64;
-        self.process_sender.send(DownloadProcess {
-            percent: 1f64,
-            size,
-            current: size,
-        }).await?;
+        self.process_sender
+            .send(DownloadProcess {
+                percent: 1f64,
+                size,
+                current: size,
+            })
+            .await?;
         Ok(file_name.clone())
     }
 
@@ -130,7 +150,8 @@ impl HttpDownloader {
             .create(true)
             .write(true)
             .open(file_path)?;
-        let count = dirs.filter(|n| n.is_ok())
+        let count = dirs
+            .filter(|n| n.is_ok())
             .map(|n| n.unwrap())
             .filter(|n| n.path().to_str().unwrap().starts_with(file_name))
             .count();
@@ -138,7 +159,7 @@ impl HttpDownloader {
         for i in 0..count {
             let path = format!("{}{}", file_name, i);
             let bytes = &fs::read(&path)?;
-            result_size = result_size + bytes.len();
+            result_size += bytes.len();
             result_file.write(bytes);
             // 删除临时文件
             fs::remove_file(&path)?;
@@ -172,7 +193,9 @@ impl HttpDownloader {
         // 403
         // let request = self.client.request(Method::HEAD, &self.config.uri)
         // 	.build()?;
-        let request = self.client.request(Method::GET, &self.config.uri)
+        let request = self
+            .client
+            .request(Method::GET, &self.config.uri)
             .header("range", "bytes=0-0")
             .build()?;
         let response = self.client.execute(request).await?;
@@ -181,7 +204,7 @@ impl HttpDownloader {
         let content_length = headers.get("content-length");
         let accept_ranges_flag = match accept_ranges {
             None => false,
-            Some(v) => v.to_str()?.eq("bytes")
+            Some(v) => v.to_str()?.eq("bytes"),
         };
         if accept_ranges_flag && content_length.is_some() {
             debug!("支持并发下载");
@@ -193,19 +216,27 @@ impl HttpDownloader {
             let t_size = size / self.config.block_size;
             if t_size <= 1 {
                 debug!("数据分片 <= 1，单线程下载");
-                return Ok(self.download().await?);
+                return self.download().await;
             }
             let first_attach = size % self.config.block_size;
             debug!("数据块长度 {}", size);
             debug!("启用 {} 个线程下载", t_size);
 
-            let mut futures = vec![
-                Box::pin(self.download_block_and_write(size, 0, 0, self.config.block_size - 1 + first_attach))
-            ];
+            let mut futures = vec![Box::pin(self.download_block_and_write(
+                size,
+                0,
+                0,
+                self.config.block_size - 1 + first_attach,
+            ))];
             for i in 1..t_size {
                 let start = i * self.config.block_size + first_attach;
 
-                let t = self.download_block_and_write(size, i, start, start + self.config.block_size - 1);
+                let t = self.download_block_and_write(
+                    size,
+                    i,
+                    start,
+                    start + self.config.block_size - 1,
+                );
                 futures.push(Box::pin(t))
             }
             let results = futures_util::future::join_all(futures.into_iter()).await;
@@ -220,5 +251,3 @@ impl HttpDownloader {
         }
     }
 }
-
-

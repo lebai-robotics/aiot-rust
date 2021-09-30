@@ -59,29 +59,28 @@ impl MqttClient {
     }
 
     pub fn new_public(host: &str, three: &ThreeTuple) -> Result<Self> {
-        let info = DeviceAuthInfo::from_tuple(&three);
-        let instance = MqttInstance::public(&host, &three.product_key);
+        let info = DeviceAuthInfo::from_tuple(three);
+        let instance = MqttInstance::public(host, &three.product_key);
         Self::new(three, &info, &instance)
     }
 
     pub fn new_public_tls(host: &str, three: &ThreeTuple) -> Result<Self> {
-        let mut res = Self::new_public(&host, &three)?;
+        let mut res = Self::new_public(host, three)?;
         res.enable_tls()?;
         Ok(res)
     }
 
     pub fn new_tls(end_point: &str, three: &ThreeTuple) -> Result<Self> {
-        let info = DeviceAuthInfo::from_tuple(&three);
+        let info = DeviceAuthInfo::from_tuple(three);
         let instance = MqttInstance::EndPoint(end_point.to_string());
-        let mut res = Self::new(&three, &info, &instance)?;
+        let mut res = Self::new(three, &info, &instance)?;
         res.enable_tls()?;
         Ok(res)
     }
 
     pub fn enable_tls(&mut self) -> Result<()> {
         let tls = auth::aliyun_client_config()?;
-        self
-            .options
+        self.options
             .set_transport(Transport::tls_with_config(tls.into()));
         Ok(())
     }
@@ -176,7 +175,7 @@ impl DeviceAuthInfo {
         let client_id = auth::mqtt::client_id(
             &three.product_key,
             &three.device_name,
-            &secure_mode,
+            secure_mode,
             "",
             false,
         );

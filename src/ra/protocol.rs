@@ -83,7 +83,7 @@ pub enum MsgType {
     //服务消费者发送的原始服务协议.
     KeepalivePing = 256,
     //心跳PING
-    KeepalivePong = 257,               //心跳PONG
+    KeepalivePong = 257, //心跳PONG
 }
 
 #[derive(Serialize_repr, Deserialize_repr, Debug, Copy, Clone, PartialEq)]
@@ -117,7 +117,7 @@ pub fn handshake_payload(
     ds: &str,
     service_meta: &[LocalServiceInfo],
 ) -> Result<String> {
-    let sign = auth::sign_device(&G_UUID, &dn, &pk, &ds, timestamp() as u128);
+    let sign = auth::sign_device(G_UUID, dn, pk, ds, timestamp() as u128);
     let msg = MsgHandshake {
         uuid: G_UUID,
         product_key: pk,
@@ -130,7 +130,7 @@ pub fn handshake_payload(
         signmethod: auth::SIGN_METHOD,
         sign: &sign,
     };
-    serde_json::to_string(&msg).map_err(|e| Error::SerdeError(e.into()))
+    serde_json::to_string(&msg).map_err(Error::SerdeError)
 }
 
 pub fn response_payload(code: ErrorCode, data: Option<&str>, msg: Option<&str>) -> Result<String> {
@@ -151,7 +151,7 @@ pub fn header(msg_type: MsgType, payload_len: usize, msg_id: &str, token: &str) 
         timestamp: timestamp(),
         token: Some(token.to_string()),
     };
-    serde_json::to_string(&msg).map_err(|e| Error::SerdeError(e.into()))
+    serde_json::to_string(&msg).map_err(Error::SerdeError)
 }
 
 pub fn parse_message(msg: Vec<u8>) -> Result<(MsgHead, Vec<u8>)> {
@@ -169,7 +169,7 @@ pub fn parse_message(msg: Vec<u8>) -> Result<(MsgHead, Vec<u8>)> {
     //     p.len(),
     //     String::from_utf8_lossy(&p)
     // );
-    let header: MsgHead = serde_json::from_slice(&h)?;
+    let header: MsgHead = serde_json::from_slice(h)?;
     if header.payload_len != p.len() {
         return Err(Error::HeaderFormatError(format!(
             "声明长度 {} != 实际长度 {}",
@@ -186,16 +186,16 @@ pub fn gen_response(
     token: &str,
     payload: &[u8],
 ) -> Result<Vec<u8>> {
-    let header = header(msg_type, payload.len(), &msg_id, &token)?;
+    let header = header(msg_type, payload.len(), msg_id, token)?;
     // let s = format!("{}{}{}", header, RNRN, String::f payload);
-    let s = [header.as_bytes(), &payload].join(RNRN.as_bytes());
+    let s = [header.as_bytes(), payload].join(RNRN.as_bytes());
     // debug!("响应给云端={}", String::from_utf8_lossy(&s));
     Ok(s)
 }
 
 pub fn gen_error(code: ErrorCode, msg: Option<&str>, msg_id: &str) -> Result<Vec<u8>> {
     let payload = response_payload(code, None, msg)?;
-    gen_response(MsgType::RespOk, &msg_id, "", payload.as_bytes())
+    gen_response(MsgType::RespOk, msg_id, "", payload.as_bytes())
 }
 
 #[cfg(test)]
@@ -205,7 +205,7 @@ mod tests {
     #[test]
     fn 测试serde_json() {
         let b = r#"{"msg_id":"MSG_FRONTEND_CONN_REQ_0.9149057932059996","msg_type":4,"payload_len":114,"service_type":1,"timestamp":0}"#;
-        let x = serde_json::from_str::<MsgHead>(&b).unwrap();
+        let x = serde_json::from_str::<MsgHead>(b).unwrap();
         println!("{:?}", x);
     }
 }

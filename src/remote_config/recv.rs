@@ -1,4 +1,4 @@
-use crate::alink::aiot_module::{ModuleRecvKind, get_aiot_json};
+use crate::alink::aiot_module::{get_aiot_json, ModuleRecvKind};
 use crate::alink::alink_topic::ALinkSubscribeTopic;
 use crate::{alink::AlinkResponse, Error};
 use enum_iterator::IntoEnumIterator;
@@ -43,9 +43,9 @@ impl ModuleRecvKind for super::RecvKind {
     fn to_payload(&self, payload: &[u8]) -> crate::Result<Self::Recv> {
         let json_str = get_aiot_json(payload);
         match *self {
-            Self::RemoteConfigGetReply => Ok(Self::Recv::RemoteConfigGetReply(serde_json::from_str(
-                &json_str,
-            )?)),
+            Self::RemoteConfigGetReply => Ok(Self::Recv::RemoteConfigGetReply(
+                serde_json::from_str(&json_str)?,
+            )),
             Self::RemoteConfigPush => Ok(Self::Recv::RemoteConfigPush(serde_json::from_str(
                 &json_str,
             )?)),

@@ -26,7 +26,7 @@ pub fn sign_device(uuid: &str, dn: &str, pk: &str, ds: &str, timestamp: u128) ->
         "clientId{}deviceName{}productKey{}timestamp{}",
         uuid, dn, pk, timestamp
     );
-    sign(&res, &ds)
+    sign(&res, ds)
 }
 
 pub mod mqtt {
@@ -49,9 +49,9 @@ pub mod mqtt {
         };
         super::sign_device(
             &uuid,
-            &device_name,
-            &product_key,
-            &device_secret,
+            device_name,
+            product_key,
+            device_secret,
             CORE_AUTH_TIMESTAMP,
         )
     }
@@ -91,7 +91,7 @@ pub mod http {
             device_name,
             product_key
         );
-        super::sign(&text, &device_secret)
+        super::sign(&text, device_secret)
     }
 }
 
@@ -140,7 +140,7 @@ mod tests {
         let output = "4780A5F17990D8DC4CCAD392683ED80160C4C2A1FFA649425CD0E2666A8593EB";
         assert_eq!(
             &output,
-            &mqtt::password(&product_key, &device_name, &device_secret, false)
+            &mqtt::password(product_key, device_name, device_secret, false)
         );
     }
 }

@@ -17,14 +17,13 @@ impl super::Module {
             method: None,
             version: None,
         };
-        self
-            .publish(
-                format!(
-                    "/sys/{}/{}/thing/bootstrap/notify_reply",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/sys/{}/{}/thing/bootstrap/notify_reply",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 }

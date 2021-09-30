@@ -1,4 +1,4 @@
-use crate::alink::aiot_module::{ModuleRecvKind, get_aiot_json};
+use crate::alink::aiot_module::{get_aiot_json, ModuleRecvKind};
 use crate::alink::alink_topic::ALinkSubscribeTopic;
 use crate::alink::AlinkRequest;
 use crate::{alink::AlinkResponse, Error};
@@ -30,18 +30,16 @@ impl ModuleRecvKind for super::RecvKind {
 
     fn get_topic(&self) -> ALinkSubscribeTopic {
         match *self {
-            Self::BootstrapNotify => {
-                ALinkSubscribeTopic::new_we("/sys/+/+/thing/bootstrap/notify")
-            }
+            Self::BootstrapNotify => ALinkSubscribeTopic::new_we("/sys/+/+/thing/bootstrap/notify"),
         }
     }
 
     fn to_payload(&self, payload: &[u8]) -> crate::Result<Self::Recv> {
         let json_str = get_aiot_json(payload);
         match *self {
-            Self::BootstrapNotify => Ok(Self::Recv::BootstrapNotify(
-                serde_json::from_str(&json_str)?,
-            )),
+            Self::BootstrapNotify => Ok(Self::Recv::BootstrapNotify(serde_json::from_str(
+                &json_str,
+            )?)),
         }
     }
 }

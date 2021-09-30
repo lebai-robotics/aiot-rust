@@ -55,27 +55,21 @@ impl MqttConnection {
 
 impl<TRecv> AiotModule<TRecv> {
     pub async fn publish<T>(&self, topic: String, payload: &T) -> Result<()>
-        where
-            T: ?Sized + Serialize,
+    where
+        T: ?Sized + Serialize,
     {
         let payload = serde_json::to_vec(payload)?;
         debug!("publish: {} {}", topic, String::from_utf8_lossy(&payload));
-        self
-            .client
+        self.client
             .publish(topic, QoS::AtMostOnce, false, payload)
             .await?;
         Ok(())
     }
 
     pub async fn poll(&mut self) -> Result<TRecv> {
-        self
-            .rx
-            .recv()
-            .await
-            .ok_or(Error::RecvTopicError)
+        self.rx.recv().await.ok_or(Error::RecvTopicError)
     }
 }
-
 
 pub fn get_aiot_json(payload: &[u8]) -> String {
     String::from_utf8_lossy(payload).replace(",\"data\":{},", ",\"data\":null,")

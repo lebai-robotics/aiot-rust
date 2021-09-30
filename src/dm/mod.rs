@@ -94,7 +94,7 @@ impl crate::Executor for Executor {
                 if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
                     return Ok(());
                 }
-                let payload: AlinkResponse<Value> = serde_json::from_slice(&payload)?;
+                let payload: AlinkResponse<Value> = serde_json::from_slice(payload)?;
 
                 let data = recv::GenericReply {
                     msg_id: payload.msg_id(),
@@ -112,7 +112,7 @@ impl crate::Executor for Executor {
             if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
                 return Ok(());
             }
-            let payload: AlinkRequest<Value> = serde_json::from_slice(&payload)?;
+            let payload: AlinkRequest<Value> = serde_json::from_slice(payload)?;
             let data = recv::PropertySet {
                 msg_id: payload.msg_id(),
                 params: payload.params.clone(),
@@ -126,7 +126,7 @@ impl crate::Executor for Executor {
             if &caps[1] != self.three.product_key || &caps[2] != self.three.device_name {
                 return Ok(());
             }
-            let payload: AlinkRequest<Value> = serde_json::from_slice(&payload)?;
+            let payload: AlinkRequest<Value> = serde_json::from_slice(payload)?;
             let data = recv::AsyncServiceInvoke {
                 msg_id: payload.msg_id(),
                 service_id: (&caps[3]).to_string(),
@@ -141,7 +141,7 @@ impl crate::Executor for Executor {
             if &caps[2] != self.three.product_key || &caps[3] != self.three.device_name {
                 return Ok(());
             }
-            let payload: AlinkRequest<Value> = serde_json::from_slice(&payload)?;
+            let payload: AlinkRequest<Value> = serde_json::from_slice(payload)?;
             let data = recv::SyncServiceInvoke {
                 rrpc_id: (&caps[1]).to_string(),
                 msg_id: payload.msg_id(),
@@ -199,7 +199,7 @@ struct DataModelInner {
     executor: Executor,
 }
 
-const TOPICS: &'static [&str] = &[
+const TOPICS: &[&str] = &[
     "/sys/+/+/thing/event/+/post_reply",
     "/sys/+/+/thing/service/property/set",
     "/sys/+/+/thing/service/+",
@@ -245,7 +245,7 @@ pub trait DataModel {
 
 impl DataModel for crate::MqttClient {
     fn data_model(&mut self, options: &DataModelOptions) -> Result<HalfRunner> {
-        let ra = DataModelInner::new(&options, self.three.clone())?;
+        let ra = DataModelInner::new(options, self.three.clone())?;
         self.executors
             .push(Box::new(ra.executor) as Box<dyn crate::Executor>);
         Ok(ra.runner)

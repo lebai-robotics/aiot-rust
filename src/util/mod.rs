@@ -31,7 +31,7 @@ pub fn str2hex(input: &str) -> Vec<u8> {
     }
     let mut output = Vec::with_capacity(input.len() / 2);
     let mut iter = input.as_bytes().chunks(2);
-    while let Some(chunk) = iter.next() {
+    for chunk in iter {
         let a = c2u(chunk[0]);
         let b = c2u(chunk[1]);
         let c = (a << 4) + b;

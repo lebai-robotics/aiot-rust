@@ -25,7 +25,6 @@ pub struct DeviceInfoWithSecret {
     pub device_secret: String,
 }
 
-
 impl From<DeviceInfoWithSecret> for DeviceInfoId {
     fn from(r: DeviceInfoWithSecret) -> Self {
         DeviceInfoId {

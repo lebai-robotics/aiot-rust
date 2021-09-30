@@ -21,15 +21,14 @@ impl super::Module {
             sys: Some(SysAck { ack: ack.into() }),
             method: Some("thing.deviceinfo.update".to_string()),
         };
-        self
-            .publish(
-                format!(
-                    "/sys/{}/{}/thing/deviceinfo/update",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/sys/{}/{}/thing/deviceinfo/update",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 
     /// 标签信息删除
@@ -51,15 +50,14 @@ impl super::Module {
             sys: Some(SysAck { ack: ack.into() }),
             method: Some("thing.deviceinfo.delete".to_string()),
         };
-        self
-            .publish(
-                format!(
-                    "/sys/{}/{}/thing/deviceinfo/delete",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await
+        self.publish(
+            format!(
+                "/sys/{}/{}/thing/deviceinfo/delete",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await
     }
 }
 

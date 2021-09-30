@@ -38,15 +38,14 @@ impl super::Module {
             sys: None,
             method: None,
         };
-        self
-            .publish(
-                format!(
-                    "/ota/device/inform/{}/{}",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await;
+        self.publish(
+            format!(
+                "/ota/device/inform/{}/{}",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await;
         Ok(())
     }
     /// 设备上报升级进度
@@ -58,15 +57,14 @@ impl super::Module {
             sys: None,
             method: None,
         };
-        self
-            .publish(
-                format!(
-                    "/ota/device/progress/{}/{}",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await;
+        self.publish(
+            format!(
+                "/ota/device/progress/{}/{}",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await;
         Ok(())
     }
 
@@ -83,15 +81,14 @@ impl super::Module {
             sys: None,
             method: None,
         };
-        self
-            .publish(
-                format!(
-                    "/sys/{}/{}/thing/ota/firmware/get",
-                    self.three.product_key, self.three.device_name
-                ),
-                &payload,
-            )
-            .await;
+        self.publish(
+            format!(
+                "/sys/{}/{}/thing/ota/firmware/get",
+                self.three.product_key, self.three.device_name
+            ),
+            &payload,
+        )
+        .await;
         Ok(())
     }
     /// 下载升级包直到完成，返回二进制数据
@@ -133,9 +130,9 @@ impl super::Module {
             },
             downloader.start(),
         )
-            .await;
+        .await;
         let mut ota_file_path = results.1?;
-        let mut buffer = fs::read(ota_file_path.clone())?;
+        let mut buffer = fs::read(ota_file_path)?;
         debug!("file size:{}", buffer.len());
         match package.sign_method.as_str() {
             "SHA256" | "Sha256" => {
