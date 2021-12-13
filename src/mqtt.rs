@@ -7,6 +7,7 @@ use rumqttc::{AsyncClient, Event, EventLoop, MqttOptions, Packet, Transport};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::time::Duration;
 
 #[derive(Debug, Clone)]
 pub enum MqttInstance {
@@ -48,7 +49,7 @@ impl MqttClient {
     pub fn new(three: &ThreeTuple, info: &DeviceAuthInfo, instance: &MqttInstance) -> Result<Self> {
         let (host, port) = instance.url();
         let mut options = MqttOptions::new(&info.client_id, &host, port);
-        options.set_keep_alive(300);
+        options.set_keep_alive(Duration::from_secs(1));
         options.set_credentials(&info.username, &info.password);
 
         Ok(Self {

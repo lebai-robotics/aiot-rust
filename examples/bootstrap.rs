@@ -1,5 +1,4 @@
 use aiot::mqtt::MqttConnection;
-use aiot::tag;
 use aiot::{MqttClient, ThreeTuple};
 use anyhow::Result;
 
