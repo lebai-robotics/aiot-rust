@@ -5,6 +5,7 @@ use tokio::task;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    env_logger::init();
     let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
     let three = ThreeTuple::from_env();
     let (client, mut eventloop) = MqttClient::new_public_tls(host, &three)?.connect();

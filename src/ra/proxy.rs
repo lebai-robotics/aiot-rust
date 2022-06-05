@@ -4,7 +4,6 @@ use super::session::{SessionId, SessionList};
 use super::{Error, RemoteAccessOptions, Result};
 use crate::util::{auth, rand_string};
 use log::*;
-use rustls::ClientConfig;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::net::TcpStream;
@@ -21,7 +20,7 @@ pub struct RemoteAccessProxy {
     cloud_rx: Receiver<Vec<u8>>,
     params: RemoteAccessOptions,
     local_services: Vec<LocalServiceInfo>,
-    client_config: Arc<ClientConfig>,
+    client_config: Arc<rustls::client::ClientConfig>,
 }
 
 impl RemoteAccessProxy {

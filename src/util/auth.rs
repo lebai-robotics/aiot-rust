@@ -1,7 +1,6 @@
 //! 签名和证书
 
 use crate::{Error, Result};
-use rustls::ClientConfig;
 
 pub const SIGN_METHOD: &str = "hmacsha256";
 
@@ -118,14 +117,30 @@ DKqC5JlR3XC321Y9YeRq4VzW9v493kHMB65jUr9TU/Qr6cf9tveCX4XSQRjbgbME
 HMUfpIBvFSDJ3gyICh3WZlXi/EjJKSZp4A==
 -----END CERTIFICATE-----"#;
 
-pub fn aliyun_client_config() -> Result<ClientConfig> {
-    let mut client_config = ClientConfig::new();
+fn aliyun_root_cert_store() -> Result<rustls::RootCertStore> {
+    let mut store = rustls::RootCertStore::empty();
     let mut cred = ALI_CA_CERT.clone().as_bytes();
-    client_config
-        .root_store
-        .add_pem_file(&mut cred)
-        .map_err(|_| Error::AddPemFileError)?;
-    Ok(client_config)
+    let mut items = rustls_pemfile::certs(&mut cred).map_err(|err| {
+        log::error!("rustls_pemfile::certs {err}");
+        Error::AddPemFileError
+    })?;
+    for item in items {
+        let cert = rustls::Certificate(item);
+        store.add(&cert).map_err(|err| {
+            log::error!("RootCertStore.add {err}");
+            Error::AddPemFileError
+        })?;
+    }
+    Ok(store)
+}
+
+pub fn aliyun_client_config() -> Result<rustls::ClientConfig> {
+    let builder = rustls::ClientConfig::builder();
+    let config = builder
+        .with_safe_defaults()
+        .with_root_certificates(aliyun_root_cert_store()?)
+        .with_no_client_auth();
+    Ok(config)
 }
 
 #[cfg(test)]
