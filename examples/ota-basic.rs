@@ -13,7 +13,7 @@ async fn main() -> Result<()> {
     let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(host, &three)?);
     let mut ota = mqtt_connection.ota()?;
 
-    ota.report_version(String::from("0.0.0"), None).await?;
+    ota.report_version("0.0.0", Some("RC")).await?;
 
     ota.query_firmware(None).await?;
     loop {
@@ -26,18 +26,16 @@ async fn main() -> Result<()> {
                  match recv {
                       OTARecv::UpgradePackageRequest(request) => {
                         if let Some(package) = request.data{
+                            info!("{package:?}");
                             let _data = ota.download_upgrade_package(&package).await?;
-
-                            ota.report_version(package.version.clone(), package.module.clone()).await?;
+                            // ota.report_version(&package.version, package.module.as_ref().map(|x| &**x)).await?;
                         }
-                        //  info!("data:{:?}",data);
                      },
                      OTARecv::GetFirmwareReply(request) => {
                         if let Some(package) = request.data{
-                            let data = ota.download_upgrade_package(&package).await?;
-
-                            ota.report_version(package.version.clone(), package.module.clone()).await?;
-                            info!("data:{:?}",data);
+                            info!("{package:?}");
+                            let _data = ota.download_upgrade_package(&package).await?;
+                            // ota.report_version(&package.version, package.module.as_ref().map(|x| &**x)).await?;
                         }
                     },
                  }

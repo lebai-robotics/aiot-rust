@@ -28,12 +28,15 @@ impl super::Module {
     /// * `module` - 上报的OTA模块，默认为 "default"
     pub async fn report_version(
         &mut self,
-        version: String,
-        module: Option<String>,
+        version: &str,
+        module: Option<&str>,
     ) -> crate::Result<()> {
         let payload = ReportVersionRequest {
             id: global_id_next().to_string(),
-            params: ReportVersion { version, module },
+            params: ReportVersion {
+                version: version.to_string(),
+                module: module.map(|s| s.to_string()),
+            },
             version: ALINK_VERSION.to_string(),
             sys: None,
             method: None,
@@ -106,13 +109,13 @@ impl super::Module {
         let tmp_dir = TempDir::new("ota")?;
         let file_path = tmp_dir.path().join(format!(
             "{}_{}",
-            module.clone().unwrap_or(String::from("default")),
+            module.clone().unwrap_or("default".to_string()),
             version
         ));
         let downloader = HttpDownloader::new(HttpDownloadConfig {
             block_size: 8000000,
             uri: package.url.clone(),
-            file_path: String::from(file_path.to_str().unwrap()),
+            file_path: file_path.to_str().unwrap().to_string(),
         });
         let results = futures_util::future::join(
             async {
