@@ -10,9 +10,9 @@ use rand::Rng;
 use rand::SeedableRng;
 use std::sync::Mutex;
 
-pub const VERSION: Option<&'static str> = std::option_env!("CARGO_PKG_VERSION");
+pub const VERSION: &'static str = std::env!("CARGO_PKG_VERSION");
 lazy_static! {
-    pub static ref CORE_SDK_VERSION: String = format!("sdk-rust-{}", VERSION.unwrap_or("unknown"));
+    pub static ref CORE_SDK_VERSION: String = format!("sdk-rust-{}", VERSION);
     static ref RNG: Mutex<StdRng> = Mutex::new(StdRng::seed_from_u64(timestamp()));
 }
 
