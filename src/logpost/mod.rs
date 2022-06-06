@@ -7,7 +7,6 @@ use crate::mqtt::MqttConnection;
 use crate::{Error, Result, ThreeTuple};
 use enum_iterator::IntoEnumIterator;
 use log::*;
-use log::*;
 use regex::Regex;
 use rumqttc::{AsyncClient, QoS};
 use serde::{Deserialize, Serialize};

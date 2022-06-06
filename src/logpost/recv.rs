@@ -1,11 +1,10 @@
-use super::base::LogConfig;
+use super::base::{LogConfig, LogItem};
 use crate::alink::aiot_module::{get_aiot_json, ModuleRecvKind};
 use crate::alink::alink_topic::ALinkSubscribeTopic;
 use crate::alink::{AlinkRequest, AlinkResponse, SimpleResponse};
 use crate::{Error, Result, ThreeTuple};
 use enum_iterator::IntoEnumIterator;
 use enum_kinds::EnumKind;
-use log::*;
 use regex::Regex;
 use rumqttc::{AsyncClient, QoS};
 use serde::{Deserialize, Serialize};
@@ -22,6 +21,10 @@ pub type ConfigLogGetReply = AlinkResponse<LogConfig>;
 // /sys/${productKey}/${deviceName}/thing/config/log/push
 pub type ConfigLogPush = AlinkRequest<LogConfig>;
 
+// 设备上报日志内容响应
+// /sys/${productKey}/${deviceName}/thing/log/post_reply
+pub type LogPostReply = SimpleResponse;
+
 #[derive(Debug, EnumKind)]
 #[enum_kind(LogPostRecvKind, derive(Serialize, IntoEnumIterator, Deserialize))]
 pub enum LogPostRecv {
@@ -29,6 +32,8 @@ pub enum LogPostRecv {
     ConfigLogGetReply(ConfigLogGetReply),
     /// 设备接收订阅云端推送日志配置
     ConfigLogPush(ConfigLogPush),
+    /// 设备上报日志内容响应
+    LogPostReply(LogPostReply),
 }
 
 impl ModuleRecvKind for super::RecvKind {
@@ -39,6 +44,7 @@ impl ModuleRecvKind for super::RecvKind {
         match *self {
             Self::ConfigLogGetReply => Ok(Self::Recv::ConfigLogGetReply(serde_json::from_str(&s)?)),
             Self::ConfigLogPush => Ok(Self::Recv::ConfigLogPush(serde_json::from_str(&s)?)),
+            Self::LogPostReply => Ok(Self::Recv::LogPostReply(serde_json::from_str(&s)?)),
         }
     }
 
@@ -48,6 +54,7 @@ impl ModuleRecvKind for super::RecvKind {
                 ALinkSubscribeTopic::new("/sys/+/+/thing/config/log/get_reply")
             }
             Self::ConfigLogPush => ALinkSubscribeTopic::new("/sys/+/+/thing/config/log/push"),
+            Self::LogPostReply => ALinkSubscribeTopic::new("/sys/+/+/thing/log/post_reply"),
         }
     }
 }

@@ -10,7 +10,7 @@ use tokio::sync::mpsc::{Receiver, Sender};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct LogPostRequest {
+pub struct LogItem {
     /// 日志的采集时间，为设备本地UTC时间，包含时区信息，以毫秒计，格式为`yyyy-MM-dd'T'HH:mm:ss.SSSZ`。 可上报其它字符串格式，但不利于问题排查，不推荐使用。
     pub utc_time: String,
     /// 日志级别。可以使用默认日志级别，也可以自定义日志级别。默认日志级别从高到低为：
