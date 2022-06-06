@@ -1,4 +1,4 @@
-use aiot::{LogPost, MqttClient, ThreeTuple};
+use aiot::{MqttClient, ThreeTuple};
 use anyhow::Result;
 use log::*;
 
@@ -8,17 +8,13 @@ async fn main() -> Result<()> {
     let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
     let three = ThreeTuple::from_env();
 
-    let mut client = MqttClient::new_public_tls(host, &three)?;
+    let mut conn = MqttClient::new_public_tls(host, &three)?.connect();
+    let mut log_post = conn.log_post()?;
 
-    let log_post = client.log_post()?;
-
-    let (client, mut eventloop) = client.connect();
-
-    let mut log_post = log_post.init(&client).await?;
-
+    log_post.get("device", "content").await?;
     loop {
         tokio::select! {
-            Ok(event) = eventloop.poll() => {
+            Ok(event) = conn.poll() => {
                 info!("{:?}", event);
             }
             Ok(log_config) = log_post.poll() => {

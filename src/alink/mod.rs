@@ -144,7 +144,7 @@ impl<T> AlinkRequest<T> {
     }
 }
 
-// sys下的扩展功能字段，表示是否返回响应数据。1：云端返回响应数据。0：云端不返回响应数据。
+/// sys下的扩展功能字段，表示是否返回响应数据。1：云端返回响应数据。0：云端不返回响应数据。
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct SysAck {
     pub ack: i32,

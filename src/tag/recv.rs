@@ -1,14 +1,12 @@
-use std::any::TypeId;
-
-use enum_iterator::IntoEnumIterator;
-use enum_kinds::EnumKind;
-use log::*;
-use serde::{Deserialize, Serialize};
-
 use crate::alink::aiot_module::{get_aiot_json, ModuleRecvKind};
 use crate::alink::alink_topic::ALinkSubscribeTopic;
 use crate::alink::{AlinkResponse, SimpleResponse};
 use crate::Error;
+use enum_iterator::IntoEnumIterator;
+use enum_kinds::EnumKind;
+use log::*;
+use serde::{Deserialize, Serialize};
+use std::any::TypeId;
 
 // 标签信息上报响应
 // /sys/{productKey}/{deviceName}/thing/deviceinfo/update_reply
