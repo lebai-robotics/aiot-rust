@@ -46,13 +46,13 @@ impl DynamicRegister {
     }
 
     pub async fn register(mut self) -> Result<DynamicRegisterResult> {
-        let (_, mut eventloop) = self.mqtt.connect();
+        let mut conn = self.mqtt.connect();
         loop {
             tokio::select! {
                 Some(res) = self.rx.recv() => {
                     return Ok(res);
                 },
-                Ok(n) = eventloop.poll() => {
+                Ok(n) = conn.poll() => {
                     debug!("Received = {:?}", n);
                 },
                 else => {
@@ -162,16 +162,15 @@ impl crate::Executor for DynamicRegisterOptions {
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct DeviceInfoWhitelist {
-    #[serde(rename = "deviceSecret")]
     pub device_secret: String,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct RecvNoWhitelist {
-    #[serde(rename = "clientId")]
     pub client_id: String,
-    #[serde(rename = "deviceToken")]
     pub device_token: String,
 }
 

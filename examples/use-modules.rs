@@ -1,6 +1,4 @@
 use aiot::bootstrap::recv::BootstrapRecv;
-use aiot::mqtt::MqttConnection;
-
 use aiot::tag;
 use aiot::tag::base::DeviceInfoKeyValue;
 use aiot::{MqttClient, ThreeTuple};
@@ -14,9 +12,9 @@ async fn main() -> Result<()> {
 
     let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
     let three = ThreeTuple::from_env();
-    let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(host, &three)?);
-    let mut tag = mqtt_connection.tag()?;
-    let mut bootstrap = mqtt_connection.bootstrap()?;
+    let mut conn = MqttClient::new_public_tls(host, &three)?.connect();
+    let mut tag = conn.tag()?;
+    let mut bootstrap = conn.bootstrap()?;
     tag.update(
         vec![
             DeviceInfoKeyValue {
@@ -34,25 +32,23 @@ async fn main() -> Result<()> {
 
     loop {
         tokio::select! {
-            Ok(notification) = mqtt_connection.poll() => {
+            Ok(notification) = conn.poll() => {
                 // 主循环的 poll 是必须的
                 info!("Received = {:?}", notification);
             }
             Ok(recv) = tag.poll() => {
-                   match recv {
-                 TagRecv::DeviceInfoUpdateResponse(_) => {
-
-                 },
-                 TagRecv::DeviceInfoDeleteResponse(_) => {
-                 },
-              }
+                match recv {
+                    TagRecv::DeviceInfoUpdateResponse(_) => {
+                    },
+                    TagRecv::DeviceInfoDeleteResponse(_) => {
+                    },
+                }
             }
             Ok(recv) = bootstrap.poll() => {
-                   match recv {
-                 BootstrapRecv::BootstrapNotify(_) => {
-
-                 },
-              }
+                match recv {
+                    BootstrapRecv::BootstrapNotify(_) => {
+                    },
+                }
             }
         }
     }

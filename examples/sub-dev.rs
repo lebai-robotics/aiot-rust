@@ -1,12 +1,9 @@
-use aiot::mqtt::MqttConnection;
-use aiot::subdev::base::DeviceInfoWithSecret;
+use aiot::subdev::base::{DeviceInfoId, DeviceInfoWithSecret};
+use aiot::subdev::push::LoginParam;
 use aiot::subdev::recv::SubDevRecv;
+use aiot::{MqttClient, ThreeTuple};
 use anyhow::Result;
 use log::*;
-
-use aiot::subdev::base::DeviceInfoId;
-use aiot::subdev::push::LoginParam;
-use aiot::{MqttClient, ThreeTuple};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -15,8 +12,8 @@ async fn main() -> Result<()> {
     let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
     let three = ThreeTuple::from_env();
 
-    let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(host, &three)?);
-    let mut subdev = mqtt_connection.subdev()?;
+    let mut conn = MqttClient::new_public_tls(host, &three)?.connect();
+    let mut subdev = conn.subdev()?;
 
     let sub_device_id = DeviceInfoId {
         product_key: "gbgmHl8l0ee".to_string(),
@@ -67,7 +64,7 @@ async fn main() -> Result<()> {
 
     loop {
         tokio::select! {
-             Ok(notification) = mqtt_connection.poll() => {
+             Ok(notification) = conn.poll() => {
                   // 主循环的 poll 是必须的
                   info!("Received = {:?}", notification);
              }

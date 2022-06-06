@@ -9,18 +9,16 @@ use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct NtpRequest {
-    #[serde(rename = "deviceSendTime")]
     pub device_send_time: u64,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct NtpResponse {
-    #[serde(rename = "deviceSendTime")]
     pub device_send_time: i64,
-    #[serde(rename = "serverRecvTime")]
     pub server_recv_time: i64,
-    #[serde(rename = "serverSendTime")]
     pub server_send_time: i64,
 }
 

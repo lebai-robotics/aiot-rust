@@ -1,4 +1,3 @@
-use aiot::mqtt::MqttConnection;
 use anyhow::Result;
 use log::*;
 
@@ -12,8 +11,8 @@ async fn main() -> Result<()> {
 
     let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
     let three = ThreeTuple::from_env();
-    let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(host, &three)?);
-    let mut shadow = mqtt_connection.shadow()?;
+    let mut conn = MqttClient::new_public_tls(host, &three)?.connect();
+    let mut shadow = conn.shadow()?;
 
     shadow
         .update(
@@ -39,7 +38,7 @@ async fn main() -> Result<()> {
 
     loop {
         tokio::select! {
-            Ok(notification) = mqtt_connection.poll() => {
+            Ok(notification) = conn.poll() => {
                 // 主循环的 poll 是必须的
                 info!("Received = {:?}", notification);
             }

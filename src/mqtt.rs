@@ -85,13 +85,8 @@ impl MqttClient {
         Ok(())
     }
 
-    pub fn connect(self) -> (AsyncClient, MqttEventLoop) {
-        let (mqtt, eventloop) = AsyncClient::new(self.options, 16);
-        let el = MqttEventLoop {
-            eventloop,
-            executors: self.executors,
-        };
-        (mqtt, el)
+    pub fn connect(self) -> MqttConnection {
+        MqttConnection::new(self)
     }
 }
 
@@ -117,31 +112,6 @@ impl MqttConnection {
             Event::Incoming(packet) => match packet {
                 Packet::Publish(data) => {
                     for e in &self.mqtt_client.executors {
-                        if let Err(err) = e.execute(&data.topic, &data.payload).await {
-                            error!("{} error: {}", data.topic, err);
-                        }
-                    }
-                }
-                _ => {}
-            },
-            _ => {}
-        }
-        Ok(incoming)
-    }
-}
-
-pub struct MqttEventLoop {
-    eventloop: EventLoop,
-    executors: Vec<Box<dyn Executor>>,
-}
-
-impl MqttEventLoop {
-    pub async fn poll(&mut self) -> Result<Event> {
-        let incoming = self.eventloop.poll().await?;
-        match &incoming {
-            Event::Incoming(packet) => match packet {
-                Packet::Publish(data) => {
-                    for e in &self.executors {
                         if let Err(err) = e.execute(&data.topic, &data.payload).await {
                             error!("{} error: {}", data.topic, err);
                         }

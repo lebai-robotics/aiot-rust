@@ -1,5 +1,3 @@
-use aiot::mqtt::MqttConnection;
-
 use aiot::tag;
 use aiot::tag::base::DeviceInfoKeyValue;
 use aiot::{MqttClient, ThreeTuple};
@@ -13,8 +11,8 @@ async fn main() -> Result<()> {
 
     let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
     let three = ThreeTuple::from_env();
-    let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(host, &three)?);
-    let mut tag = mqtt_connection.tag()?;
+    let mut conn = MqttClient::new_public_tls(host, &three)?.connect();
+    let mut tag = conn.tag()?;
     tag.update(
         vec![
             DeviceInfoKeyValue {
@@ -37,7 +35,7 @@ async fn main() -> Result<()> {
 
     loop {
         tokio::select! {
-            Ok(notification) = mqtt_connection.poll() => {
+            Ok(notification) = conn.poll() => {
                 // 主循环的 poll 是必须的
                 info!("Received = {:?}", notification);
             }

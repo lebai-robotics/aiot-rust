@@ -132,14 +132,6 @@ impl HttpDownloader {
         Ok(file_name.clone())
     }
 
-    /// 写入文件
-    async fn write_file(&self, response: Response, file_name: &str) -> Result<()> {
-        let bytes = response.bytes().await?;
-        fs::write(file_name, bytes.iter())?;
-        debug!("write {}", file_name);
-        Ok(())
-    }
-
     /// 合并文件
     fn merge(&self, size: u64) -> Result<String> {
         let file_path = std::path::Path::new(&self.config.file_path);

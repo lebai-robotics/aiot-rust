@@ -91,12 +91,10 @@ impl Http {
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct HttpAuthBody {
-    #[serde(rename = "productKey")]
     pub product_key: String,
-    #[serde(rename = "deviceName")]
     pub device_name: String,
-    #[serde(rename = "clientId")]
     pub client_id: String,
     // pub timestamp: Option<String>,
     pub sign: String,

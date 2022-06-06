@@ -1,7 +1,6 @@
+use aiot::{ota::recv::OTARecv, MqttClient, ThreeTuple};
 use anyhow::Result;
 use log::*;
-
-use aiot::{mqtt::MqttConnection, ota::recv::OTARecv, MqttClient, ThreeTuple};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -10,15 +9,15 @@ async fn main() -> Result<()> {
     let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
     let three = ThreeTuple::from_env();
 
-    let mut mqtt_connection = MqttConnection::new(MqttClient::new_public_tls(host, &three)?);
-    let mut ota = mqtt_connection.ota()?;
+    let mut conn = MqttClient::new_public_tls(host, &three)?.connect();
+    let mut ota = conn.ota()?;
 
     ota.report_version("0.0.0", Some("RC")).await?;
 
     ota.query_firmware(None).await?;
     loop {
         tokio::select! {
-             Ok(notification) = mqtt_connection.poll() => {
+             Ok(notification) = conn.poll() => {
                   // 主循环的 poll 是必须的
                   info!("Received = {:?}", notification);
              }

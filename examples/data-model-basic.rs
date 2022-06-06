@@ -8,12 +8,10 @@ async fn main() -> Result<()> {
     env_logger::init();
     let host = "iot-as-mqtt.cn-shanghai.aliyuncs.com";
     let three = ThreeTuple::from_env();
-    let mut client = MqttClient::new_public_tls(host, &three)?;
+    let mut conn = MqttClient::new_public_tls(host, &three)?.connect();
 
     let options = DataModelOptions::new();
-    let dm = client.data_model(&options)?;
-    let (client, mut eventloop) = client.connect();
-    let mut dm = dm.init(&client).await?;
+    let mut dm = conn.data_model(&options)?;
 
     dm.send(DataModelMsg::property_post(json!({
         "LightSwitch": 0

@@ -14,7 +14,7 @@ pub use dm::{DataModel, DataModelOptions};
 pub use dynregmq::{DynamicRegister, DynamicRegisterResult};
 pub use http::Http;
 pub use logpost::LogPost;
-pub use mqtt::{DeviceAuthInfo, MqttClient, MqttInstance};
+pub use mqtt::{DeviceAuthInfo, MqttClient, MqttConnection, MqttInstance};
 pub use ntp::NtpService;
 pub use ra::RemoteAccess;
 pub use util::error::{Error, Result};
