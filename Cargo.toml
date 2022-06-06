@@ -19,7 +19,6 @@ futures-util = { version = "^0.3", default-features = false, features = [
     "std",
 ] }
 hmac = "^0.11"
-hyper-tls = { version = "^0.5", features = ["vendored"] }
 lazy_static = "^1.4"
 libc = "^0.2"
 log = "^0.4"
