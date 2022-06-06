@@ -1,23 +1,18 @@
-use std::fs;
-
-use crate::Error;
-use crypto::digest::Digest;
-use log::debug;
-use tempdir::TempDir;
-
-use crate::alink::{global_id_next, SysAck, ALINK_VERSION};
-use crate::http_downloader::{HttpDownloadConfig, HttpDownloader};
-use serde_json::Value;
-use std::collections::HashMap;
-
+use super::base::*;
 use crate::alink::alink_topic::ALinkSubscribeTopic;
+use crate::alink::{global_id_next, SysAck, ALINK_VERSION};
 use crate::alink::{AlinkRequest, AlinkResponse};
+use crate::http_downloader::{HttpDownloadConfig, HttpDownloader};
 use crate::subdev::base::DeviceInfoId;
+use crate::Error;
 use enum_iterator::IntoEnumIterator;
 use enum_kinds::EnumKind;
+use log::debug;
 use serde::{Deserialize, Serialize};
-
-use super::base::*;
+use serde_json::Value;
+use std::collections::HashMap;
+use std::fs;
+use tempdir::TempDir;
 
 impl super::Module {
     /// 设备上报OTA模块版本
@@ -137,22 +132,18 @@ impl super::Module {
         let mut ota_file_path = results.1?;
         let mut buffer = fs::read(ota_file_path)?;
         debug!("file size:{}", buffer.len());
-        match package.sign_method.as_str() {
-            "SHA256" | "Sha256" => {
-                let mut sha256 = crypto::sha2::Sha256::new();
-                sha256.input(&buffer);
-                let computed_result = sha256.result_str();
-                if computed_result != package.sign {
-                    debug!("computed_result:{} sign:{}", computed_result, package.sign);
+        match package.sign_method.to_ascii_lowercase().as_str() {
+            "sha256" => {
+                let result = crate::util::sha256(&buffer);
+                if result != package.sign {
+                    debug!("result:{} sign:{}", result, package.sign);
                     return Err(Error::FileValidateFailed);
                 }
             }
-            "Md5" | "MD5" => {
-                let mut md5 = crypto::md5::Md5::new();
-                md5.input(&buffer);
-                let computed_result = md5.result_str();
-                if computed_result != package.sign {
-                    debug!("computed_result:{} sign:{}", computed_result, package.sign);
+            "md5" => {
+                let result = crate::util::md5(&buffer);
+                if result != package.sign {
+                    debug!("result:{} sign:{}", result, package.sign);
                     return Err(Error::FileValidateFailed);
                 }
             }

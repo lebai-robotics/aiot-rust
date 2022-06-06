@@ -1,17 +1,14 @@
-use std::fs;
-
+use super::recv::RemoteConfigFileInfo;
 use crate::Error;
 use crate::{
     alink::{global_id_next, AlinkRequest, AlinkResponse, SysAck, ALINK_VERSION},
     http_downloader::{HttpDownloadConfig, HttpDownloader},
 };
-use crypto::digest::Digest;
 use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::fs;
 use tempdir::TempDir;
-
-use super::recv::RemoteConfigFileInfo;
 
 impl super::Module {
     /// 设备主动请求配置信息
@@ -75,28 +72,18 @@ impl super::Module {
         let config_file_path = downloader.start().await?;
         let mut buffer = fs::read(config_file_path)?;
         debug!("size:{}", buffer.len());
-        match config_info.sign_method.as_str() {
-            "SHA256" | "Sha256" => {
-                let mut sha256 = crypto::sha2::Sha256::new();
-                sha256.input(&buffer);
-                let computed_result = sha256.result_str();
-                if computed_result != config_info.sign {
-                    debug!(
-                        "computed_result:{} sign:{}",
-                        computed_result, config_info.sign
-                    );
+        match config_info.sign_method.to_ascii_lowercase().as_str() {
+            "sha256" => {
+                let result = crate::util::sha256(&buffer);
+                if result != config_info.sign {
+                    debug!("result:{} sign:{}", result, config_info.sign);
                     return Err(Error::FileValidateFailed);
                 }
             }
-            "Md5" | "MD5" => {
-                let mut md5 = crypto::md5::Md5::new();
-                md5.input(&buffer);
-                let computed_result = md5.result_str();
-                if computed_result != config_info.sign {
-                    debug!(
-                        "computed_result:{} sign:{}",
-                        computed_result, config_info.sign
-                    );
+            "md5" => {
+                let result = crate::util::md5(&buffer);
+                if result != config_info.sign {
+                    debug!("result:{} sign:{}", result, config_info.sign);
                     return Err(Error::FileValidateFailed);
                 }
             }

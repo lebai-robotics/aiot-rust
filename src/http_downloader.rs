@@ -220,7 +220,7 @@ impl HttpDownloader {
             }
             let first_attach = size % self.config.block_size;
             debug!("数据块长度 {}", size);
-            debug!("启用 {} 个线程下载", t_size);
+            info!("启用 {} 个线程下载", t_size);
 
             let mut futures = vec![Box::pin(self.download_block_and_write(
                 size,

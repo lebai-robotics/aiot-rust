@@ -6,7 +6,7 @@ pub const SIGN_METHOD: &str = "hmacsha256";
 
 pub fn sign(input: &str, key: &str) -> String {
     use super::hex2str;
-    use hmac::{Hmac, Mac, NewMac};
+    use hmac::{Hmac, Mac};
     use sha2::Sha256;
     type HmacSha256 = Hmac<Sha256>;
     match HmacSha256::new_from_slice(key.as_bytes()) {

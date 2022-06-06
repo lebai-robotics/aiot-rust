@@ -57,6 +57,22 @@ pub fn rand_string(len: usize) -> String {
         .collect()
 }
 
+pub fn sha256(buffer: &[u8]) -> String {
+    use sha2::{Digest, Sha256, Sha512};
+    let mut hasher = Sha256::new();
+    hasher.update(&buffer);
+    let result = hasher.finalize();
+    String::from_utf8_lossy(&result).into()
+}
+
+pub fn md5(buffer: &[u8]) -> String {
+    use md5::{Digest, Md5};
+    let mut hasher = Md5::new();
+    hasher.update(&buffer);
+    let result = hasher.finalize();
+    String::from_utf8_lossy(&result).into()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
