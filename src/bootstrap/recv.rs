@@ -34,7 +34,7 @@ impl ModuleRecvKind for super::RecvKind {
         }
     }
 
-    fn to_payload(&self, payload: &[u8]) -> crate::Result<Self::Recv> {
+    fn to_payload(&self, payload: &[u8], _: &Vec<String>) -> crate::Result<Self::Recv> {
         let json_str = get_aiot_json(payload);
         match *self {
             Self::BootstrapNotify => Ok(Self::Recv::BootstrapNotify(serde_json::from_str(

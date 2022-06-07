@@ -28,7 +28,7 @@ pub enum TagRecv {
 impl ModuleRecvKind for super::RecvKind {
     type Recv = super::Recv;
 
-    fn to_payload(&self, payload: &[u8]) -> crate::Result<TagRecv> {
+    fn to_payload(&self, payload: &[u8], _: &Vec<String>) -> crate::Result<TagRecv> {
         let json_str = get_aiot_json(payload);
         match *self {
             Self::DeviceInfoUpdateResponse => Ok(Self::Recv::DeviceInfoUpdateResponse(

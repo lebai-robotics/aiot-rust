@@ -9,9 +9,6 @@
 
 use alink::aiot_module::ModuleRecvKind;
 pub use alink::ThreeTuple;
-pub use dm::msg::{DataModelMsg, MsgEnum};
-pub use dm::recv::{DataModelRecv, RecvEnum};
-pub use dm::{DataModel, DataModelOptions};
 pub use dynregmq::{DynamicRegister, DynamicRegisterResult};
 pub use http::Http;
 pub use mqtt::{DeviceAuthInfo, MqttClient, MqttConnection, MqttInstance};
@@ -44,8 +41,9 @@ where
     RecvKind: ModuleRecvKind,
 {
     log::debug!("receive: {} {}", topic, String::from_utf8_lossy(payload));
-    if let Some(kind) = RecvKind::match_kind(topic, &three.product_key, &three.device_name) {
-        kind.to_payload(payload)
+    if let Some((kind, caps)) = RecvKind::match_kind(topic, &three.product_key, &three.device_name)
+    {
+        kind.to_payload(payload, &caps)
     } else {
         Err(Error::InvalidTopic(topic.to_string()))
     }

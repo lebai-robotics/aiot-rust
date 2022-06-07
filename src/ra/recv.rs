@@ -33,7 +33,7 @@ impl RemoteAccessRecv {
 impl ModuleRecvKind for super::RecvKind {
     type Recv = super::Recv;
 
-    fn to_payload(&self, payload: &[u8]) -> crate::Result<RemoteAccessRecv> {
+    fn to_payload(&self, payload: &[u8], _: &Vec<String>) -> crate::Result<RemoteAccessRecv> {
         let s = get_aiot_json(payload);
         match *self {
             Self::EdgeDebugSwitchRequest => Ok(Self::Recv::EdgeDebugSwitchRequest(

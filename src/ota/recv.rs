@@ -24,7 +24,7 @@ pub enum OTARecv {
 
 impl ModuleRecvKind for super::RecvKind {
     type Recv = super::Recv;
-    fn to_payload(&self, payload: &[u8]) -> crate::Result<OTARecv> {
+    fn to_payload(&self, payload: &[u8], _: &Vec<String>) -> crate::Result<OTARecv> {
         let json_str = get_aiot_json(payload);
         match *self {
             Self::UpgradePackageRequest => Ok(Self::Recv::UpgradePackageRequest(

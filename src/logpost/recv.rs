@@ -39,7 +39,7 @@ pub enum LogPostRecv {
 impl ModuleRecvKind for super::RecvKind {
     type Recv = super::Recv;
 
-    fn to_payload(&self, payload: &[u8]) -> crate::Result<LogPostRecv> {
+    fn to_payload(&self, payload: &[u8], _: &Vec<String>) -> crate::Result<LogPostRecv> {
         let s = get_aiot_json(payload);
         match *self {
             Self::ConfigLogGetReply => Ok(Self::Recv::ConfigLogGetReply(serde_json::from_str(&s)?)),

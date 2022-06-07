@@ -33,7 +33,7 @@ impl NtpRecv {
 impl ModuleRecvKind for super::RecvKind {
     type Recv = super::Recv;
 
-    fn to_payload(&self, payload: &[u8]) -> crate::Result<NtpRecv> {
+    fn to_payload(&self, payload: &[u8], _: &Vec<String>) -> crate::Result<NtpRecv> {
         let s = get_aiot_json(payload);
         match *self {
             Self::NtpResponseType => Ok(Self::Recv::NtpResponseType(serde_json::from_str(&s)?)),

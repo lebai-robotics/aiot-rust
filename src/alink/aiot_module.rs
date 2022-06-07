@@ -15,17 +15,20 @@ use tokio::sync::mpsc::{Receiver, Sender};
 
 pub trait ModuleRecvKind: IntoEnumIterator {
     type Recv;
-    fn match_kind(topic: &str, product_key: &str, device_name: &str) -> Option<Self> {
+    fn match_kind(
+        topic: &str,
+        product_key: &str,
+        device_name: &str,
+    ) -> Option<(Self, Vec<String>)> {
         for item in Self::into_enum_iter() {
             let alink_topic = item.get_topic();
-            if !alink_topic.is_match(topic, product_key, device_name) {
-                continue;
+            if let Some(caps) = alink_topic.matches(topic, product_key, device_name) {
+                return Some((item, caps));
             }
-            return Some(item);
         }
         None
     }
-    fn to_payload(&self, payload: &[u8]) -> Result<Self::Recv>;
+    fn to_payload(&self, payload: &[u8], caps: &Vec<String>) -> Result<Self::Recv>;
     fn get_topic(&self) -> ALinkSubscribeTopic;
 }
 

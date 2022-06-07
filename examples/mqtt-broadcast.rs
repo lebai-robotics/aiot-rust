@@ -13,16 +13,16 @@ async fn main() -> Result<()> {
         device_name: "mqtt_broadcast_demo".to_string(),
         device_secret: "IQDVHqMEScjRj7DxYABKSkw8L5duQKoI".to_string(),
     };
-    let (client, mut eventloop) = MqttClient::new_public_tls(host, &three)?.connect();
+    let mut conn = MqttClient::new_public_tls(host, &three)?.connect();
 
     // 指定Topic的所有设备接收广播消息，需订阅该Topic
     let topic = format!("/broadcast/{}/custom", three.product_key);
-    client.subscribe(&topic, QoS::AtMostOnce).await?;
+    conn.mqtt.subscribe(&topic, QoS::AtMostOnce).await?;
 
     let broadcast = Regex::new(r"/sys/(.*)/(.*)/broadcast/request/(.*)").unwrap();
 
     loop {
-        if let Ok(event) = eventloop.poll().await {
+        if let Ok(event) = conn.poll().await {
             match event {
                 Event::Incoming(incoming) => {
                     info!("incoming = {:?}", incoming);

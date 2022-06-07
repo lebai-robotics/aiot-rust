@@ -40,7 +40,7 @@ pub enum RemoteConfigRecv {
 
 impl ModuleRecvKind for super::RecvKind {
     type Recv = super::Recv;
-    fn to_payload(&self, payload: &[u8]) -> crate::Result<Self::Recv> {
+    fn to_payload(&self, payload: &[u8], _: &Vec<String>) -> crate::Result<Self::Recv> {
         let json_str = get_aiot_json(payload);
         match *self {
             Self::RemoteConfigGetReply => Ok(Self::Recv::RemoteConfigGetReply(

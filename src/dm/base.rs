@@ -1,7 +1,13 @@
 use crate::alink::{AlinkRequest, AlinkResponse};
-use crate::Result;
+use crate::{Error, Result, ThreeTuple};
+use log::*;
+use regex::Regex;
+use rumqttc::{AsyncClient, QoS};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::sync::Arc;
+use tokio::sync::mpsc;
+use tokio::sync::mpsc::{Receiver, Sender};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct DataModelMsg {
@@ -68,13 +74,6 @@ pub struct AsyncServiceReply {
     pub code: u64,
     /// 设备端应答数据, 字符串形式的JSON结构体, 如<i>"{}"</i>表示应答数据为空
     pub data: Value,
-}
-
-/// <b>物模型二进制数据</b>消息结构体, 发送的二进制数据将通过物联网平台的JavaScript脚本转化为JSON格式数据, 用户发送此消息前应确保已正确启用云端解析脚本
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct RawData {
-    /// 二进制数据
-    pub data: Vec<u8>,
 }
 
 /// <b>二进制格式的同步服务应答</b>消息结构体, 用户在收到@ref AIOT_DMRECV_RAW_SYNC_SERVICE_INVOKE 类型消息后, 应在超时时间(默认7s)内进行应答\n
@@ -313,4 +312,87 @@ impl MsgEnum {
             }
         }
     }
+}
+
+/// data-model模块接收消息的结构体
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct DataModelRecv<T> {
+    /// 消息所属设备的product_key, 不配置则默认使用MQTT模块配置的product_key
+    pub product_key: String,
+    /// 消息所属设备的device_name, 不配置则默认使用MQTT模块配置的device_name
+    pub device_name: String,
+    /// 接收消息数据
+    pub data: T,
+}
+
+impl<T> DataModelRecv<T> {
+    pub fn new(product_key: &str, device_name: &str, data: T) -> Self {
+        Self {
+            product_key: product_key.to_string(),
+            device_name: device_name.to_string(),
+            data,
+        }
+    }
+}
+
+/// <b>云端通用应答</b>消息结构体, 设备端上报@ref AIOT_DMMSG_PROPERTY_POST, @ref AIOT_DMMSG_EVENT_POST 或者@ref AIOT_DMMSG_GET_DESIRED 等消息后, 服务器会应答此消息
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct GenericReply {
+    /// 消息标识符, uint64_t类型的整数, 与属性上报或事件上报的消息标示符一致
+    pub msg_id: u64,
+    /// 设备端错误码, 200-请求成功, 更多错误码码查看<a href="https://help.aliyun.com/document_detail/120329.html">设备端错误码</a>
+    pub code: u64,
+    /// 云端应答数据
+    pub data: Value,
+    /// 状态消息字符串, 当设备端上报请求成功时对应的应答消息为"success", 若请求失败则应答消息中包含错误信息
+    pub message: String,
+}
+
+/// <b>属性设置</b>消息结构体
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct PropertySet {
+    /// 消息标识符, uint64_t类型的整数
+    pub msg_id: u64,
+    /// 服务器下发的属性数据, 为字符串形式的JSON结构体, 此字符串<b>不</b>以结束符'\0'结尾, 如<i>"{\"LightSwitch\":0}"</i>
+    pub params: Value,
+}
+
+/// <b>同步服务调用</b>消息结构体, 用户收到同步服务后, 必须在超时时间(默认7s)内进行应答
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct SyncServiceInvoke {
+    /// 消息标识符, uint64_t类型的整数
+    pub msg_id: u64,
+    /// RRPC标识符, 用于唯一标识每一个同步服务的特殊字符串
+    pub rrpc_id: String,
+    /// 服务标示符, 字符串内容由用户定义的物模型决定
+    pub service_id: String,
+    /// 服务调用的输入参数数据, 为字符串形式的JSON结构体, 此字符串<b>不</b>以结束符'\0'结尾, 如<i>"{\"LightSwitch\":0}"</i>
+    pub params: Value,
+}
+
+/// <b>异步服务调用</b>消息结构体
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct AsyncServiceInvoke {
+    /// 消息标识符, uint64_t类型的整数
+    pub msg_id: u64,
+    /// 服务标示符, 字符串内容由用户定义的物模型决定
+    pub service_id: String,
+    /// 服务调用的输入参数数据, 为字符串形式的JSON结构体, 此字符串<b>不</b>以结束符'\0'结尾, 如<i>"{\"LightSwitch\":0}"</i>
+    pub params: Value,
+}
+
+/// <b>物模型二进制数据</b>消息结构体, 服务器的JSON格式物模型数据将通过物联网平台的JavaScript脚本转化为二进制数据, 用户在接收此消息前应确保已正确启用云端解析脚本
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct RawData {
+    /// 二进制数据
+    pub data: Vec<u8>,
+}
+
+/// <b>二进制数据的同步服务调用</b>消息结构体, 服务器的JSON格式物模型数据将通过物联网平台的JavaScript脚本转化为二进制数据, 用户在接收此消息前应确保已正确启用云端解析脚本
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct RawServiceInvoke {
+    /// RRPC标识符, 用于唯一标识每一个同步服务的特殊字符串
+    pub rrpc_id: String,
+    /// 二进制数据
+    pub data: Vec<u8>,
 }

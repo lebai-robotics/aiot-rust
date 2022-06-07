@@ -25,18 +25,7 @@ pub enum ShadowRecv {
 
 impl ModuleRecvKind for super::RecvKind {
     type Recv = super::Recv;
-    fn match_kind(topic: &str, product_key: &str, device_name: &str) -> Option<ShadowRecvKind> {
-        for item in ShadowRecvKind::into_enum_iter() {
-            let alink_topic = item.get_topic();
-            if !alink_topic.is_match(topic, product_key, device_name) {
-                continue;
-            }
-            return Some(item);
-            // self.tx.send(data).await.map_err(|_| Error::MpscSendError)?;
-        }
-        None
-    }
-    fn to_payload(&self, payload: &[u8]) -> crate::Result<ShadowRecv> {
+    fn to_payload(&self, payload: &[u8], _: &Vec<String>) -> crate::Result<ShadowRecv> {
         let json_str = get_aiot_json(payload);
         match *self {
             Self::ShadowGetTopic => {
