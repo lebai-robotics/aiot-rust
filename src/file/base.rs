@@ -137,7 +137,7 @@ impl SendPayload {
         let header_length = header.len() as u16;
         let digest64 = crc64::crc64(0, &file_bytes);
         let digest = digest64 as u16;
-        log::debug!("u64:{digest64:x} u16:{digest:x}");
+        log::debug!("u64:{digest64:x} u16:{digest:x} ({}) {}", file_bytes.len(), String::from_utf8_lossy(&file_bytes));
 
         let mut payload = Vec::new();
         payload.extend_from_slice(&header_length.to_be_bytes());

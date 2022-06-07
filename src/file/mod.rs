@@ -71,6 +71,8 @@ impl Module {
             if b_size == 0 {
                 is_complete = Some(true);
             }
+            log::debug!("read: {} [{}]", b_size, String::from_utf8_lossy(&buf));
+            offset += b_size;
             let params = SendHeaderParams {
                 upload_id: info.upload_id.clone(),
                 offset,
@@ -116,7 +118,18 @@ impl crate::Executor for Executor {
         while let Ok(r) = self.rx_.try_recv() {
             self.map.insert(r.0, r.1);
         }
+
         let data = crate::execute::<RecvKind>(&self.three, topic, payload)?;
+
+        let id = match &data {
+            Recv::InitReply(item) => item.id.clone(),
+            Recv::SendReply(item) => item.id.clone(),
+            Recv::CancelReply(item) => item.id.clone(),
+        };
+        if let Some(item) = self.map.remove(&id) {
+            item.send(data.clone());
+        }
+
         self.tx.send(data).await.map_err(|_| Error::MpscSendError)
     }
 }

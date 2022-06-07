@@ -23,7 +23,7 @@ impl super::Module {
         if let Ok(data) = rx.await {
             match data {
                 FileRecv::InitReply(reply) => {
-                    if reply.code == 0 {
+                    if reply.code == 200 {
                         return Ok(reply.data);
                     } else {
                         return Err(Error::CodeParams(reply.code, reply.message));
@@ -53,7 +53,7 @@ impl super::Module {
         if let Ok(data) = rx.await {
             match data {
                 FileRecv::SendReply(reply) => {
-                    if reply.code == 0 {
+                    if reply.code == 200 {
                         return Ok(reply.data);
                     } else {
                         return Err(Error::CodeParams(reply.code, reply.message));
@@ -78,7 +78,7 @@ impl super::Module {
             match data {
                 FileRecv::CancelReply(reply) => {
                     if &reply.id == &payload.id {
-                        if reply.code == 0 {
+                        if reply.code == 200 {
                             return Ok(reply.data);
                         } else {
                             return Err(Error::CodeParams(reply.code, reply.message));

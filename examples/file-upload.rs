@@ -12,10 +12,22 @@ async fn main() -> Result<()> {
     let three = ThreeTuple::from_env();
     let mut conn = MqttClient::new_public_tls(host, &three)?.connect();
 
+    let (tx, mut rx) = tokio::sync::mpsc::channel(64);
+
     // let topic = format!("/sys/+/+/thing/file/upload/mqtt/init_reply");
     // conn.mqtt.subscribe(&topic, rumqttc::QoS::AtMostOnce).await?;
     let mut uploader = conn.file_uploader()?;
     uploader.init().await?;
+    tokio::spawn(async move {
+        tokio::select! {
+            Ok(recv) = uploader.poll() => {
+                info!("{:?}", recv);
+            }
+            Some(path) = rx.recv() => {
+                uploader.upload(path).await.unwrap();
+            }
+        }
+    });
 
     let options = DataModelOptions::new();
     let mut dm = conn.data_model(options)?;
@@ -36,7 +48,8 @@ async fn main() -> Result<()> {
                                 // let payload = r#"{"id":"1","params":{"fileName":"README.md","fileSize":-1,"conflictStrategy":"overwrite"}}"#;
                                 // conn.mqtt.publish(&topic, rumqttc::QoS::AtMostOnce, false, payload).await?;
                                 let path = params["path"].as_str().unwrap_or("./README.md");
-                                uploader.upload(path).await?;
+                                // uploader.upload(path).await?;
+                                tx.send(path.to_string()).await?;
                             },
                             _ => {},
                         }
@@ -44,9 +57,6 @@ async fn main() -> Result<()> {
                     _ => {}
                 }
             },
-            Ok(recv) = uploader.poll() => {
-                info!("{:?}", recv);
-            }
         }
     }
 }
