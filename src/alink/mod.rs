@@ -72,6 +72,23 @@ pub struct SimpleResponse {
     pub code: u64,
 }
 
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct ParamsRequest<T> {
+    /// 消息ID号。String类型的数字，取值范围0~4294967295，且每个消息ID在当前设备中具有唯一性。
+    pub id: String,
+    /// 请求业务参数。
+    pub params: T,
+}
+
+impl<T> ParamsRequest<T> {
+    pub fn new(params: T) -> Self {
+        Self {
+            id: global_id_next().to_string(),
+            params,
+        }
+    }
+}
+
 #[serde_as]
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct AlinkResponse<T = Option<()>, TID = String, TCode = u64> {

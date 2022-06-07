@@ -68,9 +68,14 @@ impl<TRecv, O> AiotModule<TRecv, O> {
 
     pub async fn publish_raw(&self, topic: String, payload: Vec<u8>) -> Result<()> {
         debug!("publish: {} {}", topic, String::from_utf8_lossy(&payload));
-        self.client
+        if let Err(err) = self
+            .client
             .publish(topic, QoS::AtMostOnce, false, payload)
-            .await?;
+            .await
+        {
+            log::error!("publish error: {}", err);
+            return Err(err.into());
+        }
         Ok(())
     }
 

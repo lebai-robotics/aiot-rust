@@ -31,6 +31,7 @@ pub mod shadow;
 pub mod subdev;
 pub mod tag;
 pub mod util;
+pub mod file;
 
 #[async_trait::async_trait]
 pub trait Executor {

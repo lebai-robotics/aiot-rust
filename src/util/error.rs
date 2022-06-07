@@ -34,6 +34,8 @@ pub enum Error {
     SetSystemTimeError,
     #[error("tokio mpsc send error")]
     MpscSendError,
+    #[error("tokio broadcast send error")]
+    BroadcastSendError,
     #[error("header format error: {0}")]
     HeaderFormatError(String),
     #[error("session {0} not found")]
@@ -68,4 +70,10 @@ pub enum Error {
     FileValidateFailed,
     #[error("Lock")]
     Lock,
+    #[error("等待响应超时 {0}")]
+    WaitResponseTimeout(String),
+    #[error("无效路径")]
+    InvalidPath,
+    #[error("错误码 {0} {1:?}")]
+    CodeParams(u64, Option<String>),
 }

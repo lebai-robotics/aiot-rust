@@ -113,7 +113,7 @@ impl MqttConnection {
                 Packet::Publish(data) => {
                     for e in &self.mqtt_client.executors {
                         if let Err(err) = e.execute(&data.topic, &data.payload).await {
-                            error!("{} error: {}", data.topic, err);
+                            debug!("{} error: {}", data.topic, err);
                         }
                     }
                 }
