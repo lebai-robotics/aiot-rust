@@ -19,7 +19,8 @@ impl super::Module {
         if data.device_name.is_none() {
             data.device_name = Some(self.three.device_name.to_string());
         }
-        let (topic, payload) = data.to_payload(1)?; // TODO: ack
-        self.publish(topic, &payload).await
+        let ack = if self.data.post_reply { 1 } else { 0 };
+        let (topic, payload) = data.to_payload(ack)?;
+        self.publish_raw(topic, payload).await
     }
 }

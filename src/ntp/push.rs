@@ -24,5 +24,4 @@ impl super::Module {
         );
         self.publish(topic, &payload).await
     }
-
 }

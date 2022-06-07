@@ -32,34 +32,41 @@ pub trait ModuleRecvKind: IntoEnumIterator {
     fn get_topic(&self) -> ALinkSubscribeTopic;
 }
 
-pub struct AiotModule<TRecv> {
+pub struct AiotModule<TRecv, O = ()> {
     pub rx: Receiver<TRecv>,
     pub client: Arc<AsyncClient>,
     pub three: Arc<ThreeTuple>,
+    pub data: O,
 }
 
 impl MqttConnection {
-    pub fn module<TModuleRecv>(
+    pub fn module<TModuleRecv, O>(
         &mut self,
         executor: Box<dyn crate::Executor>,
         rx: Receiver<TModuleRecv>,
-    ) -> Result<AiotModule<TModuleRecv>> {
+        data: O,
+    ) -> Result<AiotModule<TModuleRecv, O>> {
         self.mqtt_client.executors.push(executor);
-        let runner = AiotModule::<TModuleRecv> {
+        let runner = AiotModule::<TModuleRecv, O> {
             rx,
             three: self.mqtt_client.three.clone(),
             client: self.mqtt.clone(),
+            data,
         };
         Ok(runner)
     }
 }
 
-impl<TRecv> AiotModule<TRecv> {
+impl<TRecv, O> AiotModule<TRecv, O> {
     pub async fn publish<T>(&self, topic: String, payload: &T) -> Result<()>
     where
         T: ?Sized + Serialize,
     {
         let payload = serde_json::to_vec(payload)?;
+        self.publish_raw(topic, payload).await
+    }
+
+    pub async fn publish_raw(&self, topic: String, payload: Vec<u8>) -> Result<()> {
         debug!("publish: {} {}", topic, String::from_utf8_lossy(&payload));
         self.client
             .publish(topic, QoS::AtMostOnce, false, payload)

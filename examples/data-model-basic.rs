@@ -11,7 +11,8 @@ async fn main() -> Result<()> {
     let mut conn = MqttClient::new_public_tls(host, &three)?.connect();
 
     let options = DataModelOptions::new();
-    let mut dm = conn.data_model(&options)?;
+    let mut dm = conn.data_model(options)?;
+    dm.init().await?;
 
     dm.send(DataModelMsg::property_post(json!({
         "LightSwitch": 0

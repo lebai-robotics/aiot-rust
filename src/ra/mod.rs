@@ -50,7 +50,7 @@ impl MqttConnection {
             tx_,
             three: self.mqtt_client.three.clone(),
         };
-        let module = self.module(Box::new(executor), rx)?;
+        let module = self.module(Box::new(executor), rx, ())?;
         Ok((module, rap))
     }
 }
