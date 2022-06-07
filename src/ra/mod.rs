@@ -1,104 +1,85 @@
 //! 远程登录
 
+use crate::alink::aiot_module::{AiotModule, ModuleRecvKind};
+use crate::alink::{AlinkRequest, AlinkResponse};
+use crate::mqtt::MqttConnection;
+use crate::{Error, Result, ThreeTuple};
+use enum_iterator::IntoEnumIterator;
+use log::*;
+use regex::Regex;
+use rumqttc::{AsyncClient, QoS};
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+use tokio::sync::mpsc;
+use tokio::sync::mpsc::{Receiver, Sender};
+
+use self::base::RemoteAccessOptions;
+use self::recv::*;
+
+pub mod base;
+pub mod push;
+pub mod recv;
+
 mod protocol;
 mod proxy;
 mod session;
-
-use crate::{Error, Result, ThreeTuple};
 use proxy::RemoteAccessProxy;
-use rumqttc::{AsyncClient, QoS};
-use std::sync::Arc;
-use tokio::sync::mpsc;
-use tokio::sync::mpsc::Sender;
 
-#[derive(Debug, Clone)]
-pub struct RemoteAccessOptions {
-    three: Arc<ThreeTuple>,
-    cloud_host: String,
-    //远程连接通道云端服务地址，可以是域名
-    cloud_port: u32, //远程连接通道云端服务端口
-}
+pub type Recv = RemoteAccessRecv;
+pub type RecvKind = RemoteAccessRecvKind;
+pub type Module = AiotModule<Recv>;
 
-impl RemoteAccessOptions {
-    pub fn new(three: Arc<ThreeTuple>) -> Self {
-        Self {
-            three,
-            cloud_host: "backend-iotx-remote-debug.aliyun.com".to_string(),
-            cloud_port: 443,
+impl Module {
+    pub async fn init(&self) -> Result<()> {
+        for item in RecvKind::into_enum_iter() {
+            let topic = item.get_topic();
+            self.client.subscribe(topic.topic, QoS::AtLeastOnce).await?;
         }
-    }
-
-    pub fn switch_topic(&self) -> String {
-        format!(
-            "/sys/{}/{}/edge/debug/switch",
-            self.three.product_key, self.three.device_name
-        )
-    }
-}
-
-pub struct Runner {
-    topic: String,
-    rap: RemoteAccessProxy,
-}
-
-impl Runner {
-    pub async fn init(&self, client: &AsyncClient) -> Result<()> {
-        client.subscribe(&self.topic, QoS::AtLeastOnce).await?;
         Ok(())
     }
+}
 
-    pub async fn poll(&mut self) -> Result<()> {
-        self.rap.process().await
+impl MqttConnection {
+    pub fn remote_access(&mut self) -> Result<(Module, RemoteAccessProxy)> {
+        let (tx, rx) = mpsc::channel(16);
+        let (tx_, rx_) = mpsc::channel(16);
+        let ra = RemoteAccessOptions::new(self.mqtt_client.three.clone());
+        let rap = RemoteAccessProxy::new(rx_, ra)?;
+        let executor = Executor {
+            tx,
+            tx_,
+            three: self.mqtt_client.three.clone(),
+        };
+        let module = self.module(Box::new(executor), rx)?;
+        Ok((module, rap))
     }
 }
 
 pub struct Executor {
-    topic: String,
-    tx: Sender<Vec<u8>>,
+    three: Arc<ThreeTuple>,
+    tx: Sender<Recv>,
+    tx_: Sender<Recv>,
 }
 
 #[async_trait::async_trait]
 impl crate::Executor for Executor {
-    async fn execute(&self, topic: &str, payload: &[u8]) -> Result<()> {
-        if topic == &self.topic {
+    async fn execute(&self, topic: &str, payload: &[u8]) -> crate::Result<()> {
+        debug!("receive: {} {}", topic, String::from_utf8_lossy(payload));
+        if let Some(kind) =
+            RecvKind::match_kind(topic, &self.three.product_key, &self.three.device_name)
+        {
+            let data = kind.to_payload(payload)?;
             self.tx
-                .send(payload.to_vec())
+                .send(data.clone())
                 .await
-                .map_err(|_| Error::SendTopicError)?;
+                .map_err(|_| Error::MpscSendError)?;
+            self.tx_
+                .send(data)
+                .await
+                .map_err(|_| Error::MpscSendError)?;
+        } else {
+            debug!("no match topic: {}", topic);
         }
         Ok(())
-    }
-}
-
-struct RemoteAccessInner {
-    runner: Runner,
-    executor: Executor,
-}
-
-impl RemoteAccessInner {
-    fn new(three: Arc<ThreeTuple>) -> Result<Self> {
-        let ra = RemoteAccessOptions::new(three);
-        let topic = ra.switch_topic();
-        let (tx, rx) = mpsc::channel(16);
-        let rap = RemoteAccessProxy::new(rx, ra)?;
-        let executor = Executor {
-            topic: topic.clone(),
-            tx,
-        };
-        let runner = Runner { topic, rap };
-        Ok(Self { runner, executor })
-    }
-}
-
-pub trait RemoteAccess {
-    fn remote_access(&mut self) -> Result<Runner>;
-}
-
-impl RemoteAccess for crate::MqttClient {
-    fn remote_access(&mut self) -> Result<Runner> {
-        let ra = RemoteAccessInner::new(self.three.clone())?;
-        self.executors
-            .push(Box::new(ra.executor) as Box<dyn crate::Executor>);
-        Ok(ra.runner)
     }
 }

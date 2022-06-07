@@ -15,7 +15,6 @@ pub use dynregmq::{DynamicRegister, DynamicRegisterResult};
 pub use http::Http;
 pub use mqtt::{DeviceAuthInfo, MqttClient, MqttConnection, MqttInstance};
 pub use ntp::NtpService;
-pub use ra::RemoteAccess;
 pub use util::error::{Error, Result};
 
 pub mod alink;

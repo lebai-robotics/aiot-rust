@@ -1,7 +1,9 @@
+use super::base::RemoteAccessOptions;
 use super::protocol;
 use super::protocol::{ErrorCode, LocalServiceInfo, MsgHead, MsgResponse, MsgType};
+use super::recv::RemoteAccessRecv;
 use super::session::{SessionId, SessionList};
-use super::{Error, RemoteAccessOptions, Result};
+use super::{Error, Result};
 use crate::util::{auth, rand_string};
 use log::*;
 use serde::{Deserialize, Serialize};
@@ -17,14 +19,14 @@ pub struct RemoteAccessProxy {
     session_list: SessionList,
     local_tx: Sender<(String, Vec<u8>)>,
     local_rx: Receiver<(String, Vec<u8>)>,
-    cloud_rx: Receiver<Vec<u8>>,
+    cloud_rx: Receiver<RemoteAccessRecv>,
     params: RemoteAccessOptions,
     local_services: Vec<LocalServiceInfo>,
     client_config: Arc<rustls::client::ClientConfig>,
 }
 
 impl RemoteAccessProxy {
-    pub fn new(cloud_rx: Receiver<Vec<u8>>, params: RemoteAccessOptions) -> Result<Self> {
+    pub fn new(cloud_rx: Receiver<RemoteAccessRecv>, params: RemoteAccessOptions) -> Result<Self> {
         let (local_tx, local_rx) = mpsc::channel(128);
         Ok(Self {
             cloud_rx,
@@ -37,11 +39,10 @@ impl RemoteAccessProxy {
         })
     }
 
-    pub async fn process(&mut self) -> Result<()> {
+    pub async fn poll(&mut self) -> Result<()> {
         let data = self.cloud_rx.recv().await.ok_or(Error::ReceiveCloudError)?;
-        let data: EdgeDebugSwitch = serde_json::from_slice(&data)?;
         debug!("{:?}", data);
-        if data.status != 0 {
+        if data.is_open() {
             self.create_remote_proxy().await?;
         }
         Ok(())
@@ -87,9 +88,8 @@ impl RemoteAccessProxy {
         loop {
             tokio::select! {
                 Some(data) = self.cloud_rx.recv() => {
-                    let data: EdgeDebugSwitch = serde_json::from_slice(&data)?;
                     debug!("{:?}", data);
-                    if data.status == 0 {
+                    if !data.is_open() {
                         info!("关闭远程登录");
                         return Ok(());
                     }
@@ -187,9 +187,4 @@ impl RemoteAccessProxy {
             ),
         }
     }
-}
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
-struct EdgeDebugSwitch {
-    status: i32,
 }

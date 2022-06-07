@@ -1,7 +1,6 @@
 //! 日志上报。
 
-use crate::alink::aiot_module::AiotModule;
-use crate::alink::aiot_module::ModuleRecvKind;
+use crate::alink::aiot_module::{AiotModule, ModuleRecvKind};
 use crate::alink::{AlinkRequest, AlinkResponse};
 use crate::mqtt::MqttConnection;
 use crate::{Error, Result, ThreeTuple};
