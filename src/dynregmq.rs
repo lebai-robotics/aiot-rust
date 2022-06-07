@@ -129,7 +129,7 @@ impl DynamicRegisterOptions {
 
 #[async_trait::async_trait]
 impl crate::Executor for DynamicRegisterOptions {
-    async fn execute(&self, topic: &str, payload: &[u8]) -> Result<()> {
+    async fn execute(&mut self, topic: &str, payload: &[u8]) -> Result<()> {
         if topic == "/ext/register" {
             let data: DeviceInfoWhitelist = serde_json::from_slice(payload)?;
             self.tx

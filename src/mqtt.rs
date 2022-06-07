@@ -111,7 +111,7 @@ impl MqttConnection {
         match &incoming {
             Event::Incoming(packet) => match packet {
                 Packet::Publish(data) => {
-                    for e in &self.mqtt_client.executors {
+                    for e in &mut self.mqtt_client.executors {
                         if let Err(err) = e.execute(&data.topic, &data.payload).await {
                             debug!("{} error: {}", data.topic, err);
                         }

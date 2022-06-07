@@ -5,76 +5,25 @@ use crate::alink::{AlinkRequest, AlinkResponse};
 use crate::mqtt::MqttConnection;
 use crate::{Error, Result, ThreeTuple};
 use enum_iterator::IntoEnumIterator;
-use lazy_static::lazy_static;
-use regex::Regex;
 use rumqttc::{AsyncClient, QoS};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::mpsc::{Receiver, Sender};
-use tokio::sync::{broadcast, mpsc};
+use tokio::sync::{broadcast, mpsc, oneshot};
 
 use self::recv::*;
 
 pub mod base;
 pub mod push;
 pub mod recv;
+pub mod util;
 
 pub use base::*;
 
 pub type Recv = FileRecv;
 pub type RecvKind = FileRecvKind;
-pub type Module = AiotModule<Recv, broadcast::Sender<FileRecv>>;
-
-lazy_static! {
-    static ref REPLACE: Regex = Regex::new(r"[^a-zA-Z0-9_\.]").unwrap();
-}
-
-pub fn filename_for_path(path: impl AsRef<std::path::Path>) -> Result<String> {
-    let path = path.as_ref();
-    let filename = path.file_name().ok_or(Error::InvalidPath)?;
-    let filename = filename.to_string_lossy().to_string();
-    let filename = REPLACE.replace_all(&filename, regex::NoExpand("_"));
-    let filename = filename.trim_start_matches("_");
-    if filename.len() <= 0 {
-        return Err(Error::InvalidPath);
-    }
-    let filename = if filename.len() > 100 {
-        filename[..100].to_string()
-    } else {
-        filename.to_string()
-    };
-    Ok(filename)
-}
-
-#[test]
-fn test1() {
-    assert_eq!(
-        filename_for_path(std::path::Path::new("/tmp/test.txt")).unwrap(),
-        "test.txt"
-    );
-}
-#[test]
-fn test2() {
-    assert_eq!(
-        filename_for_path(std::path::Path::new("/tmp/_bc&^NU,HH.tar.gz")).unwrap(),
-        "bc__NU_HH.tar.gz"
-    );
-}
-#[test]
-fn test3() {
-    assert_eq!(
-        filename_for_path(std::path::Path::new("/tmp/_你好.txt")).unwrap(),
-        ".txt"
-    );
-}
-
-#[test]
-fn test4() {
-    assert_eq!(
-        filename_for_path(std::path::Path::new("/tmp/.env.dev")).unwrap(),
-        ".env.dev"
-    );
-}
+pub type Module = AiotModule<Recv, Sender<(String, oneshot::Sender<Recv>)>>;
 
 impl Module {
     pub async fn init(&self) -> Result<()> {
@@ -104,7 +53,7 @@ impl Module {
         use tokio::io::AsyncReadExt;
 
         let params = InitParams {
-            file_name: filename_for_path(&path)?,
+            file_name: util::filename_for_path(&path)?,
             file_size: -1,
             conflict_strategy: Some(ConflictStrategy::Overwrite),
             ..Default::default()
@@ -143,11 +92,12 @@ impl Module {
 impl MqttConnection {
     pub fn file_uploader(&mut self) -> Result<Module> {
         let (tx, rx) = mpsc::channel(64);
-        let (tx_, _rx_) = broadcast::channel(64);
+        let (tx_, rx_) = mpsc::channel(64);
         let executor = Executor {
             tx,
-            tx_: tx_.clone(),
+            rx_,
             three: self.mqtt_client.three.clone(),
+            map: HashMap::new(),
         };
         self.module(Box::new(executor), rx, tx_)
     }
@@ -156,16 +106,17 @@ impl MqttConnection {
 pub struct Executor {
     three: Arc<ThreeTuple>,
     tx: Sender<Recv>,
-    tx_: broadcast::Sender<Recv>,
+    rx_: Receiver<(String, oneshot::Sender<Recv>)>,
+    map: HashMap<String, oneshot::Sender<Recv>>,
 }
 
 #[async_trait::async_trait]
 impl crate::Executor for Executor {
-    async fn execute(&self, topic: &str, payload: &[u8]) -> crate::Result<()> {
+    async fn execute(&mut self, topic: &str, payload: &[u8]) -> crate::Result<()> {
+        while let Ok(r) = self.rx_.try_recv() {
+            self.map.insert(r.0, r.1);
+        }
         let data = crate::execute::<RecvKind>(&self.three, topic, payload)?;
-        self.tx_
-            .send(data.clone())
-            .map_err(|_| Error::BroadcastSendError)?;
         self.tx.send(data).await.map_err(|_| Error::MpscSendError)
     }
 }

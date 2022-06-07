@@ -14,7 +14,7 @@ async fn main() -> Result<()> {
 
     // let topic = format!("/sys/+/+/thing/file/upload/mqtt/init_reply");
     // conn.mqtt.subscribe(&topic, rumqttc::QoS::AtMostOnce).await?;
-    let uploader = conn.file_uploader()?;
+    let mut uploader = conn.file_uploader()?;
     uploader.init().await?;
 
     let options = DataModelOptions::new();
@@ -44,9 +44,9 @@ async fn main() -> Result<()> {
                     _ => {}
                 }
             },
-            // Ok(recv) = uploader.poll() => {
-            //     info!("{:?}", recv);
-            // }
+            Ok(recv) = uploader.poll() => {
+                info!("{:?}", recv);
+            }
         }
     }
 }

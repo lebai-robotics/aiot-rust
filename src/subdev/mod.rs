@@ -42,7 +42,7 @@ pub struct Executor {
 
 #[async_trait::async_trait]
 impl crate::Executor for Executor {
-    async fn execute(&self, topic: &str, payload: &[u8]) -> crate::Result<()> {
+    async fn execute(&mut self, topic: &str, payload: &[u8]) -> crate::Result<()> {
         let data = crate::execute::<RecvKind>(&self.three, topic, payload)?;
         self.tx.send(data).await.map_err(|_| Error::MpscSendError)
     }

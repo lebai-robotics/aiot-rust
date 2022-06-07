@@ -35,7 +35,7 @@ pub mod file;
 
 #[async_trait::async_trait]
 pub trait Executor {
-    async fn execute(&self, topic: &str, payload: &[u8]) -> Result<()>;
+    async fn execute(&mut self, topic: &str, payload: &[u8]) -> Result<()>;
 }
 
 pub fn execute<RecvKind>(three: &ThreeTuple, topic: &str, payload: &[u8]) -> Result<RecvKind::Recv>
