@@ -46,7 +46,7 @@ impl Module {
 }
 
 impl MqttConnection {
-    pub fn data_model(&mut self, options: DataModelOptions) -> Result<Module> {
+    pub fn data_model(&mut self, options: &DataModelOptions) -> Result<Module> {
         let (tx, rx) = mpsc::channel(64);
         let executor = Executor {
             tx,

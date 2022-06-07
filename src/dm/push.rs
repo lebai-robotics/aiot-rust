@@ -22,5 +22,4 @@ impl super::Module {
         let (topic, payload) = data.to_payload(1)?; // TODO: ack
         self.publish(topic, &payload).await
     }
-
 }
