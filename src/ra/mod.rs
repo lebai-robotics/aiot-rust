@@ -64,22 +64,7 @@ pub struct Executor {
 #[async_trait::async_trait]
 impl crate::Executor for Executor {
     async fn execute(&self, topic: &str, payload: &[u8]) -> crate::Result<()> {
-        debug!("receive: {} {}", topic, String::from_utf8_lossy(payload));
-        if let Some(kind) =
-            RecvKind::match_kind(topic, &self.three.product_key, &self.three.device_name)
-        {
-            let data = kind.to_payload(payload)?;
-            self.tx
-                .send(data.clone())
-                .await
-                .map_err(|_| Error::MpscSendError)?;
-            self.tx_
-                .send(data)
-                .await
-                .map_err(|_| Error::MpscSendError)?;
-        } else {
-            debug!("no match topic: {}", topic);
-        }
-        Ok(())
+        let data = crate::execute::<RecvKind>(&self.three, topic, payload)?;
+        self.tx_.send(data).await.map_err(|_| Error::MpscSendError)
     }
 }

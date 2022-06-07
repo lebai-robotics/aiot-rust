@@ -7,6 +7,7 @@
 //!
 //! 遵循阿里云物联网平台定义的 [Alink 协议](https://help.aliyun.com/document_detail/90459.html)。
 
+use alink::aiot_module::ModuleRecvKind;
 pub use alink::ThreeTuple;
 pub use dm::msg::{DataModelMsg, MsgEnum};
 pub use dm::recv::{DataModelRecv, RecvEnum};
@@ -37,4 +38,16 @@ pub mod util;
 #[async_trait::async_trait]
 pub trait Executor {
     async fn execute(&self, topic: &str, payload: &[u8]) -> Result<()>;
+}
+
+pub fn execute<RecvKind>(three: &ThreeTuple, topic: &str, payload: &[u8]) -> Result<RecvKind::Recv>
+where
+    RecvKind: ModuleRecvKind,
+{
+    log::debug!("receive: {} {}", topic, String::from_utf8_lossy(payload));
+    if let Some(kind) = RecvKind::match_kind(topic, &three.product_key, &three.device_name) {
+        kind.to_payload(payload)
+    } else {
+        Err(Error::InvalidTopic(topic.to_string()))
+    }
 }
