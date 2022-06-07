@@ -15,46 +15,46 @@ use tokio::sync::mpsc;
 use tokio::sync::mpsc::{Receiver, Sender};
 
 #[derive(Debug, EnumKind)]
-#[enum_kind(DMRecvKind, derive(Serialize, IntoEnumIterator, Deserialize))]
-pub enum DMRecv {
+#[enum_kind(RecvEnumKind, derive(Serialize, IntoEnumIterator, Deserialize))]
+pub enum RecvEnum {
     /// 上报属性/实践后服务器返回的应答消息
-    EventPostReply(DMGenericReply),
+    EventPostReply(GenericReply),
     /// 服务器下发的属性设置消息
-    ServicePropertySet(DataModelRecv<PropertySet>),
+    ServicePropertySet(PropertySet),
     /// 服务器下发的异步服务调用消息
-    Service(DataModelRecv<AsyncServiceInvoke>),
+    Service(AsyncServiceInvoke),
     /// 服务器下发的同步服务调用消息
-    RrpcService(DataModelRecv<SyncServiceInvoke>),
+    RrpcService(SyncServiceInvoke),
     /// 服务器下发的物模型二进制数据
-    ModelDownRaw(DataModelRecv<RawData>),
+    ModelDownRaw(RawData),
     /// 服务器对设备上报的二进制数据应答
-    ModelUpRawReply(DataModelRecv<RawData>),
+    ModelUpRawReply(RawData),
     /// 服务器下发的二进制格式的同步服务调用消息
-    RrpcDownRaw(DataModelRecv<RawServiceInvoke>),
-    PropertyDesiredGetReply(DMGenericReply),
-    PropertyDesiredDeleteReply(DMGenericReply),
-    PropertyBatchPostReply(DMGenericReply),
-    PropertyHistoryPostReply(DMGenericReply),
+    RrpcDownRaw(RawServiceInvoke),
+    PropertyDesiredGetReply(GenericReply),
+    PropertyDesiredDeleteReply(GenericReply),
+    PropertyBatchPostReply(GenericReply),
+    PropertyHistoryPostReply(GenericReply),
 }
 
 impl ModuleRecvKind for super::RecvKind {
     type Recv = super::Recv;
 
-    fn to_payload(&self, payload: &[u8], caps: &Vec<String>) -> crate::Result<DMRecv> {
+    fn to_payload(&self, payload: &[u8], caps: &Vec<String>) -> crate::Result<RecvEnum> {
         let s = get_aiot_json(payload);
         match *self {
-            Self::EventPostReply => Ok(Self::Recv::EventPostReply(DMGenericReply::s(&s, &caps)?)),
+            Self::EventPostReply => Ok(Self::Recv::EventPostReply(GenericReply::s(&s, &caps)?)),
             Self::PropertyDesiredGetReply => Ok(Self::Recv::PropertyDesiredGetReply(
-                DMGenericReply::s(&s, &caps)?,
+                GenericReply::s(&s, &caps)?,
             )),
             Self::PropertyDesiredDeleteReply => Ok(Self::Recv::PropertyDesiredDeleteReply(
-                DMGenericReply::s(&s, &caps)?,
+                GenericReply::s(&s, &caps)?,
             )),
             Self::PropertyBatchPostReply => Ok(Self::Recv::PropertyBatchPostReply(
-                DMGenericReply::s(&s, &caps)?,
+                GenericReply::s(&s, &caps)?,
             )),
             Self::PropertyHistoryPostReply => Ok(Self::Recv::PropertyHistoryPostReply(
-                DMGenericReply::s(&s, &caps)?,
+                GenericReply::s(&s, &caps)?,
             )),
             Self::ServicePropertySet => {
                 let payload: AlinkRequest<Value> = serde_json::from_slice(payload)?;
@@ -62,7 +62,6 @@ impl ModuleRecvKind for super::RecvKind {
                     msg_id: payload.msg_id(),
                     params: payload.params,
                 };
-                let data = DataModelRecv::new(&caps[1], &caps[2], data);
                 Ok(Self::Recv::ServicePropertySet(data))
             }
             Self::Service => {
@@ -72,7 +71,6 @@ impl ModuleRecvKind for super::RecvKind {
                     service_id: (&caps[3]).to_string(),
                     params: payload.params,
                 };
-                let data = DataModelRecv::new(&caps[1], &caps[2], data);
                 Ok(Self::Recv::Service(data))
             }
             Self::RrpcService => {
@@ -83,21 +81,18 @@ impl ModuleRecvKind for super::RecvKind {
                     service_id: (&caps[4]).to_string(),
                     params: payload.params,
                 };
-                let data = DataModelRecv::new(&caps[2], &caps[3], data);
                 Ok(Self::Recv::RrpcService(data))
             }
             Self::ModelDownRaw => {
                 let data = RawData {
                     data: payload.to_vec(),
                 };
-                let data = DataModelRecv::new(&caps[1], &caps[2], data);
                 Ok(Self::Recv::ModelDownRaw(data))
             }
             Self::ModelUpRawReply => {
                 let data = RawData {
                     data: payload.to_vec(),
                 };
-                let data = DataModelRecv::new(&caps[1], &caps[2], data);
                 Ok(Self::Recv::ModelUpRawReply(data))
             }
             Self::RrpcDownRaw => {
@@ -105,7 +100,6 @@ impl ModuleRecvKind for super::RecvKind {
                     rrpc_id: (&caps[1]).to_string(),
                     data: payload.to_vec(),
                 };
-                let data = DataModelRecv::new(&caps[2], &caps[3], data);
                 Ok(Self::Recv::RrpcDownRaw(data))
             }
         }
@@ -152,9 +146,7 @@ impl ModuleRecvKind for super::RecvKind {
     }
 }
 
-pub type DMGenericReply = DataModelRecv<GenericReply>;
-
-impl DMGenericReply {
+impl GenericReply {
     pub fn s(s: &str, caps: &Vec<String>) -> crate::Result<Self> {
         let payload: AlinkResponse<Value> = serde_json::from_str(&s)?;
         let data = GenericReply {
@@ -163,10 +155,6 @@ impl DMGenericReply {
             data: payload.data,
             message: payload.message.unwrap_or("".to_string()),
         };
-        Ok(DataModelRecv::new(
-            caps.get(1).ok_or_else(|| Error::DeviceNameUnmatched)?,
-            caps.get(2).ok_or_else(|| Error::DeviceNameUnmatched)?,
-            data,
-        ))
+        Ok(data)
     }
 }

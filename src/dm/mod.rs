@@ -18,9 +18,10 @@ use self::recv::*;
 pub mod base;
 pub mod push;
 pub mod recv;
+pub use base::*;
 
-pub type Recv = DMRecv;
-pub type RecvKind = DMRecvKind;
+pub type Recv = RecvEnum;
+pub type RecvKind = RecvEnumKind;
 pub type Module = AiotModule<Recv>;
 
 impl Module {

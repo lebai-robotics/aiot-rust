@@ -13,6 +13,7 @@ pub use dynregmq::{DynamicRegister, DynamicRegisterResult};
 pub use http::Http;
 pub use mqtt::{DeviceAuthInfo, MqttClient, MqttConnection, MqttInstance};
 pub use util::error::{Error, Result};
+pub use dm::{DataModelMsg, DataModelOptions};
 
 pub mod alink;
 pub mod bootstrap;
