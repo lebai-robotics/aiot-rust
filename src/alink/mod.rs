@@ -128,7 +128,9 @@ pub struct AlinkRequest<T = Option<()>> {
     pub id: String,
     pub version: String,
     pub params: T,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub sys: Option<SysAck>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub method: Option<String>,
 }
 
