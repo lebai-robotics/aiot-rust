@@ -74,6 +74,8 @@ pub enum Error {
     WaitResponseTimeout(String),
     #[error("无效路径")]
     InvalidPath,
+    #[error("无效长度 {0} != {1}")]
+    SizeNotMatch(usize, usize),
     #[error("错误码 {0} {1:?}")]
     CodeParams(u64, Option<String>),
 }

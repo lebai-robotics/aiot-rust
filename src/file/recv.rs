@@ -15,15 +15,15 @@ use tokio::sync::mpsc::{Receiver, Sender};
 
 /// 设备请求上传文件
 /// 响应Topic：`/sys/${productKey}/${deviceName}/thing/file/upload/mqtt/init_reply`。
-pub type InitReply = AlinkResponse<InitData>;
+pub type InitReply = AlinkResponse<InitData, Option<String>>;
 
 /// 设备上传文件分片
 /// 响应Topic：`/sys/${productKey}/${deviceName}/thing/file/upload/mqtt/send_reply`。
-pub type SendReply = AlinkResponse<SendReplyData>;
+pub type SendReply = AlinkResponse<SendReplyData, Option<String>>;
 
 /// 设备取消上传文件
 /// 响应Topic：`/sys/${productKey}/${deviceName}/thing/file/upload/mqtt/cancel_reply`。
-pub type CancelReply = AlinkResponse<UploadId>;
+pub type CancelReply = AlinkResponse<UploadId, Option<String>>;
 
 #[derive(Debug, EnumKind, Clone)]
 #[enum_kind(FileRecvKind, derive(Serialize, IntoEnumIterator, Deserialize))]

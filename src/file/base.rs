@@ -133,11 +133,12 @@ pub struct SendPayload {
 /// 请求Topic：`/sys/${productKey}/${deviceName}/thing/file/upload/mqtt/send`。
 impl SendPayload {
     pub fn payload(header: SendHeader, file_bytes: &[u8]) -> Result<Vec<u8>> {
+        log::info!("上传文件头: {:?}", header);
         let header = serde_json::to_vec(&header)?;
         let header_length = header.len() as u16;
-        let digest64 = crc64::crc64(0, &file_bytes);
-        let digest = digest64 as u16;
-        log::debug!("u64:{digest64:x} u16:{digest:x} ({}) {}", file_bytes.len(), String::from_utf8_lossy(&file_bytes));
+        let digest = super::util::crc_ibm(file_bytes);
+        // let digest2 = super::util::crc_ibm2(file_bytes);
+        // log::debug!("crc:[{digest:x}] [{digest2:x}] ({})", file_bytes.len());
 
         let mut payload = Vec::new();
         payload.extend_from_slice(&header_length.to_be_bytes());
@@ -162,7 +163,7 @@ pub struct SendReplyData {
     /// 当上传了最后一个分片数据后，文件上传完成，返回该参数，值为true。
     /// 若设备请求上传文件的请求消息中fileSize值大于0，即文件大小已知时，若已上传的文件大小与设备请求上传文件时的文件大小相同，文件被识别为上传完成。
     /// 若设备请求上传的请求消息中fileSize值为-1，即文件大小未知时，若文件分片上传请求中isComplete存在且值为true，文件被识别为上传完成。
-    pub complete: bool,
+    pub complete: Option<bool>,
     /// 文件的完整性校验模式。若请求上传文件时传入了该参数，对应的值仅支持为crc64。
     pub fic_mode: Option<FicMode>,
     /// 文件上传完成，返回设备请求上传文件时的ficValue值。

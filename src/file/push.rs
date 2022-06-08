@@ -40,6 +40,9 @@ impl super::Module {
         params: SendHeaderParams,
         bytes: &[u8],
     ) -> crate::Result<SendReplyData> {
+        if params.b_size != bytes.len() {
+            return Err(Error::SizeNotMatch(params.b_size, bytes.len()));
+        }
         let header: SendHeader = ParamsRequest::new(params);
         let id = header.id.clone();
         let payload = SendPayload::payload(header, bytes)?;
@@ -49,7 +52,7 @@ impl super::Module {
         );
         let (tx, rx) = oneshot::channel();
         self.data.send((id.clone(), tx)).await;
-        self.publish(topic, &payload).await?;
+        self.publish_raw(topic, payload).await?;
         if let Ok(data) = rx.await {
             match data {
                 FileRecv::SendReply(reply) => {
@@ -77,12 +80,10 @@ impl super::Module {
         if let Ok(data) = rx.await {
             match data {
                 FileRecv::CancelReply(reply) => {
-                    if &reply.id == &payload.id {
-                        if reply.code == 200 {
-                            return Ok(reply.data);
-                        } else {
-                            return Err(Error::CodeParams(reply.code, reply.message));
-                        }
+                    if reply.code == 200 {
+                        return Ok(reply.data);
+                    } else {
+                        return Err(Error::CodeParams(reply.code, reply.message));
                     }
                 }
                 _ => {}

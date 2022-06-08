@@ -25,6 +25,8 @@ pub type Recv = FileRecv;
 pub type RecvKind = FileRecvKind;
 pub type Module = AiotModule<Recv, Sender<(String, oneshot::Sender<Recv>)>>;
 
+pub const CHUNK_SIZE: usize = 4096;
+
 impl Module {
     pub async fn init(&self) -> Result<()> {
         // 这里特殊处理，因为阿里云对文件上传，如果传 /sys/+/+ 则会订阅失败
@@ -50,7 +52,7 @@ impl Module {
 
     pub async fn upload(&self, path: impl AsRef<std::path::Path>) -> Result<String> {
         use tokio::fs::File;
-        use tokio::io::AsyncReadExt;
+        use tokio::io::{AsyncReadExt, AsyncSeekExt};
 
         let params = InitParams {
             file_name: util::filename_for_path(&path)?,
@@ -63,27 +65,31 @@ impl Module {
 
         let mut file = File::open(path).await?;
 
-        let mut buf = Vec::with_capacity(4096);
+        let mut buf = [0; CHUNK_SIZE];
         let mut offset = 0;
         let mut is_complete = Some(false);
+        if let Some(seek) = info.offset {
+            file.seek(std::io::SeekFrom::Start(seek as u64)).await?;
+            offset = seek as usize;
+        }
         loop {
             let b_size = file.read(&mut buf).await?;
-            if b_size == 0 {
+            if b_size < CHUNK_SIZE {
                 is_complete = Some(true);
             }
-            log::debug!("read: {} [{}]", b_size, String::from_utf8_lossy(&buf));
-            offset += b_size;
+            // log::debug!("read: {} [{}]", b_size, String::from_utf8_lossy(&buf));
             let params = SendHeaderParams {
                 upload_id: info.upload_id.clone(),
                 offset,
                 b_size,
                 is_complete,
             };
+            offset += b_size;
             if let Err(err) = self.upload_send(params.clone(), buf[..b_size].into()).await {
                 log::error!("upload_send: {:?}", err);
                 self.upload_send(params, buf[..b_size].into()).await?;
             }
-            if b_size == 0 {
+            if is_complete.unwrap_or(false) {
                 break;
             }
         }
@@ -126,8 +132,17 @@ impl crate::Executor for Executor {
             Recv::SendReply(item) => item.id.clone(),
             Recv::CancelReply(item) => item.id.clone(),
         };
-        if let Some(item) = self.map.remove(&id) {
-            item.send(data.clone());
+        if let Some(id) = id {
+            if let Some(item) = self.map.remove(&id) {
+                item.send(data.clone());
+            }
+        } else {
+            if let Some((id, _)) = self.map.iter().next() {
+                let id = id.clone();
+                if let Some(item) = self.map.remove(&id) {
+                    item.send(data.clone());
+                }
+            }
         }
 
         self.tx.send(data).await.map_err(|_| Error::MpscSendError)
