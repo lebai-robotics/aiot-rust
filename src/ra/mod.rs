@@ -23,7 +23,7 @@ pub mod recv;
 mod protocol;
 mod proxy;
 mod session;
-use proxy::RemoteAccessProxy;
+pub use proxy::RemoteAccessProxy;
 
 pub type Recv = RemoteAccessRecv;
 pub type RecvKind = RemoteAccessRecvKind;

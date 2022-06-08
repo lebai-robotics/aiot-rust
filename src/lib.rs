@@ -7,7 +7,7 @@
 //!
 //! 遵循阿里云物联网平台定义的 [Alink 协议](https://help.aliyun.com/document_detail/90459.html)。
 
-use alink::aiot_module::ModuleRecvKind;
+pub use alink::aiot_module::{AiotModule, ModuleRecvKind};
 pub use alink::ThreeTuple;
 pub use dm::{DataModelMsg, DataModelOptions};
 pub use dynregmq::{DynamicRegister, DynamicRegisterResult};
@@ -19,6 +19,7 @@ pub mod alink;
 pub mod bootstrap;
 pub mod dm;
 pub mod dynregmq;
+pub mod file;
 pub mod http;
 pub mod http_downloader;
 pub mod logpost;
@@ -31,7 +32,6 @@ pub mod shadow;
 pub mod subdev;
 pub mod tag;
 pub mod util;
-pub mod file;
 
 #[async_trait::async_trait]
 pub trait Executor {
