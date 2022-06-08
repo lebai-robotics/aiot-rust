@@ -137,12 +137,12 @@ impl<T> AlinkRequest<T> {
         self.id.parse().unwrap_or(0)
     }
 
-    pub fn new_id(id: u64, method: &str, params: T, ack: i32) -> Self {
+    pub fn new_id(id: u64, method: &str, params: T, ack: Option<i32>) -> Self {
         Self {
             id: format!("{}", id),
             version: ALINK_VERSION.to_string(),
             params,
-            sys: Some(SysAck { ack }),
+            sys: ack.map(|ack| SysAck { ack }),
             method: Some(method.to_string()),
         }
     }
@@ -157,7 +157,10 @@ impl<T> AlinkRequest<T> {
         }
     }
     pub fn new(method: &str, params: T, ack: i32) -> Self {
-        Self::new_id(global_id_next(), method, params, ack)
+        Self::new_id(global_id_next(), method, params, Some(ack))
+    }
+    pub fn new_no_ack(method: &str, params: T) -> Self {
+        Self::new_id(global_id_next(), method, params, None)
     }
 }
 
