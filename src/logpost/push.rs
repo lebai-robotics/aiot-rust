@@ -40,7 +40,7 @@ impl super::Module {
     pub async fn post(&self, logs: Vec<LogItem>) -> crate::Result<()> {
         let payload: LogPostRequest = AlinkRequest::new("thing.log.post", logs, 1);
         let topic = format!(
-            "/sys/{}/{}/thing/config/log/get",
+            "/sys/{}/{}/thing/log/post",
             self.three.product_key, self.three.device_name
         );
         self.publish(topic, &payload).await
