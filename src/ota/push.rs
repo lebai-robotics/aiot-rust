@@ -10,9 +10,9 @@ use enum_kinds::EnumKind;
 use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::ascii::AsciiExt;
 use std::collections::HashMap;
 use std::fs;
+use std::path::Path;
 use tempdir::TempDir;
 
 impl super::Module {
@@ -24,46 +24,38 @@ impl super::Module {
     /// * `module` - 上报的OTA模块，默认为 "default"
     pub async fn report_version(
         &mut self,
-        version: &str,
-        module: Option<&str>,
+        version: String,
+        module: Option<String>,
     ) -> crate::Result<()> {
         let payload = ReportVersionRequest {
             id: global_id_next().to_string(),
-            params: ReportVersion {
-                version: version.to_string(),
-                module: module.map(|s| s.to_string()),
-            },
+            params: ReportVersion { version, module },
             version: ALINK_VERSION.to_string(),
             sys: None,
             method: None,
         };
-        self.publish(
-            format!(
-                "/ota/device/inform/{}/{}",
-                self.three.product_key, self.three.device_name
-            ),
-            &payload,
-        )
-        .await;
+        let topic = format!(
+            "/ota/device/inform/{}/{}",
+            self.three.product_key, self.three.device_name
+        );
+        self.publish(topic, &payload).await;
         Ok(())
     }
+
     /// 设备上报升级进度
-    pub async fn report_process(&mut self, report_process: ReportProgress) -> crate::Result<()> {
+    pub async fn report_process(&mut self, params: ReportProgress) -> crate::Result<()> {
         let payload = ReportProgressRequest {
             id: global_id_next().to_string(),
-            params: report_process,
+            params,
             version: ALINK_VERSION.to_string(),
             sys: None,
             method: None,
         };
-        self.publish(
-            format!(
-                "/ota/device/progress/{}/{}",
-                self.three.product_key, self.three.device_name
-            ),
-            &payload,
-        )
-        .await;
+        let topic = format!(
+            "/ota/device/progress/{}/{}",
+            self.three.product_key, self.three.device_name
+        );
+        self.publish(topic, &payload).await;
         Ok(())
     }
 
@@ -80,38 +72,28 @@ impl super::Module {
             sys: None,
             method: None,
         };
-        self.publish(
-            format!(
-                "/sys/{}/{}/thing/ota/firmware/get",
-                self.three.product_key, self.three.device_name
-            ),
-            &payload,
-        )
-        .await;
+        let topic = format!(
+            "/sys/{}/{}/thing/ota/firmware/get",
+            self.three.product_key, self.three.device_name
+        );
+        self.publish(topic, &payload).await;
         Ok(())
     }
-    /// 下载升级包直到完成，返回二进制数据
-    ///
-    /// # 参数
-    ///
-    /// * `package` - 升级包信息
-    pub async fn download_upgrade_package(
+
+    /// 下载升级包到文件
+    pub async fn download_to(
         &mut self,
         package: &PackageData,
-    ) -> crate::Result<Vec<u8>> {
-        debug!("start receive_upgrade_package");
+        path: impl AsRef<Path>,
+    ) -> crate::Result<String> {
+        let file_path = path.as_ref().to_string_lossy().to_string();
+        debug!("下载升级包 {package:?} 到文件 {file_path}");
         let module = package.module.clone();
         let version = package.version.clone();
-        let tmp_dir = TempDir::new("ota")?;
-        let file_path = tmp_dir.path().join(format!(
-            "{}_{}",
-            module.clone().unwrap_or("default".to_string()),
-            version
-        ));
         let downloader = HttpDownloader::new(HttpDownloadConfig {
             block_size: 8000000,
             uri: package.url.clone(),
-            file_path: file_path.to_str().unwrap().to_string(),
+            file_path,
         });
         let results = futures_util::future::join(
             async {
@@ -131,29 +113,9 @@ impl super::Module {
         )
         .await;
         let mut ota_file_path = results.1?;
-        let mut buffer = fs::read(ota_file_path)?;
-        let method = package.sign_method.to_ascii_lowercase();
-        debug!("method={}, size={}", method, buffer.len());
-        match method.as_str() {
-            "sha256" => {
-                let result = crate::util::sha256(&buffer);
-                if result != package.sign.to_ascii_uppercase() {
-                    debug!("result:{} sign:{}", result, package.sign);
-                    return Err(Error::FileValidateFailed(method));
-                }
-            }
-            "md5" => {
-                let result = crate::util::md5(&buffer);
-                if result != package.sign.to_ascii_uppercase() {
-                    debug!("result:{} sign:{}", result, package.sign);
-                    return Err(Error::FileValidateFailed(method));
-                }
-            }
-            _ => {
-                return Err(Error::FileValidateFailed(method));
-            }
-        }
-        Ok(buffer)
+        let mut buffer = fs::read(&ota_file_path)?;
+        crate::util::validate(&buffer, &package.sign_method, &package.sign)?;
+        Ok(ota_file_path)
     }
 }
 

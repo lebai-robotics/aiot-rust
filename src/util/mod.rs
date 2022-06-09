@@ -3,6 +3,7 @@
 pub mod auth;
 pub mod error;
 
+use crate::{Error, Result};
 use lazy_static::lazy_static;
 use rand::distributions::Alphanumeric;
 use rand::rngs::StdRng;
@@ -71,6 +72,31 @@ pub fn md5(buffer: &[u8]) -> String {
     hasher.update(&buffer);
     let result = hasher.finalize();
     hex2str(&result)
+}
+
+pub fn validate(buffer: &[u8], sign_method: &str, sign: &str) -> Result<()> {
+    let method = sign_method.to_ascii_lowercase();
+    log::debug!("method={}, size={}", method, buffer.len());
+    match method.as_str() {
+        "sha256" => {
+            let result = crate::util::sha256(&buffer);
+            if result != sign.to_ascii_uppercase() {
+                log::debug!("result:{} sign:{}", result, sign);
+                return Err(Error::FileValidateFailed(method));
+            }
+        }
+        "md5" => {
+            let result = crate::util::md5(&buffer);
+            if result != sign.to_ascii_uppercase() {
+                log::debug!("result:{} sign:{}", result, sign);
+                return Err(Error::FileValidateFailed(method));
+            }
+        }
+        _ => {
+            return Err(Error::FileValidateFailed(method));
+        }
+    }
+    Ok(())
 }
 
 #[cfg(test)]
