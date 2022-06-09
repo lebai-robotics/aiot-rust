@@ -10,14 +10,7 @@ impl ALinkSubscribeTopic {
     pub fn new(topic: &'static str) -> Self {
         Self {
             topic,
-            reg: Regex::new(topic.replace("/+/+/", "/(.+?)/(.+?)/").as_str()).unwrap(),
-            offset: 0,
-        }
-    }
-    pub fn new_we(topic: &'static str) -> Self {
-        Self {
-            topic,
-            reg: Regex::new(topic.replace("/+/+", "/(.+?)/(.+?)").as_str()).unwrap(),
+            reg: Regex::new(topic.replacen("+", "(.+?)", 3).as_str()).unwrap(),
             offset: 0,
         }
     }

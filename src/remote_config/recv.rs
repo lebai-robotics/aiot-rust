@@ -54,9 +54,9 @@ impl ModuleRecvKind for super::RecvKind {
     fn get_topic(&self) -> ALinkSubscribeTopic {
         match *self {
             Self::RemoteConfigGetReply => {
-                ALinkSubscribeTopic::new_we("/sys/+/+/thing/config/get_reply")
+                ALinkSubscribeTopic::new("/sys/+/+/thing/config/get_reply")
             }
-            Self::RemoteConfigPush => ALinkSubscribeTopic::new_we("/sys/+/+/thing/config/push"),
+            Self::RemoteConfigPush => ALinkSubscribeTopic::new("/sys/+/+/thing/config/push"),
         }
     }
 }

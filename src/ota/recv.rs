@@ -37,7 +37,7 @@ impl ModuleRecvKind for super::RecvKind {
     }
     fn get_topic(&self) -> ALinkSubscribeTopic {
         match *self {
-            Self::UpgradePackageRequest => ALinkSubscribeTopic::new_we("/ota/device/upgrade/+/+"),
+            Self::UpgradePackageRequest => ALinkSubscribeTopic::new("/ota/device/upgrade/+/+"),
             Self::GetFirmwareReply => {
                 ALinkSubscribeTopic::new("/sys/+/+/thing/ota/firmware/get_reply")
             }

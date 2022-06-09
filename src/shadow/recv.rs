@@ -36,7 +36,7 @@ impl ModuleRecvKind for super::RecvKind {
 
     fn get_topic(&self) -> ALinkSubscribeTopic {
         match *self {
-            Self::ShadowGetTopic => ALinkSubscribeTopic::new_we("/shadow/get/+/+"),
+            Self::ShadowGetTopic => ALinkSubscribeTopic::new("/shadow/get/+/+"),
         }
     }
 }

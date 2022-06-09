@@ -30,7 +30,7 @@ impl ModuleRecvKind for super::RecvKind {
 
     fn get_topic(&self) -> ALinkSubscribeTopic {
         match *self {
-            Self::BootstrapNotify => ALinkSubscribeTopic::new_we("/sys/+/+/thing/bootstrap/notify"),
+            Self::BootstrapNotify => ALinkSubscribeTopic::new("/sys/+/+/thing/bootstrap/notify"),
         }
     }
 
