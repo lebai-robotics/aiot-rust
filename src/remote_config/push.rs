@@ -76,14 +76,14 @@ impl super::Module {
         match method.as_str() {
             "sha256" => {
                 let result = crate::util::sha256(&buffer);
-                if result != config_info.sign {
+                if result != config_info.sign.to_ascii_uppercase() {
                     debug!("result:{} sign:{}", result, config_info.sign);
                     return Err(Error::FileValidateFailed(method));
                 }
             }
             "md5" => {
                 let result = crate::util::md5(&buffer);
-                if result != config_info.sign {
+                if result != config_info.sign.to_ascii_uppercase() {
                     debug!("result:{} sign:{}", result, config_info.sign);
                     return Err(Error::FileValidateFailed(method));
                 }

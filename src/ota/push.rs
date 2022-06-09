@@ -10,6 +10,7 @@ use enum_kinds::EnumKind;
 use log::debug;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::ascii::AsciiExt;
 use std::collections::HashMap;
 use std::fs;
 use tempdir::TempDir;
@@ -136,14 +137,14 @@ impl super::Module {
         match method.as_str() {
             "sha256" => {
                 let result = crate::util::sha256(&buffer);
-                if result != package.sign {
+                if result != package.sign.to_ascii_uppercase() {
                     debug!("result:{} sign:{}", result, package.sign);
                     return Err(Error::FileValidateFailed(method));
                 }
             }
             "md5" => {
                 let result = crate::util::md5(&buffer);
-                if result != package.sign {
+                if result != package.sign.to_ascii_uppercase() {
                     debug!("result:{} sign:{}", result, package.sign);
                     return Err(Error::FileValidateFailed(method));
                 }
