@@ -28,6 +28,13 @@ pub trait ModuleRecvKind: IntoEnumIterator {
         }
         None
     }
+    fn show() -> String {
+        let mut s = String::new();
+        for item in Self::into_enum_iter() {
+            s.push_str(&format!("{} ", item.get_topic().topic));
+        }
+        s
+    }
     fn to_payload(&self, payload: &[u8], caps: &Vec<String>) -> Result<Self::Recv>;
     fn get_topic(&self) -> ALinkSubscribeTopic;
 }

@@ -47,6 +47,6 @@ where
     {
         kind.to_payload(payload, &caps)
     } else {
-        Err(Error::InvalidTopic(topic.to_string()))
+        Err(Error::TopicNotMatch(format!("{:?}", RecvKind::show())))
     }
 }

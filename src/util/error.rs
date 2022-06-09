@@ -54,6 +54,8 @@ pub enum Error {
     AddPemFileError,
     #[error("invalid topic: {0}")]
     InvalidTopic(String),
+    #[error("模块 {0} 不匹配")]
+    TopicNotMatch(String),
     #[error("重复的注册响应")]
     RepeatRegisterResponse,
     #[error("事件循环错误")]

@@ -11,7 +11,7 @@ async fn main() -> Result<()> {
     let mut conn = MqttClient::new_public_tls(host, &three)?.connect();
     let mut log_post = conn.log_post()?;
 
-    log_post.get("device", "content").await?;
+    log_post.get_default().await?;
     loop {
         tokio::select! {
             Ok(event) = conn.poll() => {
