@@ -71,24 +71,25 @@ impl super::Module {
         });
         let config_file_path = downloader.start().await?;
         let mut buffer = fs::read(config_file_path)?;
-        debug!("size:{}", buffer.len());
-        match config_info.sign_method.to_ascii_lowercase().as_str() {
+        let method = config_info.sign_method.to_ascii_lowercase();
+        debug!("method={}, size={}", method, buffer.len());
+        match method.as_str() {
             "sha256" => {
                 let result = crate::util::sha256(&buffer);
                 if result != config_info.sign {
                     debug!("result:{} sign:{}", result, config_info.sign);
-                    return Err(Error::FileValidateFailed);
+                    return Err(Error::FileValidateFailed(method));
                 }
             }
             "md5" => {
                 let result = crate::util::md5(&buffer);
                 if result != config_info.sign {
                     debug!("result:{} sign:{}", result, config_info.sign);
-                    return Err(Error::FileValidateFailed);
+                    return Err(Error::FileValidateFailed(method));
                 }
             }
             _ => {
-                return Err(Error::FileValidateFailed);
+                return Err(Error::FileValidateFailed(method));
             }
         }
         // std::fs::remove_file(file_path);

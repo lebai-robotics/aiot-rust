@@ -68,8 +68,8 @@ pub enum Error {
     DeviceNameUnmatched,
     #[error("实例未初始化")]
     UnInitError,
-    #[error("文件验证失败")]
-    FileValidateFailed,
+    #[error("文件验证失败 {0}")]
+    FileValidateFailed(String),
     #[error("Lock")]
     Lock,
     #[error("等待响应超时 {0}")]

@@ -131,24 +131,25 @@ impl super::Module {
         .await;
         let mut ota_file_path = results.1?;
         let mut buffer = fs::read(ota_file_path)?;
-        debug!("file size:{}", buffer.len());
-        match package.sign_method.to_ascii_lowercase().as_str() {
+        let method = package.sign_method.to_ascii_lowercase();
+        debug!("method={}, size={}", method, buffer.len());
+        match method.as_str() {
             "sha256" => {
                 let result = crate::util::sha256(&buffer);
                 if result != package.sign {
                     debug!("result:{} sign:{}", result, package.sign);
-                    return Err(Error::FileValidateFailed);
+                    return Err(Error::FileValidateFailed(method));
                 }
             }
             "md5" => {
                 let result = crate::util::md5(&buffer);
                 if result != package.sign {
                     debug!("result:{} sign:{}", result, package.sign);
-                    return Err(Error::FileValidateFailed);
+                    return Err(Error::FileValidateFailed(method));
                 }
             }
             _ => {
-                return Err(Error::FileValidateFailed);
+                return Err(Error::FileValidateFailed(method));
             }
         }
         Ok(buffer)

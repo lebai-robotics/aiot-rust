@@ -62,7 +62,7 @@ pub fn sha256(buffer: &[u8]) -> String {
     let mut hasher = Sha256::new();
     hasher.update(&buffer);
     let result = hasher.finalize();
-    String::from_utf8_lossy(&result).into()
+    hex2str(&result)
 }
 
 pub fn md5(buffer: &[u8]) -> String {
@@ -70,7 +70,7 @@ pub fn md5(buffer: &[u8]) -> String {
     let mut hasher = Md5::new();
     hasher.update(&buffer);
     let result = hasher.finalize();
-    String::from_utf8_lossy(&result).into()
+    hex2str(&result)
 }
 
 #[cfg(test)]
