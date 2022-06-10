@@ -86,15 +86,9 @@ impl super::Module {
         package: &PackageData,
         path: impl AsRef<Path>,
     ) -> crate::Result<String> {
-        let file_path = path.as_ref().to_string_lossy().to_string();
-        debug!("下载升级包 {package:?} 到文件 {file_path}");
         let module = package.module.clone();
         let version = package.version.clone();
-        let downloader = HttpDownloader::new(HttpDownloadConfig {
-            block_size: 8000000,
-            uri: package.url.clone(),
-            file_path,
-        });
+        let downloader = HttpDownloader::new(&package.url, path);
         let results = futures_util::future::join(
             async {
                 let process_receiver = downloader.get_process_receiver();

@@ -5,7 +5,7 @@ keywords = ["alink", "aliyun", "mqtt", "iot", "sdk"]
 license = "MIT"
 name = "aiot"
 repository = "https://github.com/lebai-robotics/aiot-rust"
-version = "0.9.5"
+version = "0.9.6"
 
 [dependencies]
 async-trait = "^0.1"

@@ -60,6 +60,22 @@ pub struct HttpDownloader {
 }
 
 impl HttpDownloader {
+    pub fn new(url: &str, path: impl AsRef<Path>) -> Self {
+        let file_path = path.as_ref().to_string_lossy().to_string();
+        let config = HttpDownloadConfig {
+            block_size: 8000000,
+            uri: url.to_string(),
+            file_path,
+        };
+        let (tx, rx) = mpsc::channel(10);
+        Self {
+            config,
+            client: Client::new(),
+            process_receiver: Arc::new(Mutex::new(rx)),
+            process_sender: tx,
+        }
+    }
+
     async fn download_block(&self, start: u64, end: u64) -> Result<Response> {
         let request = self
             .client
@@ -164,16 +180,6 @@ impl HttpDownloader {
             return Err(Error::InconsistentData);
         }
         Ok(file_name.clone())
-    }
-
-    pub fn new(config: HttpDownloadConfig) -> Self {
-        let (tx, rx) = mpsc::channel::<DownloadProcess>(10);
-        Self {
-            config,
-            client: Client::new(),
-            process_receiver: Arc::new(Mutex::new(rx)),
-            process_sender: tx,
-        }
     }
 
     pub fn get_process_receiver(&self) -> Arc<Mutex<Receiver<DownloadProcess>>> {

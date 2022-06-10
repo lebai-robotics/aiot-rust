@@ -64,11 +64,7 @@ impl super::Module {
         let config_id = config_info.config_id.clone();
         let tmp_dir = TempDir::new("remote_config")?;
         let file_path = tmp_dir.path().join(config_id.to_string());
-        let downloader = HttpDownloader::new(HttpDownloadConfig {
-            block_size: 8000000,
-            uri: config_info.url.clone(),
-            file_path: String::from(file_path.to_str().unwrap()),
-        });
+        let downloader = HttpDownloader::new(&config_info.url, file_path);
         let config_file_path = downloader.start().await?;
         let mut buffer = fs::read(config_file_path)?;
         crate::util::validate(&buffer, &config_info.sign_method, &config_info.sign)?;

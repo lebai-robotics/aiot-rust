@@ -12,6 +12,7 @@ pub use alink::ThreeTuple;
 pub use dm::{DataModelMsg, DataModelOptions};
 pub use dynregmq::{DynamicRegister, DynamicRegisterResult};
 pub use http::Http;
+pub use http_downloader::HttpDownloader;
 pub use mqtt::{DeviceAuthInfo, MqttClient, MqttConnection, MqttInstance};
 pub use util::error::{Error, Result};
 
