@@ -26,14 +26,7 @@ pub type Module = AiotModule<Recv, DataModelOptions>;
 
 impl Module {
     pub async fn init(&self) -> Result<()> {
-        let mut client = self.client.clone();
-        let mut topics = rumqttc::Subscribe::empty_subscribe();
-        for item in RecvKind::into_enum_iter() {
-            let topic = item.get_topic();
-            topics.add(topic.topic.to_string(), QoS::AtMostOnce);
-        }
-        client.subscribe_many(topics.filters).await?;
-        Ok(())
+        self.sub_all::<RecvKind>().await
     }
 }
 

@@ -42,7 +42,7 @@ impl SessionList {
     ) -> Result<String> {
         use tokio::io::{AsyncReadExt, AsyncWriteExt};
 
-        let addr = format!("{}:{}", info.service_ip, info.service_port);
+        let addr = format!("{}:{}", info.ip, info.port);
         let id = util::rand_string(32);
         let res = id.clone();
         debug!("{} session_id: {:?}", addr, id);

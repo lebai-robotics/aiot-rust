@@ -46,6 +46,24 @@ pub struct AiotModule<TRecv, O = ()> {
     pub data: O,
 }
 
+impl<TRecv, O> AiotModule<TRecv, O> {
+    pub async fn sub_all<RecvKind>(&self) -> Result<()>
+    where
+        RecvKind: ModuleRecvKind,
+    {
+        let two = format!("{}/{}", self.three.product_key, self.three.device_name);
+        let mut client = self.client.clone();
+        let mut topics = rumqttc::Subscribe::empty_subscribe();
+        for item in RecvKind::into_enum_iter() {
+            let topic = item.get_topic();
+            let topic = topic.topic.replace("+/+", &two);
+            topics.add(topic, QoS::AtMostOnce);
+        }
+        client.subscribe_many(topics.filters).await?;
+        Ok(())
+    }
+}
+
 impl MqttConnection {
     pub fn module<TModuleRecv, O>(
         &mut self,

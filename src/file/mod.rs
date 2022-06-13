@@ -29,25 +29,7 @@ pub const CHUNK_SIZE: usize = 4096;
 
 impl Module {
     pub async fn init(&self) -> Result<()> {
-        // 这里特殊处理，因为阿里云对文件上传，如果传 /sys/+/+ 则会订阅失败
-        let topics = [
-            format!(
-                "/sys/{}/{}/thing/file/upload/mqtt/init_reply",
-                self.three.product_key, self.three.device_name
-            ),
-            format!(
-                "/sys/{}/{}/thing/file/upload/mqtt/send_reply",
-                self.three.product_key, self.three.device_name
-            ),
-            format!(
-                "/sys/{}/{}/thing/file/upload/mqtt/cancel_reply",
-                self.three.product_key, self.three.device_name
-            ),
-        ];
-        for topic in topics {
-            self.client.subscribe(topic, QoS::AtMostOnce).await?;
-        }
-        Ok(())
+        self.sub_all::<RecvKind>().await
     }
 
     pub async fn upload(&self, path: impl AsRef<std::path::Path>) -> Result<String> {

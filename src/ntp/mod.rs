@@ -25,11 +25,7 @@ pub type Module = AiotModule<Recv>;
 
 impl Module {
     pub async fn init(&self) -> Result<()> {
-        for item in RecvKind::into_enum_iter() {
-            let topic = item.get_topic();
-            self.client.subscribe(topic.topic, QoS::AtMostOnce).await?;
-        }
-        Ok(())
+        self.sub_all::<RecvKind>().await
     }
 }
 

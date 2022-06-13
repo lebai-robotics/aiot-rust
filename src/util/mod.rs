@@ -58,6 +58,10 @@ pub fn rand_string(len: usize) -> String {
         .collect()
 }
 
+pub fn rand_u64() -> u64 {
+    RNG.lock().unwrap().gen()
+}
+
 pub fn sha256(buffer: &[u8]) -> String {
     use sha2::{Digest, Sha256, Sha512};
     let mut hasher = Sha256::new();
