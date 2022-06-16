@@ -1,4 +1,5 @@
-use super::protocol::Service;
+use super::protocol::{Frame, ReleaseCode, Service};
+use crate::util::rand_u64;
 use crate::{Error, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -7,16 +8,19 @@ use tokio::net::TcpStream;
 use tokio::sync::mpsc::{self, Sender};
 use tokio::task;
 
+pub struct Session {
+    tx: Sender<Vec<u8>>,
+    service_type: String,
+}
+
 pub struct SessionList {
-    txs: HashMap<String, Sender<Vec<u8>>>,
-    cloud_tx: Sender<Vec<u8>>,
+    txs: HashMap<String, Session>,
 }
 
 impl SessionList {
-    pub fn new(cloud_tx: Sender<Vec<u8>>) -> Self {
+    pub fn new() -> Self {
         Self {
             txs: HashMap::new(),
-            cloud_tx
         }
     }
 }
@@ -26,13 +30,20 @@ impl SessionList {
         &mut self,
         id: String,
         info: &Service,
-        local_tx: Sender<(String, Vec<u8>)>,
+        local_tx: Sender<(String, String, Vec<u8>)>,
     ) -> Result<()> {
         let addr = format!("{}:{}", info.ip, info.port);
         log::debug!("tcp://{} session_id: {:?}", addr, id);
 
         let (tx, mut rx) = mpsc::channel(128);
-        self.txs.insert(id.clone(), tx);
+        let service_type = info.r#type.clone();
+        self.txs.insert(
+            id.clone(),
+            Session {
+                tx,
+                service_type: service_type.clone(),
+            },
+        );
 
         let mut stream = TcpStream::connect(&addr).await?;
         task::spawn(async move {
@@ -48,7 +59,7 @@ impl SessionList {
                         if n == 0 {
                             break;
                         }
-                        local_tx.send((id.clone(), (&buf[0..n]).to_vec())).await.map_err(|_| Error::MpscSendError)?;
+                        local_tx.send((id.clone(), service_type.clone(), (&buf[0..n]).to_vec())).await.map_err(|_| Error::MpscSendError)?;
                     },
                     else => break,
                 }
@@ -60,14 +71,22 @@ impl SessionList {
         Ok(())
     }
 
-    pub async fn release(&mut self, id: String) {
+    pub async fn release(&mut self, id: String) -> Result<()> {
         self.txs.remove(&id);
-        // self.cloud_tx.send(); 关闭Session
+        Ok(())
     }
 
-    pub async fn write(&mut self, id: String, data: Vec<u8>) -> Result<()> {
-        let tx = self.txs.get(&id).ok_or(Error::SessionNotFound(id))?.clone();
-        tx.send(data).await.map_err(|_| Error::UploadDataError)?;
+    pub async fn write(&mut self, id: String, body: Vec<u8>) -> Result<()> {
+        let session = self
+            .txs
+            .get(&id)
+            .ok_or(Error::SessionNotFound(id.clone()))?
+            .clone();
+        session
+            .tx
+            .send(Frame::raw(id, rand_u64(), session.service_type.clone(), body).to_vec()?)
+            .await
+            .map_err(|_| Error::UploadDataError)?;
         Ok(())
     }
 }

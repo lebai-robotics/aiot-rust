@@ -6,7 +6,6 @@ use crate::mqtt::MqttConnection;
 use crate::{Error, Result, ThreeTuple};
 use enum_iterator::IntoEnumIterator;
 use log::*;
-pub use proxy::RemoteAccessProxy;
 use regex::Regex;
 use rumqttc::{AsyncClient, QoS};
 use serde::{Deserialize, Serialize};
@@ -18,11 +17,8 @@ use self::base::RemoteAccessOptions;
 use self::recv::*;
 
 pub mod base;
-mod protocol;
-mod proxy;
 pub mod push;
 pub mod recv;
-mod session;
 
 pub type Recv = RemoteAccessRecv;
 pub type RecvKind = RemoteAccessRecvKind;
@@ -37,18 +33,17 @@ impl Module {
 }
 
 impl MqttConnection {
-    pub fn remote_access(&mut self) -> Result<(Module, RemoteAccessProxy)> {
+    pub fn remote_access(&mut self) -> Result<Module> {
         let (tx, rx) = mpsc::channel(16);
         let (tx_, rx_) = mpsc::channel(16);
         let ra = RemoteAccessOptions::new(self.mqtt_client.three.clone());
-        let rap = RemoteAccessProxy::new(rx_, ra)?;
         let executor = Executor {
             tx,
             tx_,
             three: self.mqtt_client.three.clone(),
         };
         let module = self.module(Box::new(executor), rx, ())?;
-        Ok((module, rap))
+        Ok(module)
     }
 }
 

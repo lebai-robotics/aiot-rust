@@ -55,6 +55,34 @@ pub enum FrameType {
     RawData = 4,
 }
 
+/// 响应结果码，取值范围0~255，0~15为系统预留响应码，16~255可由您自定义。
+#[derive(Serialize_repr, Deserialize_repr, Debug, Copy, Clone, PartialEq)]
+#[repr(u8)]
+pub enum ResponseCode {
+    /// 0：表示创建Session成功，其他表示失败。
+    Success = 0,
+    /// 1：表示物联网平台的云端识别到单个安全隧道中Session数量已达到上限（10个），无法再创建。
+    SessionLimit = 1,
+    /// 2：表示设备端拒绝创建该Session。
+    DeviceRefused = 2,
+}
+
+/// 关闭Session的原因
+#[derive(Serialize_repr, Deserialize_repr, Debug, Copy, Clone, PartialEq)]
+#[repr(u8)]
+pub enum ReleaseCode {
+    /// 0：表示访问端主动关闭Session。
+    ClientClose = 0,
+    /// 1：表示设备端主动关闭Session。
+    DeviceClose = 1,
+    /// 2：表示物联网平台因检测到访问端断连，关闭Session。
+    CloudClientDisconnect = 2,
+    /// 3：表示物联网平台因检测到设备端断连，关闭Session。
+    CloudDeviceDisconnect = 3,
+    /// 4：表示物联网平台因系统更新，关闭Session，设备端和访问端可以延时1秒后重新建连。
+    CloudUpdate = 4,
+}
+
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ResponseBody<T> {
     pub code: T,
@@ -100,7 +128,7 @@ impl Frame {
         session_id: String,
         frame_id: u64,
         service_type: String,
-        code: u8,
+        code: ResponseCode,
         msg: String,
     ) -> Frame {
         Frame::new(
@@ -114,7 +142,7 @@ impl Frame {
         )
     }
 
-    pub fn release(session_id: String, frame_id: u64, code: u8, msg: String) -> Frame {
+    pub fn release(session_id: String, frame_id: u64, code: ReleaseCode, msg: String) -> Frame {
         Frame::new(
             Header {
                 frame_type: FrameType::ReleaseSession,

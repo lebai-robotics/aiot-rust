@@ -1,6 +1,6 @@
-pub mod session;
 pub mod protocol;
-
+pub mod proxy;
+pub mod session;
 
 /// tunnel内部事件类型
 pub enum Event {
@@ -11,4 +11,3 @@ pub enum Event {
     /// 隧道认证信息已经过期，需要重新连接
     Expired,
 }
-
