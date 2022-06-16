@@ -9,15 +9,15 @@ async fn main() -> Result<()> {
     let three = ThreeTuple::from_env();
     let mut conn = MqttClient::new_public_tls(host, &three)?.connect();
 
-    let (mut ra, mut rap) = conn.remote_access()?;
-    tokio::spawn(async move {
-        ra.init().await?;
-        loop {
-            rap.poll().await?;
-        }
-        #[allow(unreachable_code)]
-        Ok::<_, Error>(())
-    });
+    // let (mut ra, mut rap) = conn.remote_access()?;
+    // tokio::spawn(async move {
+    //     ra.init().await?;
+    //     loop {
+    //         rap.poll().await?;
+    //     }
+    //     #[allow(unreachable_code)]
+    //     Ok::<_, Error>(())
+    // });
 
     loop {
         tokio::select! {

@@ -32,6 +32,7 @@ pub mod remote_config;
 pub mod shadow;
 pub mod subdev;
 pub mod tag;
+pub mod tunnel;
 pub mod util;
 
 #[async_trait::async_trait]

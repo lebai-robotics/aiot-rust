@@ -190,14 +190,14 @@ pub fn gen_error(code: ErrorCode, msg: Option<&str>, frame_id: u64) -> Result<Ve
     gen_response(MsgType::RespOk, frame_id, None, None, payload.as_bytes())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
 
-    #[test]
-    fn 测试serde_json() {
-        let b = r#"{"frame_id":"MSG_FRONTEND_CONN_REQ_0.9149057932059996","frame_type":4,"payload_len":114,"service_type":1,"timestamp":0}"#;
-        let x = serde_json::from_str::<MsgHead>(b).unwrap();
-        println!("{:?}", x);
-    }
-}
+//     #[test]
+//     fn 测试serde_json() {
+//         let b = r#"{"frame_id":"MSG_FRONTEND_CONN_REQ_0.9149057932059996","frame_type":4,"payload_len":114,"service_type":1,"timestamp":0}"#;
+//         let x = serde_json::from_str::<MsgHead>(b).unwrap();
+//         println!("{:?}", x);
+//     }
+// }

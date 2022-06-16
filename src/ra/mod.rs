@@ -23,7 +23,6 @@ mod proxy;
 pub mod push;
 pub mod recv;
 mod session;
-mod tunnel;
 
 pub type Recv = RemoteAccessRecv;
 pub type RecvKind = RemoteAccessRecvKind;
