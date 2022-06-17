@@ -1,8 +1,8 @@
-use super::protocol::Service;
+use super::protocol::{Header, Service};
 use super::session::{Session, SessionList};
-use crate::tunnel::protocol::{Frame, FrameType, ReleaseCode};
+use crate::tunnel::protocol::{Frame, FrameType, ReleaseCode, ResponseCode, ResponseBody};
 use crate::util::auth::aliyun_client_config;
-use crate::util::rand_u64;
+use crate::util::inc_u64;
 use crate::{Error, Result};
 use futures::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
@@ -102,8 +102,8 @@ struct RemoteAccessProxy {
     write: SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>,
     action_rx: Receiver<ProxyAction>,
     cloud_rx: Receiver<Vec<u8>>,
-    local_tx: Sender<(String, String, Vec<u8>)>,
-    local_rx: Receiver<(String, String, Vec<u8>)>,
+    local_tx: Sender<Frame>,
+    local_rx: Receiver<Frame>,
     one_tx: Option<oneshot::Sender<String>>, // 上送 sessionId
     exit_flag: bool,
     session_list: SessionList,
@@ -211,24 +211,52 @@ impl RemoteAccessProxy {
         Ok(())
     }
 
+    async fn new_session(&mut self, header: Header) -> Result<()> {
+        let id = header.session_id.unwrap_or("".to_string());
+        if let Some(tx) = self.one_tx.take() {
+            tx.send(id.clone()).ok();
+        }
+        let service_type = header.service_type.unwrap_or("".to_string());
+        if let Some(service) = SERVICE_LIST.read().await.get(&service_type) {
+            if let Err(err) = self
+                .session_list
+                .add(id, service, self.local_tx.clone())
+                .await
+            {
+                return Err(err);
+            }
+            return Ok(());
+        }
+        Err(Error::SessionCreate(format!(
+            "找不到 service: {service_type}"
+        )))
+    }
+
     pub async fn poll(&mut self) -> Result<()> {
         tokio::select! {
             Some(Ok(data)) = self.read.next() => {
                 let data = Frame::from_slice(&data.into_data())?;
+                // log::info!("云端下发 {:?}", data);
                 match data.header.frame_type {
                     FrameType::Response => {},
-                    FrameType::NewSession => if let Some(id) = data.header.session_id {
-                        if let Some(tx) = self.one_tx.take() {
-                            tx.send(id.clone()).ok();
-                        }
-                        if let Some(service_type) = data.header.service_type {
-                            if let Some(service) = SERVICE_LIST.read().await.get(&service_type) {
-                                self.session_list.add(id, service, self.local_tx.clone()).await.ok();
+                    FrameType::NewSession => {
+                        let data = match self.new_session(data.header.clone()).await {
+                            Ok(()) => {
+                                Frame::response(data.session_id(), data.frame_id(), data.service_type(), ResponseCode::Success, "new session response".to_string())
+                            },
+                            Err(err) => {
+                                Frame::response(data.session_id(), data.frame_id(), data.service_type(), ResponseCode::DeviceRefused, format!("{err}"))
                             }
-                        }
+                        };
+                        self.write.send(data.to_vec()?.into()).await.ok();
                     },
                     FrameType::ReleaseSession => if let Some(id) = data.header.session_id {
-                        self.session_list.release(id).await.ok();
+                        let code = if let Ok(body) = serde_json::from_slice::<ResponseBody<ReleaseCode>>(&data.body) {
+                            body.code
+                        } else {
+                            ReleaseCode::DeviceClose
+                        };
+                        self.session_list.release(id, code, "".to_string()).await.ok();
                     },
                     FrameType::RawData => if let Some(id) = data.header.session_id {
                         self.session_list.write(id, data.body).await.ok();
@@ -236,9 +264,8 @@ impl RemoteAccessProxy {
                 }
                 Ok(())
             },
-            Some((id, service_type, data)) = self.local_rx.recv() => {
-                let data = Frame::raw(id, rand_u64(), service_type, data);
-                if let Err(err) = self.write.send(data.to_vec()?.into()).await {
+            Some(frame) = self.local_rx.recv() => {
+                if let Err(err) = self.write.send(frame.to_vec()?.into()).await {
                     log::error!("send local data error: {}", err);
                 }
                 Ok(())
@@ -250,8 +277,8 @@ impl RemoteAccessProxy {
                     }
                     ProxyAction::DeleteTunnel(id) => {
                         self.exit_flag = true;
-                        let data = Frame::release(id, rand_u64(), ReleaseCode::DeviceClose, "".into());
-                        self.write.send(data.to_vec()?.into()).await.ok();
+                        // let data = Frame::release(id, inc_u64(), ReleaseCode::DeviceClose, "".into());
+                        // self.write.send(data.to_vec()?.into()).await.ok();
                     }
                 }
                 Ok(())

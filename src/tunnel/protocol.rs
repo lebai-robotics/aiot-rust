@@ -1,4 +1,4 @@
-use crate::{Error, Result};
+use crate::{util::rand_u64, Error, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use serde_repr::{Deserialize_repr, Serialize_repr};
@@ -98,6 +98,18 @@ pub struct Frame {
 }
 
 impl Frame {
+    pub fn session_id(&self) -> String {
+        self.header.session_id.clone().unwrap_or("".to_string())
+    }
+
+    pub fn service_type(&self) -> String {
+        self.header.service_type.clone().unwrap_or("".to_string())
+    }
+
+    pub fn frame_id(&self) -> u64 {
+        self.header.frame_id.clone().unwrap_or(rand_u64())
+    }
+
     pub fn new(header: Header, body: Vec<u8>) -> Frame {
         Frame { header, body }
     }
@@ -114,13 +126,13 @@ impl Frame {
         )
     }
 
-    pub fn raw(session_id: String, frame_id: u64, service_type: String, body: Vec<u8>) -> Frame {
+    pub fn raw(session_id: String, frame_id: u64, service_type: Option<String>, body: Vec<u8>) -> Frame {
         Frame::new(
             Header {
                 frame_type: FrameType::RawData,
                 frame_id: Some(frame_id),
                 session_id: Some(session_id),
-                service_type: Some(service_type),
+                service_type,
             },
             body,
         )
@@ -162,7 +174,7 @@ impl Frame {
         buf.extend_from_slice(&(header.len() as u16).to_be_bytes());
         buf.extend_from_slice(&header);
         buf.extend_from_slice(&self.body);
-        log::debug!("{}", String::from_utf8_lossy(&buf));
+        log::debug!("{}{}", header.len(), String::from_utf8_lossy(&header));
         Ok(buf)
     }
 
@@ -172,7 +184,7 @@ impl Frame {
         }
         let len = u16::from_be_bytes(bytes[..2].try_into().unwrap()) as usize;
         if bytes.len() < 2 + len {
-            return Err(Error::HeaderFormatError(format!("头部长度 {} 不够", len)));
+            return Err(Error::HeaderFormatError(format!("头部长度 {} + 2 不够 {} [{:02x}][{:02x}]", bytes.len(), len, bytes[0], bytes[1])));
         }
         let header = bytes[2..(2 + len)].try_into().unwrap();
         let header: Header = serde_json::from_slice(header)?;

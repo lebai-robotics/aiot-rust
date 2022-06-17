@@ -9,12 +9,14 @@ use rand::distributions::Alphanumeric;
 use rand::rngs::StdRng;
 use rand::Rng;
 use rand::SeedableRng;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 
 pub const VERSION: &'static str = std::env!("CARGO_PKG_VERSION");
 lazy_static! {
     pub static ref CORE_SDK_VERSION: String = format!("sdk-rust-{}", VERSION);
     static ref RNG: Mutex<StdRng> = Mutex::new(StdRng::seed_from_u64(timestamp()));
+    static ref ID_U64: AtomicU64 = AtomicU64::new(0);
 }
 
 pub fn hex2str(input: &[u8]) -> String {
@@ -60,6 +62,10 @@ pub fn rand_string(len: usize) -> String {
 
 pub fn rand_u64() -> u64 {
     RNG.lock().unwrap().gen()
+}
+
+pub fn inc_u64() -> u64 {
+    ID_U64.fetch_add(1, Ordering::SeqCst)
 }
 
 pub fn sha256(buffer: &[u8]) -> String {

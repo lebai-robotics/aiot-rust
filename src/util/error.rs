@@ -84,4 +84,6 @@ pub enum Error {
     CodeParams(u64, Option<String>),
     #[error("HTTP 请求构造失败")]
     HttpRequestBuild,
+    #[error("Session 创建失败 {0}")]
+    SessionCreate(String),
 }
