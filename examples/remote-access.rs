@@ -29,7 +29,10 @@ async fn main() -> Result<()> {
                     }
                     SecureTunnelNotify::Update(data) => {
                         info!("Update = {:?}", data);
-                        proxy.update_tunnel(data.into()).await.ok();
+                        proxy.delete_tunnel(&data.tunnel_id).await.ok();
+                        proxy.add_tunnel(data.into()).await.ok();
+                        // update_tunnel 暂不可用
+                        // proxy.update_tunnel(data.into()).await.ok();
                     }
                     SecureTunnelNotify::Close(data) => {
                         info!("Close = {:?}", data);

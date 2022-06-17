@@ -1,6 +1,6 @@
 use super::protocol::{Header, Service};
 use super::session::{Session, SessionList};
-use crate::tunnel::protocol::{Frame, FrameType, ReleaseCode, ResponseCode, ResponseBody};
+use crate::tunnel::protocol::{Frame, FrameType, ReleaseCode, ResponseBody, ResponseCode};
 use crate::util::auth::aliyun_client_config;
 use crate::util::inc_u64;
 use crate::{Error, Result};
@@ -106,6 +106,7 @@ struct RemoteAccessProxy {
     local_rx: Receiver<Frame>,
     one_tx: Option<oneshot::Sender<String>>, // 上送 sessionId
     exit_flag: bool,
+    update_flag: bool,
     session_list: SessionList,
 }
 
@@ -191,6 +192,7 @@ impl RemoteAccessProxy {
             write,
             action_rx,
             exit_flag: false,
+            update_flag: false,
             cloud_rx,
             local_tx,
             local_rx,
@@ -206,6 +208,12 @@ impl RemoteAccessProxy {
                     log::info!("proxy {} exit", proxy.params.id);
                     break;
                 }
+            }
+            if proxy.update_flag {
+                // TODO: 自循环引用
+                // if let Err(err) = Self::new(proxy.params, proxy.action_rx, one_tx, client_config).await {
+                //     log::error!("update tunnel: {}", err);
+                // }
             }
         });
         Ok(())
@@ -274,11 +282,12 @@ impl RemoteAccessProxy {
                 match data {
                     ProxyAction::UpdateTunnel(params) => {
                         self.params = params;
+                        self.update_flag = true;
+                        self.exit_flag = true;
                     }
                     ProxyAction::DeleteTunnel(id) => {
+                        self.update_flag = false;
                         self.exit_flag = true;
-                        // let data = Frame::release(id, inc_u64(), ReleaseCode::DeviceClose, "".into());
-                        // self.write.send(data.to_vec()?.into()).await.ok();
                     }
                 }
                 Ok(())
