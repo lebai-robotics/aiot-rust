@@ -35,11 +35,9 @@ impl Module {
 impl MqttConnection {
     pub fn remote_access(&mut self) -> Result<Module> {
         let (tx, rx) = mpsc::channel(16);
-        let (tx_, rx_) = mpsc::channel(16);
         let ra = RemoteAccessOptions::new(self.mqtt_client.three.clone());
         let executor = Executor {
             tx,
-            tx_,
             three: self.mqtt_client.three.clone(),
         };
         let module = self.module(Box::new(executor), rx, ())?;
@@ -50,13 +48,12 @@ impl MqttConnection {
 pub struct Executor {
     three: Arc<ThreeTuple>,
     tx: Sender<Recv>,
-    tx_: Sender<Recv>,
 }
 
 #[async_trait::async_trait]
 impl crate::Executor for Executor {
     async fn execute(&mut self, topic: &str, payload: &[u8]) -> crate::Result<()> {
         let data = crate::execute::<RecvKind>(&self.three, topic, payload)?;
-        self.tx_.send(data).await.map_err(|_| Error::MpscSendError)
+        self.tx.send(data).await.map_err(|_| Error::MpscSendError)
     }
 }

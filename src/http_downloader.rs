@@ -31,7 +31,7 @@ pub enum Error {
     #[error(transparent)]
     RequestError(#[from] reqwest::Error),
     #[error(transparent)]
-    HttpError(#[from] crate::http::HttpError),
+    HttpError(#[from] crate::https::HttpError),
     #[error(transparent)]
     ToStrError(#[from] ToStrError),
     #[error(transparent)]

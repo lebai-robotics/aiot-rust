@@ -3,7 +3,7 @@ use super::session::{Session, SessionList};
 use crate::tunnel::protocol::{Frame, FrameType, ReleaseCode};
 use crate::util::auth::aliyun_client_config;
 use crate::util::rand_u64;
-use crate::Result;
+use crate::{Error, Result};
 use futures::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
 use lazy_static::lazy_static;
@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc::{self, Receiver, Sender};
+use tokio::sync::oneshot;
 use tokio::sync::RwLock;
 use tokio::time;
 use tokio::time::Duration;
@@ -19,19 +20,18 @@ use tokio_tungstenite::{client_async_tls_with_config, MaybeTlsStream, WebSocketS
 use tungstenite::Message;
 
 pub struct TunnelParams {
-    id: String,
-    host: String,
-    port: String,
-    path: String,
-    token: String,
+    pub id: String,
+    pub host: String,
+    pub port: String,
+    pub path: String,
+    pub token: String,
 }
 
 pub enum TunnelAction {
-    AddTunnel(TunnelParams),
+    AddTunnel(TunnelParams, oneshot::Sender<String>),
     UpdateTunnel(TunnelParams),
     DeleteTunnel(String),
     AddService(Service),
-    UpdateService(Service),
     DeleteService(String),
 }
 
@@ -54,20 +54,49 @@ impl TunnelProxy {
         Self { tx }
     }
 
-    pub fn add_tunnel(&self) -> Result<String> {
-        Ok("".into())
+    pub async fn add_tunnel(&self, params: TunnelParams) -> Result<String> {
+        let (tx, rx) = oneshot::channel();
+        self.tx
+            .send(TunnelAction::AddTunnel(params, tx))
+            .await
+            .map_err(|err| Error::MpscSendError)?;
+        rx.await.map_err(|err| Error::OneshotRecvError)
     }
 
-    pub fn delete_tunnel(&self, id: &str) -> Result<()> {
+    pub async fn delete_tunnel(&self, id: &str) -> Result<()> {
+        self.tx
+            .send(TunnelAction::DeleteTunnel(id.to_string()))
+            .await
+            .map_err(|err| Error::MpscSendError)?;
         Ok(())
     }
 
-    pub fn update_tunnel(&self, id: &str) -> Result<()> {
+    pub async fn update_tunnel(&self, params: TunnelParams) -> Result<()> {
+        self.tx
+            .send(TunnelAction::UpdateTunnel(params))
+            .await
+            .map_err(|err| Error::MpscSendError)?;
+        Ok(())
+    }
+
+    pub async fn add_service(&self, service: Service) -> Result<()> {
+        self.tx
+            .send(TunnelAction::AddService(service))
+            .await
+            .map_err(|err| Error::MpscSendError)?;
+        Ok(())
+    }
+
+    pub async fn delete_service(&self, id: &str) -> Result<()> {
+        self.tx
+            .send(TunnelAction::DeleteService(id.to_string()))
+            .await
+            .map_err(|err| Error::MpscSendError)?;
         Ok(())
     }
 }
 
-pub struct RemoteAccessProxy {
+struct RemoteAccessProxy {
     params: TunnelParams,
     read: SplitStream<WebSocketStream<MaybeTlsStream<TcpStream>>>,
     write: SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, Message>,
@@ -75,6 +104,7 @@ pub struct RemoteAccessProxy {
     cloud_rx: Receiver<Vec<u8>>,
     local_tx: Sender<(String, String, Vec<u8>)>,
     local_rx: Receiver<(String, String, Vec<u8>)>,
+    one_tx: Option<oneshot::Sender<String>>, // 上送 sessionId
     exit_flag: bool,
     session_list: SessionList,
 }
@@ -97,12 +127,6 @@ impl RemoteAccessProxy {
                             .await
                             .insert(service.r#type.clone(), service);
                     }
-                    TunnelAction::UpdateService(service) => {
-                        SERVICE_LIST
-                            .write()
-                            .await
-                            .insert(service.r#type.clone(), service);
-                    }
                     TunnelAction::DeleteService(id) => {
                         SERVICE_LIST.write().await.remove(&id);
                     }
@@ -116,10 +140,11 @@ impl RemoteAccessProxy {
                             tx.send(ProxyAction::DeleteTunnel(id)).await.ok();
                         }
                     }
-                    TunnelAction::AddTunnel(params) => {
+                    TunnelAction::AddTunnel(params, one_tx) => {
                         let (tx, rx) = mpsc::channel(16);
                         proxytxs.insert(params.id.clone(), tx);
-                        if let Err(err) = Self::new(params, rx, client_config.clone()).await {
+                        if let Err(err) = Self::new(params, rx, one_tx, client_config.clone()).await
+                        {
                             log::error!("add tunnel: {}", err);
                         }
                     }
@@ -131,14 +156,31 @@ impl RemoteAccessProxy {
     async fn new(
         params: TunnelParams,
         action_rx: Receiver<ProxyAction>,
+        one_tx: oneshot::Sender<String>,
         client_config: Arc<rustls::ClientConfig>,
     ) -> Result<()> {
-        let addr = params.path.as_str();
-        let url = url::Url::parse(&format!("wss://{}/", addr))?;
-        let socket = TcpStream::connect(addr).await?;
+        let uri = format!("wss://{}:{}{}", params.host, params.port, params.path);
+        let url = url::Url::parse(&uri)?;
+        let addrs = url.socket_addrs(|| None)?;
+        let socket = TcpStream::connect(&*addrs).await?;
         let connecter = Connector::Rustls(client_config);
+        let mut request = http::request::Request::builder()
+            .uri(uri)
+            .header("tunnel-access-token", &params.token)
+            .header("Sec-WebSocket-Protocol", "aliyun.iot.securetunnel-v1.1")
+            .header(
+                "Sec-WebSocket-Key",
+                tungstenite::handshake::client::generate_key(),
+            )
+            .header("Host", &params.host)
+            .header("Sec-WebSocket-Version", "13")
+            .header("Connection", "Upgrade")
+            .header("Upgrade", "websocket")
+            .body(())
+            .map_err(|err| Error::HttpRequestBuild)?;
+
         let (ws_stream, _) =
-            client_async_tls_with_config(url, socket, None, Some(connecter)).await?;
+            client_async_tls_with_config(request, socket, None, Some(connecter)).await?;
         let (mut write, mut read) = ws_stream.split();
 
         let (cloud_tx, cloud_rx) = mpsc::channel(16);
@@ -152,6 +194,7 @@ impl RemoteAccessProxy {
             cloud_rx,
             local_tx,
             local_rx,
+            one_tx: Some(one_tx),
             session_list: SessionList::new(),
         };
         tokio::spawn(async move {
@@ -175,21 +218,29 @@ impl RemoteAccessProxy {
                 match data.header.frame_type {
                     FrameType::Response => {},
                     FrameType::NewSession => if let Some(id) = data.header.session_id {
-                        if let Some(service) = SERVICE_LIST.read().await.get(&self.params.id) {
-                            self.session_list.add(id, service, self.local_tx.clone()).await.ok();
+                        if let Some(tx) = self.one_tx.take() {
+                            tx.send(id.clone()).ok();
+                        }
+                        if let Some(service_type) = data.header.service_type {
+                            if let Some(service) = SERVICE_LIST.read().await.get(&service_type) {
+                                self.session_list.add(id, service, self.local_tx.clone()).await.ok();
+                            }
                         }
                     },
                     FrameType::ReleaseSession => if let Some(id) = data.header.session_id {
                         self.session_list.release(id).await.ok();
                     },
                     FrameType::RawData => if let Some(id) = data.header.session_id {
-                        self.session_list.write(id, data.body.clone()).await.ok();
+                        self.session_list.write(id, data.body).await.ok();
                     },
                 }
                 Ok(())
             },
             Some((id, service_type, data)) = self.local_rx.recv() => {
-                self.write.send(Frame::raw(id, rand_u64(), service_type, data).to_vec()?.into()).await.ok();
+                let data = Frame::raw(id, rand_u64(), service_type, data);
+                if let Err(err) = self.write.send(data.to_vec()?.into()).await {
+                    log::error!("send local data error: {}", err);
+                }
                 Ok(())
             },
             Some(data) = self.action_rx.recv() => {
@@ -199,7 +250,8 @@ impl RemoteAccessProxy {
                     }
                     ProxyAction::DeleteTunnel(id) => {
                         self.exit_flag = true;
-                        self.write.send(Frame::release(id, rand_u64(), ReleaseCode::DeviceClose, "".into()).to_vec()?.into()).await.ok();
+                        let data = Frame::release(id, rand_u64(), ReleaseCode::DeviceClose, "".into());
+                        self.write.send(data.to_vec()?.into()).await.ok();
                     }
                 }
                 Ok(())

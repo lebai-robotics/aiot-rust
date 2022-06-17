@@ -17,7 +17,7 @@ use tokio::sync::mpsc::{Receiver, Sender};
 pub type DebugSwitch = EdgeDebugSwitch;
 
 // /sys/%s/%s/secure_tunnel/notify
-pub type Switch = AlinkResponse<SecureTunnelNotify>;
+pub type Switch = SecureTunnelNotify;
 
 // /sys/%s/%s/secure_tunnel/proxy/request_reply
 pub type RequestReply = AlinkResponse<SecureTunnelNotify>;
@@ -28,15 +28,6 @@ pub enum RemoteAccessRecv {
     // DebugSwitch(DebugSwitch),
     Switch(Switch),
     RequestReply(RequestReply),
-}
-
-impl RemoteAccessRecv {
-    pub fn is_open(&self) -> bool {
-        match self {
-            // RemoteAccessRecv::DebugSwitch(data) => data.is_open(),
-            _ => false,
-        }
-    }
 }
 
 impl ModuleRecvKind for super::RecvKind {

@@ -33,7 +33,7 @@ impl SessionList {
         local_tx: Sender<(String, String, Vec<u8>)>,
     ) -> Result<()> {
         let addr = format!("{}:{}", info.ip, info.port);
-        log::debug!("tcp://{} session_id: {:?}", addr, id);
+        log::info!("tcp://{} session_id: {}", addr, id);
 
         let (tx, mut rx) = mpsc::channel(128);
         let service_type = info.r#type.clone();
@@ -51,15 +51,19 @@ impl SessionList {
             loop {
                 tokio::select! {
                     Some(w) = rx.recv() => {
-                        stream.write_all(&w).await.map_err(|_| Error::MpscSendError)?;
                         log::debug!("write {}={:x?}", addr, w);
+                        if let Err(err) = stream.write_all(&w).await {
+                            log::error!("write error: {:?}", err);
+                        }
                     },
                     Ok(n) = stream.read(&mut buf) => {
-                        log::debug!("read={:x?}", &buf[0..n]);
+                        log::debug!("read={:x?}", &buf[..n]);
                         if n == 0 {
                             break;
                         }
-                        local_tx.send((id.clone(), service_type.clone(), (&buf[0..n]).to_vec())).await.map_err(|_| Error::MpscSendError)?;
+                        if let Err(err) = local_tx.send((id.clone(), service_type.clone(), (&buf[..n]).to_vec())).await {
+                            log::error!("send to local: {}", err);
+                        }
                     },
                     else => break,
                 }

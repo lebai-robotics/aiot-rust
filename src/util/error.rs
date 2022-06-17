@@ -29,11 +29,13 @@ pub enum Error {
     #[error(transparent)]
     DownloadError(#[from] crate::http_downloader::Error),
     #[error(transparent)]
-    HttpError(#[from] crate::http::HttpError),
+    HttpError(#[from] crate::https::HttpError),
     #[error("set system time error")]
     SetSystemTimeError,
     #[error("tokio mpsc send error")]
     MpscSendError,
+    #[error("tokio oneshot recv error")]
+    OneshotRecvError,
     #[error("tokio broadcast send error")]
     BroadcastSendError,
     #[error("header format error: {0}")]
@@ -80,4 +82,6 @@ pub enum Error {
     SizeNotMatch(usize, usize),
     #[error("错误码 {0} {1:?}")]
     CodeParams(u64, Option<String>),
+    #[error("HTTP 请求构造失败")]
+    HttpRequestBuild,
 }

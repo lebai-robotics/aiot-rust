@@ -14,13 +14,15 @@ pub struct Service {
     pub port: u16,
 }
 
+impl Service {
+    pub fn new(r#type: String, ip: String, port: u16) -> Self {
+        Self { r#type, ip, port }
+    }
+}
+
 impl Default for Service {
     fn default() -> Self {
-        Self {
-            r#type: "_SSH".to_string(),
-            ip: "127.0.0.1".to_string(),
-            port: 22,
-        }
+        Self::new("_SSH".into(), "127.0.0.1".into(), 22)
     }
 }
 
@@ -160,6 +162,7 @@ impl Frame {
         buf.extend_from_slice(&(header.len() as u16).to_be_bytes());
         buf.extend_from_slice(&header);
         buf.extend_from_slice(&self.body);
+        log::debug!("{}", String::from_utf8_lossy(&buf));
         Ok(buf)
     }
 

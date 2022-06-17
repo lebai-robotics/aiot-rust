@@ -11,9 +11,15 @@ pub use alink::aiot_module::{AiotModule, ModuleRecvKind};
 pub use alink::ThreeTuple;
 pub use dm::{DataModelMsg, DataModelOptions};
 pub use dynregmq::{DynamicRegister, DynamicRegisterResult};
-pub use http::Http;
 pub use http_downloader::HttpDownloader;
+pub use https::Http;
 pub use mqtt::{DeviceAuthInfo, MqttClient, MqttConnection, MqttInstance};
+pub use ra::{
+    base::{SecureTunnelClose, SecureTunnelConnect, SecureTunnelNotify},
+    recv::RemoteAccessRecv,
+};
+pub use tunnel::protocol::Service as LocalService;
+pub use tunnel::proxy::{TunnelAction, TunnelParams, TunnelProxy};
 pub use util::error::{Error, Result};
 
 pub mod alink;
@@ -21,8 +27,8 @@ pub mod bootstrap;
 pub mod dm;
 pub mod dynregmq;
 pub mod file;
-pub mod http;
 pub mod http_downloader;
+pub mod https;
 pub mod logpost;
 pub mod mqtt;
 pub mod ntp;
