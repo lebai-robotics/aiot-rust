@@ -1,5 +1,5 @@
 use crate::alink::{AlinkRequest, AlinkResponse};
-use crate::{Error, Result, ThreeTuple};
+use crate::{Error, Result, ThreeTuple, TunnelParams};
 use log::*;
 use regex::Regex;
 use rumqttc::{AsyncClient, QoS};
@@ -37,16 +37,15 @@ impl RemoteAccessOptions {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
-#[serde(untagged, rename_all = "snake_case")]
-/// operation
+#[derive(Debug, Clone)]
 pub enum SecureTunnelNotify {
-    Connect(SecureTunnelConnect),
-    Close(SecureTunnelClose),
+    Connect(ConnectOrUpdate),
+    Update(ConnectOrUpdate),
+    Close(Close),
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct SecureTunnelConnect {
+pub struct ConnectOrUpdate {
     pub schema: Option<String>,
     pub path: String,
     /// session_id剩余的有效时间，单位为秒。
@@ -59,7 +58,7 @@ pub struct SecureTunnelConnect {
     pub token_expire: i32,
     /// SSH远程通道的ID。
     pub tunnel_id: String,
-    pub payload_mod: Option<String>,
+    pub payload_mode: Option<String>,
     /// uri的端口号。
     pub port: u16,
     /// uri的域名。
@@ -70,10 +69,41 @@ pub struct SecureTunnelConnect {
     /// 设备与SSH远程通道进行WebSocket建连的认证Token。
     /// **说明** 新创建的Token有效期为7天。设备端请求SSH通道建连信息时，若物联网平台发现Token的生成时间超过了5天，则更新建连信息后响应设备的请求。
     pub token: String,
+    /// 当 operation = close 时，该字段为关闭原因。
+    pub close_reason: Option<String>,
+    /// 推送给设备的自定义信息
+    pub udi: Option<String>,
+}
+
+impl From<ConnectOrUpdate> for TunnelParams {
+    fn from(data: ConnectOrUpdate) -> Self {
+        Self {
+            id: data.tunnel_id,
+            host: data.host,
+            port: format!("{}", data.port),
+            path: data.path,
+            token: data.token,
+        }
+    }
+}
+
+impl From<ConnectOrUpdate> for SecureTunnelNotify {
+    fn from(data: ConnectOrUpdate) -> Self {
+        match data.operation.as_ref().map(|s| s.as_str()) {
+            Some("connect") => Self::Connect(data),
+            Some("close") => Self::Close(Close {
+                tunnel_id: data.tunnel_id,
+                close_reason: data.close_reason,
+                operation: data.operation,
+            }),
+            _ => Self::Update(data),
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct SecureTunnelClose {
-    // pub operation: String,
-    pub close_reason: String,
+pub struct Close {
+    pub tunnel_id: String,
+    pub operation: Option<String>,
+    pub close_reason: Option<String>,
 }

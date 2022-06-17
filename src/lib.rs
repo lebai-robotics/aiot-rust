@@ -14,10 +14,7 @@ pub use dynregmq::{DynamicRegister, DynamicRegisterResult};
 pub use http_downloader::HttpDownloader;
 pub use https::Http;
 pub use mqtt::{DeviceAuthInfo, MqttClient, MqttConnection, MqttInstance};
-pub use ra::{
-    base::{SecureTunnelClose, SecureTunnelConnect, SecureTunnelNotify},
-    recv::RemoteAccessRecv,
-};
+pub use ra::base::SecureTunnelNotify;
 pub use tunnel::protocol::Service as LocalService;
 pub use tunnel::proxy::{TunnelAction, TunnelParams, TunnelProxy};
 pub use util::error::{Error, Result};

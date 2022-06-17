@@ -1,7 +1,4 @@
-use aiot::{
-    LocalService, MqttClient, RemoteAccessRecv, SecureTunnelNotify, ThreeTuple, TunnelParams,
-    TunnelProxy,
-};
+use aiot::{LocalService, MqttClient, SecureTunnelNotify, ThreeTuple, TunnelProxy};
 use anyhow::Result;
 use log::*;
 
@@ -25,24 +22,18 @@ async fn main() -> Result<()> {
                 // 主循环的 poll 是必须的
             }
             Ok(data) = ra.poll() => {
-                let notify = match data {
-                    RemoteAccessRecv::Switch(data) => data,
-                    RemoteAccessRecv::RequestReply(data) => data.data,
-                };
-                match notify {
+                match data.into_inner() {
                     SecureTunnelNotify::Connect(data) => {
                         info!("Connect = {:?}", data);
-                        let params = TunnelParams {
-                            id: data.tunnel_id,
-                            host: data.host,
-                            port: format!("{}", data.port),
-                            path: data.path,
-                            token: data.token,
-                        };
-                        proxy.add_tunnel(params).await.ok();
+                        proxy.add_tunnel(data.into()).await.ok();
+                    }
+                    SecureTunnelNotify::Update(data) => {
+                        info!("Update = {:?}", data);
+                        proxy.update_tunnel(data.into()).await.ok();
                     }
                     SecureTunnelNotify::Close(data) => {
                         info!("Close = {:?}", data);
+                        proxy.delete_tunnel(&data.tunnel_id).await.ok();
                     }
                 }
             }

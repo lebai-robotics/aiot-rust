@@ -1,4 +1,4 @@
-use super::base::{EdgeDebugSwitch, SecureTunnelNotify};
+use super::base::{ConnectOrUpdate, EdgeDebugSwitch, SecureTunnelNotify};
 use crate::alink::aiot_module::{get_aiot_json, ModuleRecvKind};
 use crate::alink::alink_topic::ALinkSubscribeTopic;
 use crate::alink::{AlinkRequest, AlinkResponse, SimpleResponse};
@@ -30,6 +30,15 @@ pub enum RemoteAccessRecv {
     RequestReply(RequestReply),
 }
 
+impl RemoteAccessRecv {
+    pub fn into_inner(self) -> SecureTunnelNotify {
+        match self {
+            RemoteAccessRecv::Switch(data) => data,
+            RemoteAccessRecv::RequestReply(data) => data.data,
+        }
+    }
+}
+
 impl ModuleRecvKind for super::RecvKind {
     type Recv = super::Recv;
 
@@ -37,8 +46,21 @@ impl ModuleRecvKind for super::RecvKind {
         let s = get_aiot_json(payload);
         match *self {
             // Self::DebugSwitch => Ok(Self::Recv::DebugSwitch(serde_json::from_str(&s)?)),
-            Self::Switch => Ok(Self::Recv::Switch(serde_json::from_str(&s)?)),
-            Self::RequestReply => Ok(Self::Recv::RequestReply(serde_json::from_str(&s)?)),
+            Self::Switch => {
+                let data: ConnectOrUpdate = serde_json::from_str(&s)?;
+                Ok(Self::Recv::Switch(data.into()))
+            }
+            Self::RequestReply => {
+                let data: AlinkResponse<ConnectOrUpdate> = serde_json::from_str(&s)?;
+                Ok(Self::Recv::RequestReply(AlinkResponse {
+                    id: data.id,
+                    code: data.code,
+                    data: data.data.into(),
+                    message: None,
+                    version: None,
+                    method: None,
+                }))
+            }
         }
     }
 
