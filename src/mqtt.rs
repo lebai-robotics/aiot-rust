@@ -42,7 +42,7 @@ pub struct MqttPublicInstance {
 pub struct MqttClient {
     pub three: Arc<ThreeTuple>,
     pub options: MqttOptions,
-    pub(crate) executors: Vec<Box<dyn Executor>>,
+    pub(crate) executors: Vec<Box<dyn Executor + Send + Sync>>,
 }
 
 impl MqttClient {

@@ -1,4 +1,4 @@
-use super::base::{ConnectOrUpdate, EdgeDebugSwitch, SecureTunnelNotify};
+use super::base::{Close, ConnectOrUpdate, EdgeDebugSwitch, SecureTunnelNotify};
 use crate::alink::aiot_module::{get_aiot_json, ModuleRecvKind};
 use crate::alink::alink_topic::ALinkSubscribeTopic;
 use crate::alink::{AlinkRequest, AlinkResponse, SimpleResponse};
@@ -46,10 +46,11 @@ impl ModuleRecvKind for super::RecvKind {
         let s = get_aiot_json(payload);
         match *self {
             // Self::DebugSwitch => Ok(Self::Recv::DebugSwitch(serde_json::from_str(&s)?)),
-            Self::Switch => {
-                let data: ConnectOrUpdate = serde_json::from_str(&s)?;
-                Ok(Self::Recv::Switch(data.into()))
-            }
+            Self::Switch => Ok(Self::Recv::Switch(if s.contains("close") {
+                Switch::Close(serde_json::from_str::<Close>(&s)?)
+            } else {
+                serde_json::from_str::<ConnectOrUpdate>(&s)?.into()
+            })),
             Self::RequestReply => {
                 let data: AlinkResponse<ConnectOrUpdate> = serde_json::from_str(&s)?;
                 Ok(Self::Recv::RequestReply(AlinkResponse {

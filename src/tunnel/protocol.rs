@@ -126,7 +126,12 @@ impl Frame {
         )
     }
 
-    pub fn raw(session_id: String, frame_id: u64, service_type: Option<String>, body: Vec<u8>) -> Frame {
+    pub fn raw(
+        session_id: String,
+        frame_id: u64,
+        service_type: Option<String>,
+        body: Vec<u8>,
+    ) -> Frame {
         Frame::new(
             Header {
                 frame_type: FrameType::RawData,
@@ -184,7 +189,13 @@ impl Frame {
         }
         let len = u16::from_be_bytes(bytes[..2].try_into().unwrap()) as usize;
         if bytes.len() < 2 + len {
-            return Err(Error::HeaderFormatError(format!("头部长度 {} + 2 不够 {} [{:02x}][{:02x}]", bytes.len(), len, bytes[0], bytes[1])));
+            return Err(Error::HeaderFormatError(format!(
+                "头部长度 {} + 2 不够 {} [{:02x}][{:02x}]",
+                bytes.len(),
+                len,
+                bytes[0],
+                bytes[1]
+            )));
         }
         let header = bytes[2..(2 + len)].try_into().unwrap();
         let header: Header = serde_json::from_slice(header)?;

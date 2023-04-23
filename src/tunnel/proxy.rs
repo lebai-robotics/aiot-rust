@@ -54,13 +54,16 @@ impl TunnelProxy {
         Self { tx }
     }
 
-    pub async fn add_tunnel(&self, params: TunnelParams) -> Result<String> {
+    pub async fn add_tunnel(&self, params: TunnelParams) -> Result<()> {
         let (tx, rx) = oneshot::channel();
         self.tx
             .send(TunnelAction::AddTunnel(params, tx))
             .await
             .map_err(|err| Error::MpscSendError)?;
-        rx.await.map_err(|err| Error::OneshotRecvError)
+        // if let Err(e) = rx.await.map_err(|err| Error::OneshotRecvError){
+        //     log::error!("add tunnel error: {e:?}");
+        // }
+        Ok(())
     }
 
     pub async fn delete_tunnel(&self, id: &str) -> Result<()> {

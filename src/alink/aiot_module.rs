@@ -67,7 +67,7 @@ impl<TRecv, O> AiotModule<TRecv, O> {
 impl MqttConnection {
     pub fn module<TModuleRecv, O>(
         &mut self,
-        executor: Box<dyn crate::Executor>,
+        executor: Box<dyn crate::Executor + Send + Sync>,
         rx: Receiver<TModuleRecv>,
         data: O,
     ) -> Result<AiotModule<TModuleRecv, O>> {

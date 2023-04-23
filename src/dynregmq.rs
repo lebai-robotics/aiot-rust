@@ -41,7 +41,8 @@ impl DynamicRegister {
         let instance = MqttInstance::EndPoint(host.to_string());
         let mut mqtt = MqttClient::new(&three, &info, &instance)?;
         mqtt.enable_tls()?;
-        mqtt.executors.push(rego as Box<dyn crate::Executor>);
+        mqtt.executors
+            .push(rego as Box<dyn crate::Executor + Send + Sync>);
         Ok(Self { mqtt, rx })
     }
 

@@ -66,7 +66,12 @@ impl SessionList {
                     else => break,
                 }
             }
-            let frame = Frame::release(id.clone(), inc_u64(), ReleaseCode::DeviceClose, "unknown".to_string());
+            let frame = Frame::release(
+                id.clone(),
+                inc_u64(),
+                ReleaseCode::DeviceClose,
+                "unknown".to_string(),
+            );
             local_tx.send(frame).await.ok();
         });
 
